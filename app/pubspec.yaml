@@ -1,0 +1,19 @@
+name: yhq_app
+description: Driving-rules education app. Thin Flutter shell over engine_dart.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  engine_dart:
+    path: ../engine_dart
+
+flutter:
+  uses-material-design: true
+  # Populated from /content by `node tools/sync_content.js` - do not edit by hand.
+  assets:
+    - assets/content/
