@@ -38,9 +38,33 @@ cd engine_dart && dart pub get && dart test
 # render every scenario to PNG for eyeballing
 cd engine_dart && dart run bin/render.dart ../content ../build/preview
 
-# copy validated content into the Flutter app's assets
+# copy validated content into the app's and viewer's asset dirs
 node tools/sync_content.js
+
+# build the browser scenario viewer (compiles the engine to JS and
+# verifies it against the Dart build), then serve editor/public/
+node tools/build_viewer.js
 ```
+
+## Browser viewer
+
+`editor/public/viewer.html` previews scenarios in a browser. It is not a
+reimplementation: `tools/build_viewer.js` compiles `engine_dart` itself to
+JavaScript, and the page only knows how to fill a polygon, stroke a path and
+fill a circle. All geometry, layering and lane maths stay in the engine, so the
+editor's preview cannot drift away from what the app renders.
+
+The build ends by exporting display lists from the Dart VM and diffing them
+against the JS build op-by-op (`tools/verify_js.js`, also a CI job). A mismatch
+fails the build — an author must never sign off on a preview the student will
+not see.
+
+One dart2js behaviour is worth knowing before touching `web/engine_web.dart`:
+at `-O1` and above it treats interop writes to globals as side-effect-free and
+eliminates them, producing a bundle that loads cleanly and exports nothing. The
+entry point therefore hands its exports to a host-provided `__engineRegister`
+hook — a call, which cannot be optimised away. `verify_js.js` fails loudly if
+the registration ever goes missing again.
 
 Golden snapshots live in `engine_dart/test/goldens/`. They are compared as
 decoded pixels with a small tolerance, not as file bytes, so a different zlib

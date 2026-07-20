@@ -27,13 +27,33 @@ sealed class DrawOp {
   final String? actorId;
 
   const DrawOp(this.layer, {this.actorId});
+
+  /// Serialises the op so a non-Dart backend can replay it.
+  ///
+  /// The editor's Canvas 2D preview consumes this. It exists so there is one
+  /// engine rather than a Dart engine plus a drifting TypeScript copy.
+  Map<String, dynamic> toJson();
+
+  Map<String, dynamic> _base(String op) => <String, dynamic>{
+        'op': op,
+        'layer': layer.name,
+        if (actorId != null) 'actorId': actorId,
+      };
 }
+
+List<double> _flat(List<Vec2> points) => [
+      for (final p in points) ...[p.x, p.y]
+    ];
 
 class FillPolygon extends DrawOp {
   final List<Vec2> points;
   final int colour;
 
   const FillPolygon(super.layer, this.points, this.colour, {super.actorId});
+
+  @override
+  Map<String, dynamic> toJson() =>
+      _base('fillPolygon')..addAll({'points': _flat(points), 'colour': colour});
 }
 
 class StrokePath extends DrawOp {
@@ -54,6 +74,16 @@ class StrokePath extends DrawOp {
     this.dash,
     super.actorId,
   });
+
+  @override
+  Map<String, dynamic> toJson() => _base('strokePath')
+    ..addAll({
+      'points': _flat(points),
+      'colour': colour,
+      'width': width,
+      'closed': closed,
+      if (dash != null) 'dash': dash,
+    });
 }
 
 class FillCircle extends DrawOp {
@@ -62,6 +92,14 @@ class FillCircle extends DrawOp {
   final int colour;
 
   const FillCircle(super.layer, this.centre, this.radius, this.colour, {super.actorId});
+
+  @override
+  Map<String, dynamic> toJson() => _base('fillCircle')
+    ..addAll({
+      'centre': [centre.x, centre.y],
+      'radius': radius,
+      'colour': colour
+    });
 }
 
 /// A road sign, identified by code. The renderer owns the artwork; the engine
@@ -72,6 +110,14 @@ class SignGlyph extends DrawOp {
   final double size;
 
   const SignGlyph(this.centre, this.code, this.size) : super(Layer.signs);
+
+  @override
+  Map<String, dynamic> toJson() => _base('signGlyph')
+    ..addAll({
+      'centre': [centre.x, centre.y],
+      'code': code,
+      'size': size
+    });
 }
 
 /// A traffic light head.
@@ -81,6 +127,14 @@ class LightGlyph extends DrawOp {
   final double size;
 
   const LightGlyph(this.centre, this.state, this.size) : super(Layer.lights);
+
+  @override
+  Map<String, dynamic> toJson() => _base('lightGlyph')
+    ..addAll({
+      'centre': [centre.x, centre.y],
+      'state': state.wire,
+      'size': size
+    });
 }
 
 /// The complete painting instruction for one frame.

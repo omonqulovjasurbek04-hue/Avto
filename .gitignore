@@ -14,8 +14,14 @@ node_modules/
 # Libraries do not pin; the shipped application does.
 engine_dart/pubspec.lock
 
-# App assets are synced from /content by tools/sync_content.js
+# App and viewer assets are synced from /content by tools/sync_content.js
 app/assets/content/
+editor/public/content/
+
+# The browser viewer's engine bundle, built by tools/build_viewer.js
+editor/public/engine.js
+editor/public/engine.js.map
+editor/public/engine.js.deps
 
 # OS noise
 Thumbs.db

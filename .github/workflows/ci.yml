@@ -40,7 +40,7 @@ jobs:
         run: >
           dart format --output=none --set-exit-if-changed --line-length 100
           lib/engine_dart.dart lib/raster.dart lib/src/geom.dart lib/src/layout.dart
-          lib/src/raster lib/src/render bin test
+          lib/src/raster lib/src/render bin test web
       - name: Test (unit + golden snapshots)
         working-directory: engine_dart
         run: dart test
@@ -59,3 +59,21 @@ jobs:
           name: golden-diffs
           path: build/golden-diff/*.png
           if-no-files-found: ignore
+
+  # The editor previews scenes with the engine compiled to JavaScript while the
+  # app runs the Dart one. This job proves the two produce identical display
+  # lists, so an author can never sign off on a preview the student won't see.
+  js-engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.4
+      - working-directory: engine_dart
+        run: dart pub get
+      - name: Build viewer and compare JS against Dart
+        run: node tools/build_viewer.js

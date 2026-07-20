@@ -11,5 +11,6 @@ export 'src/render/content_warning.dart';
 export 'src/render/draw_op.dart';
 export 'src/render/palette.dart';
 export 'src/render/scene_builder.dart';
+export 'src/render/scene_json.dart';
 export 'src/render/sign_art.dart';
 export 'src/render/viewport.dart';
