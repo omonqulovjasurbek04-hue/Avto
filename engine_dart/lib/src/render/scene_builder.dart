@@ -3,8 +3,41 @@ import 'dart:math' as math;
 import '../generated/scenario.g.dart';
 import '../geom.dart';
 import '../layout.dart';
+import 'content_warning.dart';
 import 'draw_op.dart';
 import 'palette.dart';
+
+/// Scene types the layout engine knows how to derive geometry for.
+/// Everything else raises [WarningCode.sceneTypeUnsupported] rather than
+/// drawing something misleading.
+const Set<SceneType> kSupportedSceneTypes = {
+  SceneType.crossroads4way,
+  SceneType.tJunction,
+};
+
+/// Marking types the renderer has artwork for. Kept next to the switch that
+/// consumes it so the two cannot drift; `tools/lib/semantic.js` mirrors this
+/// list to catch the problem before a render is ever attempted.
+const Set<MarkingType> kRenderedMarkings = {
+  MarkingType.stopLine,
+  MarkingType.giveWayLine,
+  MarkingType.crosswalk,
+  MarkingType.solidLine,
+  MarkingType.dashedLine,
+  MarkingType.doubleSolid,
+};
+
+/// Sign codes with dedicated artwork. Others fall back to a shape derived from
+/// the code family and raise [WarningCode.signArtworkGeneric].
+const Set<String> kSignsWithArtwork = {'2.1', '2.4', '2.5'};
+
+/// The result of building a scene: what to paint, and what could not be.
+class BuiltScene {
+  final RenderScene scene;
+  final List<ContentWarning> warnings;
+
+  const BuiltScene(this.scene, this.warnings);
+}
 
 /// Builds the display list for a scenario frozen at t = 0 (`preview` mode).
 ///
@@ -16,13 +49,25 @@ class SceneBuilder {
   final Palette palette;
 
   final List<DrawOp> _ops = [];
+  final List<ContentWarning> _warnings = [];
 
   SceneBuilder(this.scenario)
       : layout = IntersectionLayout(scenario.scene),
         palette = Palette.forConditions(scenario.scene.conditions);
 
-  RenderScene build() {
+  BuiltScene build() {
     _ops.clear();
+    _warnings.clear();
+
+    if (!kSupportedSceneTypes.contains(scenario.scene.type)) {
+      _warn(
+        WarningCode.sceneTypeUnsupported,
+        'scene.type',
+        'no layout rule for "${scenario.scene.type.wire}"; '
+            'roads are drawn generically and geometry may be wrong',
+      );
+    }
+
     _ground();
     _roadSurfaces();
     _kerbs();
@@ -32,8 +77,13 @@ class SceneBuilder {
     _vehicles();
     _signs();
     _lights();
-    return RenderScene(_ops);
+    _atmosphere();
+
+    return BuiltScene(RenderScene(_ops), List.unmodifiable(_warnings));
   }
+
+  void _warn(WarningCode code, String path, String detail) =>
+      _warnings.add(ContentWarning(code, path, detail));
 
   // ------------------------------------------------------------------ ground
 
@@ -95,39 +145,36 @@ class SceneBuilder {
       final a = kCentre + rl.axis * from;
       final b = kCentre + rl.axis * to;
 
-      // Centreline, separating incoming from outgoing traffic.
-      switch (_centrelineStyle(rl)) {
-        case MarkingType.doubleSolid:
-          for (final s in [-3.0, 3.0]) {
-            final off = rl.right * s;
-            _ops.add(StrokePath(Layer.markings, [a + off, b + off], palette.laneMarking, width: 3));
-          }
-        case MarkingType.solidLine:
-          _ops.add(StrokePath(Layer.markings, [a, b], palette.laneMarking, width: 4));
-        default:
-          _ops.add(StrokePath(Layer.markings, [a, b], palette.laneMarking,
-              width: 4, dash: const [40, 32]));
+      // A one-way arm has no opposing traffic, so no centreline.
+      final twoWay = rl.road.lanesIn > 0 && rl.road.lanesOut > 0;
+      if (twoWay) {
+        switch (_centrelineStyle(rl)) {
+          case MarkingType.doubleSolid:
+            for (final s in [-3.0, 3.0]) {
+              final off = rl.right * s;
+              _ops.add(
+                  StrokePath(Layer.markings, [a + off, b + off], palette.laneMarking, width: 3));
+            }
+          case MarkingType.solidLine:
+            _ops.add(StrokePath(Layer.markings, [a, b], palette.laneMarking, width: 4));
+          default:
+            _ops.add(StrokePath(Layer.markings, [a, b], palette.laneMarking,
+                width: 4, dash: const [40, 32]));
+        }
       }
 
       // Dividers between same-direction lanes.
       for (var i = 1; i < rl.road.lanesIn; i++) {
-        final off = rl.incomingOffset(i) - rl.right * (-kLaneWidth / 2);
-        _dashedAlong(rl, from, to, off);
+        _dashedAlong(rl, from, to, rl.incomingOffset(i) - rl.right * (-kLaneWidth / 2));
       }
       for (var j = 1; j < rl.road.lanesOut; j++) {
-        final off = rl.outgoingOffset(j) - rl.right * (kLaneWidth / 2);
-        _dashedAlong(rl, from, to, off);
+        _dashedAlong(rl, from, to, rl.outgoingOffset(j) - rl.right * (kLaneWidth / 2));
       }
 
       // Edge lines, inset from the kerb.
       for (final side in [-1.0, 1.0]) {
         final off = rl.right * ((rl.halfWidth - 6) * side);
-        _ops.add(StrokePath(
-          Layer.markings,
-          [a + off, b + off],
-          palette.laneMarking,
-          width: 3,
-        ));
+        _ops.add(StrokePath(Layer.markings, [a + off, b + off], palette.laneMarking, width: 3));
       }
     }
   }
@@ -143,9 +190,40 @@ class SceneBuilder {
   }
 
   void _authoredMarkings() {
-    for (final m in scenario.scene.markings) {
+    final markings = scenario.scene.markings;
+    for (var i = 0; i < markings.length; i++) {
+      final m = markings[i];
+      final path = 'scene.markings[$i]';
+
+      if (!kRenderedMarkings.contains(m.type)) {
+        _warn(
+          WarningCode.markingNotRendered,
+          path,
+          'marking "${m.type.wire}" is declared but the renderer has no artwork '
+          'for it, so it will not appear',
+        );
+        continue;
+      }
+
       final at = m.at;
-      if (at == null || !layout.roads.containsKey(at)) continue;
+      if (at == null) {
+        _warn(
+          WarningCode.markingMissingTarget,
+          path,
+          'marking "${m.type.wire}" needs an "at" road to be placed against',
+        );
+        continue;
+      }
+      if (!layout.roads.containsKey(at)) {
+        _warn(
+          WarningCode.attachmentUnresolved,
+          path,
+          'marking "${m.type.wire}" is attached to ${at.wire} but no road faces '
+          'that direction',
+        );
+        continue;
+      }
+
       final rl = layout.road(at);
       switch (m.type) {
         case MarkingType.stopLine:
@@ -162,12 +240,18 @@ class SceneBuilder {
 
   /// A bar spanning only the incoming lanes, perpendicular to the road.
   void _bandAcrossIncoming(RoadLayout rl, double t, double thickness, List<double>? dash) {
+    if (rl.road.lanesIn == 0) {
+      _warn(
+        WarningCode.laneUnavailable,
+        'scene.roads[${rl.dir.wire}]',
+        'a stop or give-way line was requested but the road has no incoming lanes',
+      );
+      return;
+    }
     final inner = kCentre + rl.axis * t;
-    final near = inner; // road centreline
-    final far = inner + rl.right * (-rl.road.lanesIn * kLaneWidth);
     _ops.add(StrokePath(
       Layer.markings,
-      [near, far],
+      [inner, inner + rl.right * (-rl.road.lanesIn * kLaneWidth)],
       palette.stopLine,
       width: thickness,
       dash: dash,
@@ -207,7 +291,14 @@ class SceneBuilder {
     for (final d in Dir.values) {
       if (!track.along.wire.contains(d.wire)) continue;
       final rl = layout.roads[d];
-      if (rl == null) continue;
+      if (rl == null) {
+        _warn(
+          WarningCode.attachmentUnresolved,
+          'scene.tram_track',
+          'track runs along ${track.along.wire} but no road faces ${d.wire}',
+        );
+        continue;
+      }
 
       // Rails follow the innermost lane in each direction, which is where a
       // tram runs. Both arms of the axis line up, so the track is continuous.
@@ -248,8 +339,8 @@ class SceneBuilder {
       final noseOffset = pose.heading.normalized * (pose.size.length * 0.22);
       _ops.add(FillPolygon(
         Layer.vehicles,
-        orientedBox(pose.position + noseOffset, pose.heading,
-            pose.size.length * 0.26, pose.size.width * 0.72),
+        orientedBox(pose.position + noseOffset, pose.heading, pose.size.length * 0.26,
+            pose.size.width * 0.72),
         palette.windshield,
         actorId: id,
       ));
@@ -259,22 +350,47 @@ class SceneBuilder {
   // ------------------------------------------------------------- signs/lights
 
   void _signs() {
-    for (final s in scenario.scene.signs) {
+    final signs = scenario.scene.signs;
+    for (var i = 0; i < signs.length; i++) {
+      final s = signs[i];
       final rl = layout.roads[s.at];
-      if (rl == null) continue;
+      if (rl == null) {
+        _warn(
+          WarningCode.attachmentUnresolved,
+          'scene.signs[$i]',
+          'sign ${s.code} is attached to ${s.at.wire} but no road faces that direction',
+        );
+        continue;
+      }
+      if (!kSignsWithArtwork.contains(s.code)) {
+        _warn(
+          WarningCode.signArtworkGeneric,
+          'scene.signs[$i]',
+          'sign ${s.code} has no dedicated artwork; a generic shape for family '
+              '"${s.code.split('.').first}" was drawn instead',
+        );
+      }
       _ops.add(SignGlyph(_roadside(rl, layout.stopDistance(s.at) + 26, 24), s.code, 44));
     }
   }
 
   void _lights() {
-    for (final l in scenario.scene.lights) {
+    final lights = scenario.scene.lights;
+    for (var i = 0; i < lights.length; i++) {
+      final l = lights[i];
       if (l.state == LightState.off) continue;
-      final targets = l.at == LightPlacement.all
-          ? layout.roads.keys.toList()
-          : [Dir.fromJson(l.at.wire)];
+      final targets =
+          l.at == LightPlacement.all ? layout.roads.keys.toList() : [Dir.fromJson(l.at.wire)];
       for (final d in targets) {
         final rl = layout.roads[d];
-        if (rl == null) continue;
+        if (rl == null) {
+          _warn(
+            WarningCode.attachmentUnresolved,
+            'scene.lights[$i]',
+            'light is attached to ${d.wire} but no road faces that direction',
+          );
+          continue;
+        }
         _ops.add(LightGlyph(
           _roadside(rl, layout.boundaryDistance(d) + 14, 20),
           l.state,
@@ -284,8 +400,17 @@ class SceneBuilder {
     }
   }
 
-  /// A point beside the road, on the right of traffic arriving on it.
-  Vec2 _roadside(RoadLayout rl, double along, double clearance) {
-    return kCentre + rl.axis * along + rl.right * (-(rl.halfWidth + clearance));
+  /// Weather veil, above the scene but below the HUD.
+  void _atmosphere() {
+    if (palette.atmosphere == 0) return;
+    _ops.add(FillPolygon(
+      Layer.overlays,
+      const Rect(0, 0, kCanvas, kCanvas).corners,
+      palette.atmosphere,
+    ));
   }
+
+  /// A point beside the road, on the right of traffic arriving on it.
+  Vec2 _roadside(RoadLayout rl, double along, double clearance) =>
+      kCentre + rl.axis * along + rl.right * (-(rl.halfWidth + clearance));
 }

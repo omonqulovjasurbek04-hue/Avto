@@ -3,43 +3,23 @@
 //   dart run bin/render.dart ../content ../build/preview
 //
 // Used for eyeballing scenes during authoring and as the producer for the
-// golden-file snapshot tests.
+// golden-file snapshot tests. Content warnings are printed, never swallowed.
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:engine_dart/engine_dart.dart';
 import 'package:engine_dart/raster.dart';
 
 const int kOutputSize = 900;
 
-Uint8ListLike renderScenario(Scenario sc) {
+/// Renders one scenario, returning the PNG and anything the engine could not
+/// draw.
+({Uint8List png, List<ContentWarning> warnings}) renderScenario(Scenario sc) {
   final canvas = RasterCanvas(kOutputSize, kOutputSize, ss: 3);
-  // Logical 1000x1000 -> output pixels. The viewport scales; the model does not.
-  final scale = kOutputSize / kCanvas;
-  canvas.drawScene(_scaled(SceneBuilder(sc).build(), scale));
-  return canvas.toPng();
-}
-
-typedef Uint8ListLike = List<int>;
-
-/// Viewport transform applied at paint time, never baked into the model.
-RenderScene _scaled(RenderScene scene, double s) {
-  Vec2 f(Vec2 p) => Vec2(p.x * s, p.y * s);
-  List<Vec2> fs(List<Vec2> ps) => [for (final p in ps) f(p)];
-
-  return RenderScene([
-    for (final op in scene.ordered)
-      switch (op) {
-        FillPolygon o => FillPolygon(o.layer, fs(o.points), o.colour, actorId: o.actorId),
-        StrokePath o => StrokePath(o.layer, fs(o.points), o.colour,
-            width: o.width * s, closed: o.closed,
-            dash: o.dash == null ? null : [for (final d in o.dash!) d * s],
-            actorId: o.actorId),
-        FillCircle o => FillCircle(o.layer, f(o.centre), o.radius * s, o.colour, actorId: o.actorId),
-        SignGlyph o => SignGlyph(f(o.centre), o.code, o.size * s),
-        LightGlyph o => LightGlyph(f(o.centre), o.state, o.size * s),
-      }
-  ]);
+  final built = SceneBuilder(sc).build();
+  canvas.drawScene(Viewport(scale: kOutputSize / kCanvas).apply(built.scene));
+  return (png: canvas.toPng(), warnings: built.warnings);
 }
 
 void main(List<String> args) {
@@ -50,17 +30,20 @@ void main(List<String> args) {
   final inDir = Directory(args[0]);
   final outDir = Directory(args[1])..createSync(recursive: true);
 
-  final files = inDir
-      .listSync()
-      .whereType<File>()
-      .where((f) => f.path.endsWith('.json'))
-      .toList()
+  final files = inDir.listSync().whereType<File>().where((f) => f.path.endsWith('.json')).toList()
     ..sort((a, b) => a.path.compareTo(b.path));
 
+  var warningCount = 0;
   for (final f in files) {
     final sc = Scenario.fromJson(jsonDecode(f.readAsStringSync()) as Map<String, dynamic>);
-    final png = renderScenario(sc);
-    final out = File('${outDir.path}/${sc.id}.png')..writeAsBytesSync(png);
-    stdout.writeln('rendered ${sc.id}  ->  ${out.path}  (${png.length} bytes)');
+    final result = renderScenario(sc);
+    final out = File('${outDir.path}/${sc.id}.png')..writeAsBytesSync(result.png);
+    stdout.writeln('rendered ${sc.id}  ->  ${out.path}  (${result.png.length} bytes)');
+    for (final w in result.warnings) {
+      warningCount++;
+      stdout.writeln('  warning: $w');
+    }
   }
+
+  stdout.writeln('\n${files.length} scenario(s), $warningCount content warning(s)');
 }
