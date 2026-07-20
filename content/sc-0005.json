@@ -2,28 +2,71 @@
   "id": "sc-0005",
   "schema_version": 1,
   "question_id": "q-0005",
-
+  "topic": "priority_and_intersections",
   "scene": {
     "type": "t_junction",
     "roads": [
-      { "dir": "N", "lanes_in": 1, "lanes_out": 1, "priority": "main" },
-      { "dir": "S", "lanes_in": 1, "lanes_out": 1, "priority": "main" },
-      { "dir": "W", "lanes_in": 1, "lanes_out": 1, "priority": "secondary" }
+      {
+        "dir": "N",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "W",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      }
     ],
-    "signs": [{ "at": "W", "code": "2.4" }],
+    "signs": [
+      {
+        "at": "W",
+        "code": "2.4"
+      }
+    ],
     "markings": [
-      { "type": "give_way_line", "at": "W" },
-      { "type": "crosswalk", "at": "N" }
+      {
+        "type": "give_way_line",
+        "at": "W"
+      },
+      {
+        "type": "crosswalk",
+        "at": "N"
+      }
     ],
-    "lights": [{ "at": "all", "state": "off" }],
-    "conditions": { "time": "day", "weather": "clear" }
+    "lights": [
+      {
+        "at": "all",
+        "state": "off"
+      }
+    ],
+    "conditions": {
+      "time": "day",
+      "weather": "clear"
+    }
   },
-
   "actors": [
-    { "id": "ego", "kind": "car", "role": "player", "from": "W", "to": "S" },
-    { "id": "a1", "kind": "car", "from": "N", "to": "S" }
+    {
+      "id": "ego",
+      "kind": "car",
+      "role": "player",
+      "from": "W",
+      "to": "S"
+    },
+    {
+      "id": "a1",
+      "kind": "car",
+      "from": "N",
+      "to": "S"
+    }
   ],
-
   "question": {
     "text": {
       "uz": "T-shaklidagi chorrahaga qo'shilayotganda birinchi bo'lib kim o'tadi?",
@@ -34,19 +77,29 @@
       {
         "id": "o1",
         "refers_to": "a1",
-        "label": { "uz": "Bosh yo'ldagi avtomobil", "ru": "Автомобиль на главной дороге", "en": "The car on the main road" }
+        "label": {
+          "uz": "Bosh yo'ldagi avtomobil",
+          "ru": "Автомобиль на главной дороге",
+          "en": "The car on the main road"
+        }
       },
       {
         "id": "o2",
         "refers_to": "ego",
-        "label": { "uz": "Siz", "ru": "Вы", "en": "You" }
+        "label": {
+          "uz": "Siz",
+          "ru": "Вы",
+          "en": "You"
+        }
       }
     ],
     "correct": "o1"
   },
-
   "resolution": {
-    "order": ["a1", "ego"],
+    "order": [
+      "a1",
+      "ego"
+    ],
     "rule": {
       "code": "13.9",
       "text": {
@@ -56,7 +109,10 @@
       }
     },
     "wrong_outcomes": {
-      "o2": { "type": "collision", "with": "a1" }
+      "o2": {
+        "type": "collision",
+        "with": "a1"
+      }
     }
   }
 }

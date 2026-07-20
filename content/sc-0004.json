@@ -2,31 +2,85 @@
   "id": "sc-0004",
   "schema_version": 1,
   "question_id": "q-0004",
-
+  "topic": "priority_and_intersections",
   "scene": {
     "type": "crossroads_4way",
     "roads": [
-      { "dir": "N", "lanes_in": 1, "lanes_out": 1, "priority": "main" },
-      { "dir": "S", "lanes_in": 1, "lanes_out": 1, "priority": "main" },
-      { "dir": "E", "lanes_in": 1, "lanes_out": 1, "priority": "secondary" },
-      { "dir": "W", "lanes_in": 1, "lanes_out": 1, "priority": "secondary" }
+      {
+        "dir": "N",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "E",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      },
+      {
+        "dir": "W",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      }
     ],
     "signs": [
-      { "at": "N", "code": "2.1" },
-      { "at": "S", "code": "2.1" },
-      { "at": "E", "code": "2.4" },
-      { "at": "W", "code": "2.4" }
+      {
+        "at": "N",
+        "code": "2.1"
+      },
+      {
+        "at": "S",
+        "code": "2.1"
+      },
+      {
+        "at": "E",
+        "code": "2.4"
+      },
+      {
+        "at": "W",
+        "code": "2.4"
+      }
     ],
-    "markings": [{ "type": "dashed_line", "at": "S" }],
-    "lights": [{ "at": "all", "state": "off" }],
-    "conditions": { "time": "day", "weather": "clear" }
+    "markings": [
+      {
+        "type": "dashed_line",
+        "at": "S"
+      }
+    ],
+    "lights": [
+      {
+        "at": "all",
+        "state": "off"
+      }
+    ],
+    "conditions": {
+      "time": "day",
+      "weather": "clear"
+    }
   },
-
   "actors": [
-    { "id": "ego", "kind": "car", "role": "player", "from": "S", "to": "W" },
-    { "id": "a1", "kind": "car", "from": "N", "to": "S" }
+    {
+      "id": "ego",
+      "kind": "car",
+      "role": "player",
+      "from": "S",
+      "to": "W"
+    },
+    {
+      "id": "a1",
+      "kind": "car",
+      "from": "N",
+      "to": "S"
+    }
   ],
-
   "question": {
     "text": {
       "uz": "Chapga burilayotganda birinchi bo'lib kim o'tadi?",
@@ -37,19 +91,29 @@
       {
         "id": "o1",
         "refers_to": "a1",
-        "label": { "uz": "Qarama-qarshi kelayotgan avtomobil", "ru": "Встречный автомобиль", "en": "The oncoming car" }
+        "label": {
+          "uz": "Qarama-qarshi kelayotgan avtomobil",
+          "ru": "Встречный автомобиль",
+          "en": "The oncoming car"
+        }
       },
       {
         "id": "o2",
         "refers_to": "ego",
-        "label": { "uz": "Siz", "ru": "Вы", "en": "You" }
+        "label": {
+          "uz": "Siz",
+          "ru": "Вы",
+          "en": "You"
+        }
       }
     ],
     "correct": "o1"
   },
-
   "resolution": {
-    "order": ["a1", "ego"],
+    "order": [
+      "a1",
+      "ego"
+    ],
     "rule": {
       "code": "13.12",
       "text": {
@@ -59,7 +123,10 @@
       }
     },
     "wrong_outcomes": {
-      "o2": { "type": "collision", "with": "a1" }
+      "o2": {
+        "type": "collision",
+        "with": "a1"
+      }
     }
   }
 }

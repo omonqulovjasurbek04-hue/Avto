@@ -14,9 +14,23 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SCHEMA_PATH = path.join(ROOT, 'schema', 'scenario.schema.json');
-const schema = JSON.parse(fs.readFileSync(SCHEMA_PATH, 'utf8'));
-const defs = schema.$defs;
+const SCHEMA_DIR = path.join(ROOT, 'schema');
+
+// Both schemas contribute types. scenario.schema.json owns the shared $defs
+// (LocalizedText, Rule, Topic, the enums); question.schema.json refs into it.
+// Names must not collide across files - the check below enforces that.
+const SCHEMA_FILES = ['scenario.schema.json', 'question.schema.json'];
+
+const defs = {};
+for (const file of SCHEMA_FILES) {
+  const doc = JSON.parse(fs.readFileSync(path.join(SCHEMA_DIR, file), 'utf8'));
+  for (const [name, def] of Object.entries(doc.$defs || {})) {
+    if (defs[name]) {
+      throw new Error(`type name "${name}" is defined in more than one schema file`);
+    }
+    defs[name] = def;
+  }
+}
 
 const BANNER = (lang) =>
   `${lang === 'dart' ? '//' : '//'} GENERATED FILE - DO NOT EDIT.\n` +
@@ -25,7 +39,10 @@ const BANNER = (lang) =>
 
 // ---------------------------------------------------------------- classification
 
-const refName = (s) => (s.$ref ? s.$ref.replace('#/$defs/', '') : null);
+// Handles both "#/$defs/Foo" and "other.schema.json#/$defs/Foo"; because all
+// $defs are merged into one namespace above, the file part carries no meaning
+// beyond documentation.
+const refName = (s) => (s.$ref ? s.$ref.split('#/$defs/').pop() : null);
 const isEnumDef = (s) => s.type === 'string' && Array.isArray(s.enum);
 const isMapDef = (s) => s.type === 'object' && !s.properties && !!s.additionalProperties;
 const isObjectDef = (s) => s.type === 'object' && !!s.properties;
@@ -262,7 +279,7 @@ function write(p, content) {
   console.log('  wrote ' + path.relative(ROOT, p));
 }
 
-console.log('codegen: schema/scenario.schema.json');
+console.log('codegen: ' + SCHEMA_FILES.map((f) => 'schema/' + f).join(', '));
 const dart = genDart();
 const ts = genTs();
 write(path.join(ROOT, 'engine_dart', 'lib', 'src', 'generated', 'scenario.g.dart'), dart);

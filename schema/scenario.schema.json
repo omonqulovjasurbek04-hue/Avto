@@ -9,11 +9,12 @@
     "Scenario": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "schema_version", "question_id", "scene", "actors", "question", "resolution"],
+      "required": ["id", "schema_version", "question_id", "topic", "scene", "actors", "question", "resolution"],
       "properties": {
         "id": { "type": "string", "pattern": "^sc-[0-9]{4,}$" },
         "schema_version": { "type": "integer", "const": 1 },
         "question_id": { "type": "string", "pattern": "^q-[0-9]{4,}$" },
+        "topic": { "$ref": "#/$defs/Topic" },
         "scene": { "$ref": "#/$defs/Scene" },
         "actors": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "$ref": "#/$defs/Actor" } },
         "question": { "$ref": "#/$defs/Question" },
@@ -175,6 +176,26 @@
       "minProperties": 1,
       "propertyNames": { "pattern": "^[a-z]{2}(-[A-Z][a-z]{3})?$" },
       "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+
+    "Topic": {
+      "type": "string",
+      "description": "Curriculum area. Drives the weak-point map and spaced repetition, so it must be stable once content ships.",
+      "enum": [
+        "priority_and_intersections",
+        "signs",
+        "markings",
+        "traffic_lights_and_signals",
+        "speed_and_distance",
+        "overtaking_and_passing",
+        "stopping_and_parking",
+        "pedestrians_and_crossings",
+        "railway_crossings",
+        "special_vehicles",
+        "vehicle_condition",
+        "documents_and_liability",
+        "first_aid"
+      ]
     },
 
     "SceneType": {

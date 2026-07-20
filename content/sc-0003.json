@@ -2,24 +2,61 @@
   "id": "sc-0003",
   "schema_version": 1,
   "question_id": "q-0003",
-
+  "topic": "priority_and_intersections",
   "scene": {
     "type": "crossroads_4way",
     "roads": [
-      { "dir": "N", "lanes_in": 1, "lanes_out": 1, "priority": "equal" },
-      { "dir": "S", "lanes_in": 1, "lanes_out": 1, "priority": "equal" },
-      { "dir": "E", "lanes_in": 1, "lanes_out": 1, "priority": "equal" },
-      { "dir": "W", "lanes_in": 1, "lanes_out": 1, "priority": "equal" }
+      {
+        "dir": "N",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "equal"
+      },
+      {
+        "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "equal"
+      },
+      {
+        "dir": "E",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "equal"
+      },
+      {
+        "dir": "W",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "equal"
+      }
     ],
-    "lights": [{ "at": "all", "state": "off" }],
-    "conditions": { "time": "day", "weather": "clear" }
+    "lights": [
+      {
+        "at": "all",
+        "state": "off"
+      }
+    ],
+    "conditions": {
+      "time": "day",
+      "weather": "clear"
+    }
   },
-
   "actors": [
-    { "id": "ego", "kind": "car", "role": "player", "from": "S", "to": "N" },
-    { "id": "a1", "kind": "car", "from": "E", "to": "W" }
+    {
+      "id": "ego",
+      "kind": "car",
+      "role": "player",
+      "from": "S",
+      "to": "N"
+    },
+    {
+      "id": "a1",
+      "kind": "car",
+      "from": "E",
+      "to": "W"
+    }
   ],
-
   "question": {
     "text": {
       "uz": "Teng ahamiyatli chorrahada birinchi bo'lib kim o'tadi?",
@@ -30,19 +67,29 @@
       {
         "id": "o1",
         "refers_to": "a1",
-        "label": { "uz": "O'ngdan kelayotgan avtomobil", "ru": "Автомобиль, приближающийся справа", "en": "The car approaching from the right" }
+        "label": {
+          "uz": "O'ngdan kelayotgan avtomobil",
+          "ru": "Автомобиль, приближающийся справа",
+          "en": "The car approaching from the right"
+        }
       },
       {
         "id": "o2",
         "refers_to": "ego",
-        "label": { "uz": "Siz", "ru": "Вы", "en": "You" }
+        "label": {
+          "uz": "Siz",
+          "ru": "Вы",
+          "en": "You"
+        }
       }
     ],
     "correct": "o1"
   },
-
   "resolution": {
-    "order": ["a1", "ego"],
+    "order": [
+      "a1",
+      "ego"
+    ],
     "rule": {
       "code": "13.11",
       "text": {
@@ -52,7 +99,10 @@
       }
     },
     "wrong_outcomes": {
-      "o2": { "type": "collision", "with": "a1" }
+      "o2": {
+        "type": "collision",
+        "with": "a1"
+      }
     }
   }
 }

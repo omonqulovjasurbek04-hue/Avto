@@ -2,6 +2,38 @@
 // Source: schema/scenario.schema.json
 // Regenerate with: node tools/codegen.js
 
+/** Curriculum area. Drives the weak-point map and spaced repetition, so it must be stable once content ships. */
+export type Topic =
+  | "priority_and_intersections"
+  | "signs"
+  | "markings"
+  | "traffic_lights_and_signals"
+  | "speed_and_distance"
+  | "overtaking_and_passing"
+  | "stopping_and_parking"
+  | "pedestrians_and_crossings"
+  | "railway_crossings"
+  | "special_vehicles"
+  | "vehicle_condition"
+  | "documents_and_liability"
+  | "first_aid";
+
+export const TopicValues: readonly Topic[] = [
+  "priority_and_intersections",
+  "signs",
+  "markings",
+  "traffic_lights_and_signals",
+  "speed_and_distance",
+  "overtaking_and_passing",
+  "stopping_and_parking",
+  "pedestrians_and_crossings",
+  "railway_crossings",
+  "special_vehicles",
+  "vehicle_condition",
+  "documents_and_liability",
+  "first_aid",
+] as const;
+
 /** SceneType */
 export type SceneType =
   | "crossroads_4way"
@@ -220,6 +252,16 @@ export const WeatherValues: readonly Weather[] = [
   "fog",
 ] as const;
 
+/** MediaKind */
+export type MediaKind =
+  | "image"
+  | "diagram";
+
+export const MediaKindValues: readonly MediaKind[] = [
+  "image",
+  "diagram",
+] as const;
+
 /** Locale code -> string. No locale is privileged; completeness is reported by tooling, not enforced here. */
 export type LocalizedText = Record<string, string>;
 
@@ -227,6 +269,7 @@ export interface Scenario {
   id: string;
   schema_version: number;
   question_id: string;
+  topic: Topic;
   scene: Scene;
   actors: Actor[];
   question: Question;
@@ -323,6 +366,33 @@ export interface Outcome {
   with?: string;
 }
 
+export interface QuestionBankEntry {
+  id: string;
+  schema_version: number;
+  topic: Topic;
+  text: Record<string, string>;
+  options: PlainOption[];
+  correct: string;
+  rule: Rule;
+  /** Present only for spatial questions. The named scenario owns the scene, actors and resolution; its embedded `question` block is authoritative for wording, and this entry is the index record. */
+  scenario_id?: string;
+  /** Static illustration for non-spatial questions that need one. Never video - see principle 5. */
+  media?: Media;
+  /** Available before purchase. The free tier is capped at 25 questions. */
+  free_tier?: boolean;
+}
+
+export interface PlainOption {
+  id: string;
+  label: Record<string, string>;
+}
+
+export interface Media {
+  kind: MediaKind;
+  /** Path relative to the media root. A file name, not prose. */
+  asset: string;
+}
+
 /** Property defaults declared in the schema, by "Type.property". */
 export const SCHEMA_DEFAULTS: Record<string, unknown> = {
   "Scene.signs": [],
@@ -334,4 +404,5 @@ export const SCHEMA_DEFAULTS: Record<string, unknown> = {
   "Actor.lane_in": 0,
   "Actor.lane_out": 0,
   "Resolution.wrong_outcomes": {},
+  "QuestionBankEntry.free_tier": false,
 };

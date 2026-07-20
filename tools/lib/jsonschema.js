@@ -3,10 +3,24 @@
  * Minimal JSON Schema (draft 2020-12) validator covering exactly the keywords
  * scenario.schema.json uses. Deliberately dependency-free.
  *
- * Supported: $ref, type, const, enum, required, properties, additionalProperties,
- * propertyNames, items, minItems, maxItems, minLength, minProperties,
- * minimum, maximum, pattern.
+ * Supported: $ref (local and cross-file), type, const, enum, required,
+ * properties, additionalProperties, propertyNames, items, minItems, maxItems,
+ * minLength, minProperties, minimum, maximum, pattern.
  */
+
+const fs = require('fs');
+const path = require('path');
+
+/** Cache of sibling schema files loaded to satisfy cross-file $refs. */
+const _fileCache = new Map();
+
+function loadSchemaFile(dir, name) {
+  const p = path.join(dir, name);
+  if (!_fileCache.has(p)) {
+    _fileCache.set(p, JSON.parse(fs.readFileSync(p, 'utf8')));
+  }
+  return _fileCache.get(p);
+}
 
 function typeOk(value, t) {
   switch (t) {
@@ -22,19 +36,46 @@ function typeOk(value, t) {
 }
 
 /**
+ * Resolves a JSON pointer fragment like `#/$defs/Foo` against [doc].
+ */
+function resolvePointer(doc, fragment) {
+  if (!fragment || fragment === '#') return doc;
+  return fragment
+    .replace(/^#\//, '')
+    .split('/')
+    .reduce((o, k) => (o == null ? o : o[k.replace(/~1/g, '/').replace(/~0/g, '~')]), doc);
+}
+
+/**
+ * @param {object} schema   schema node to check against
+ * @param {*}      value    the value being validated
+ * @param {object} root     document the schema node came from
+ * @param {string} at       path into the value, for error messages
+ * @param {string} baseDir  directory used to resolve cross-file $refs
  * @returns {string[]} error messages, empty when valid.
  */
-function validate(schema, value, root = schema, at = '') {
+function validate(schema, value, root = schema, at = '', baseDir = null) {
   const errs = [];
   const here = at || '(root)';
 
   if (schema.$ref) {
-    const target = schema.$ref
-      .replace(/^#\//, '')
-      .split('/')
-      .reduce((o, k) => o[k.replace(/~1/g, '/').replace(/~0/g, '~')], root);
+    const [file, fragment] = schema.$ref.split('#');
+    let target;
+    let targetRoot = root;
+    let targetDir = baseDir;
+
+    if (file) {
+      // Cross-file reference, e.g. "scenario.schema.json#/$defs/Topic".
+      if (!baseDir) return [`${here}: cross-file $ref ${schema.$ref} needs a baseDir`];
+      targetRoot = loadSchemaFile(baseDir, file);
+      targetDir = path.dirname(path.join(baseDir, file));
+      target = resolvePointer(targetRoot, fragment ? '#' + fragment : '#');
+    } else {
+      target = resolvePointer(root, schema.$ref);
+    }
+
     if (!target) return [`${here}: unresolvable $ref ${schema.$ref}`];
-    return validate(target, value, root, at);
+    return validate(target, value, targetRoot, at, targetDir);
   }
 
   if (schema.type !== undefined) {
@@ -73,7 +114,9 @@ function validate(schema, value, root = schema, at = '') {
       errs.push(`${here}: allows at most ${schema.maxItems} item(s)`);
     }
     if (schema.items) {
-      value.forEach((v, i) => errs.push(...validate(schema.items, v, root, `${at}[${i}]`)));
+      value.forEach((v, i) =>
+        errs.push(...validate(schema.items, v, root, `${at}[${i}]`, baseDir))
+      );
     }
   }
 
@@ -87,18 +130,20 @@ function validate(schema, value, root = schema, at = '') {
     }
     if (schema.propertyNames) {
       for (const k of keys) {
-        const sub = validate(schema.propertyNames, k, root, `${at}/${k}`);
+        const sub = validate(schema.propertyNames, k, root, `${at}/${k}`, baseDir);
         if (sub.length) errs.push(`${here}: property name "${k}" is invalid (${sub[0].split(': ').slice(1).join(': ')})`);
       }
     }
     const props = schema.properties || {};
     for (const k of keys) {
       if (props[k]) {
-        errs.push(...validate(props[k], value[k], root, `${at}.${k}`));
+        errs.push(...validate(props[k], value[k], root, `${at}.${k}`, baseDir));
       } else if (schema.additionalProperties === false) {
         errs.push(`${here}: unknown property "${k}"`);
       } else if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
-        errs.push(...validate(schema.additionalProperties, value[k], root, `${at}.${k}`));
+        errs.push(
+          ...validate(schema.additionalProperties, value[k], root, `${at}.${k}`, baseDir)
+        );
       }
     }
   }
@@ -106,4 +151,4 @@ function validate(schema, value, root = schema, at = '') {
   return errs;
 }
 
-module.exports = { validate };
+module.exports = { validate, resolvePointer, loadSchemaFile };

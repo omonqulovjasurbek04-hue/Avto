@@ -4,6 +4,35 @@
 
 // ignore_for_file: unnecessary_cast, prefer_const_constructors
 
+/// Curriculum area. Drives the weak-point map and spaced repetition, so it must be stable once content ships.
+enum Topic {
+  priorityAndIntersections("priority_and_intersections"),
+  signs("signs"),
+  markings("markings"),
+  trafficLightsAndSignals("traffic_lights_and_signals"),
+  speedAndDistance("speed_and_distance"),
+  overtakingAndPassing("overtaking_and_passing"),
+  stoppingAndParking("stopping_and_parking"),
+  pedestriansAndCrossings("pedestrians_and_crossings"),
+  railwayCrossings("railway_crossings"),
+  specialVehicles("special_vehicles"),
+  vehicleCondition("vehicle_condition"),
+  documentsAndLiability("documents_and_liability"),
+  firstAid("first_aid");
+
+  const Topic(this.wire);
+
+  /// The exact string used in scenario JSON.
+  final String wire;
+
+  String toJson() => wire;
+
+  static Topic fromJson(String v) => values.firstWhere(
+        (e) => e.wire == v,
+        orElse: () => throw FormatException('unknown Topic: $v'),
+      );
+}
+
 /// SceneType
 enum SceneType {
   crossroads4way("crossroads_4way"),
@@ -269,10 +298,29 @@ enum Weather {
       );
 }
 
+/// MediaKind
+enum MediaKind {
+  image("image"),
+  diagram("diagram");
+
+  const MediaKind(this.wire);
+
+  /// The exact string used in scenario JSON.
+  final String wire;
+
+  String toJson() => wire;
+
+  static MediaKind fromJson(String v) => values.firstWhere(
+        (e) => e.wire == v,
+        orElse: () => throw FormatException('unknown MediaKind: $v'),
+      );
+}
+
 class Scenario {
   final String id;
   final int schemaVersion;
   final String questionId;
+  final Topic topic;
   final Scene scene;
   final List<Actor> actors;
   final Question question;
@@ -282,6 +330,7 @@ class Scenario {
     required this.id,
     required this.schemaVersion,
     required this.questionId,
+    required this.topic,
     required this.scene,
     required this.actors,
     required this.question,
@@ -292,6 +341,7 @@ class Scenario {
       id: j["id"] as String,
       schemaVersion: j["schema_version"] as int,
       questionId: j["question_id"] as String,
+      topic: Topic.fromJson(j["topic"] as String),
       scene: Scene.fromJson(j["scene"] as Map<String, dynamic>),
       actors: (j["actors"] as List<dynamic>).map((e) => Actor.fromJson(e as Map<String, dynamic>)).toList(growable: false),
       question: Question.fromJson(j["question"] as Map<String, dynamic>),
@@ -302,6 +352,7 @@ class Scenario {
         "id": id,
         "schema_version": schemaVersion,
         "question_id": questionId,
+        "topic": topic.toJson(),
         "scene": scene.toJson(),
         "actors": actors.map((e) => e.toJson()).toList(growable: false),
         "question": question.toJson(),
@@ -633,6 +684,102 @@ class Outcome {
   Map<String, dynamic> toJson() => <String, dynamic>{
         "type": type.toJson(),
         if (with_ != null) "with": with_!,
+      };
+}
+
+class QuestionBankEntry {
+  final String id;
+  final int schemaVersion;
+  final Topic topic;
+  final Map<String, String> text;
+  final List<PlainOption> options;
+  final String correct;
+  final Rule rule;
+  /// Present only for spatial questions. The named scenario owns the scene, actors and resolution; its embedded `question` block is authoritative for wording, and this entry is the index record.
+  final String? scenarioId;
+  /// Static illustration for non-spatial questions that need one. Never video - see principle 5.
+  final Media? media;
+  /// Available before purchase. The free tier is capped at 25 questions.
+  final bool freeTier;
+
+  const QuestionBankEntry({
+    required this.id,
+    required this.schemaVersion,
+    required this.topic,
+    required this.text,
+    required this.options,
+    required this.correct,
+    required this.rule,
+    this.scenarioId,
+    this.media,
+    this.freeTier = false,
+  });
+
+  static QuestionBankEntry fromJson(Map<String, dynamic> j) => QuestionBankEntry(
+      id: j["id"] as String,
+      schemaVersion: j["schema_version"] as int,
+      topic: Topic.fromJson(j["topic"] as String),
+      text: (j["text"] as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String)),
+      options: (j["options"] as List<dynamic>).map((e) => PlainOption.fromJson(e as Map<String, dynamic>)).toList(growable: false),
+      correct: j["correct"] as String,
+      rule: Rule.fromJson(j["rule"] as Map<String, dynamic>),
+      scenarioId: j["scenario_id"] == null ? null : j["scenario_id"] as String,
+      media: j["media"] == null ? null : Media.fromJson(j["media"] as Map<String, dynamic>),
+      freeTier: j["free_tier"] == null ? false : j["free_tier"] as bool,
+    );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        "id": id,
+        "schema_version": schemaVersion,
+        "topic": topic.toJson(),
+        "text": text,
+        "options": options.map((e) => e.toJson()).toList(growable: false),
+        "correct": correct,
+        "rule": rule.toJson(),
+        if (scenarioId != null) "scenario_id": scenarioId!,
+        if (media != null) "media": media!.toJson(),
+        "free_tier": freeTier,
+      };
+}
+
+class PlainOption {
+  final String id;
+  final Map<String, String> label;
+
+  const PlainOption({
+    required this.id,
+    required this.label,
+  });
+
+  static PlainOption fromJson(Map<String, dynamic> j) => PlainOption(
+      id: j["id"] as String,
+      label: (j["label"] as Map<String, dynamic>).map((k, v) => MapEntry(k, v as String)),
+    );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        "id": id,
+        "label": label,
+      };
+}
+
+class Media {
+  final MediaKind kind;
+  /// Path relative to the media root. A file name, not prose.
+  final String asset;
+
+  const Media({
+    required this.kind,
+    required this.asset,
+  });
+
+  static Media fromJson(Map<String, dynamic> j) => Media(
+      kind: MediaKind.fromJson(j["kind"] as String),
+      asset: j["asset"] as String,
+    );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        "kind": kind.toJson(),
+        "asset": asset,
       };
 }
 
