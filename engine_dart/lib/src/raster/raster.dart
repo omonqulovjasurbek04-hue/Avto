@@ -239,11 +239,77 @@ List<int> _chunk(String type, List<int> data) {
   final body = <int>[...type.codeUnits, ...data];
   final crc = _crc32(body);
   return [
-    (data.length >> 24) & 0xFF, (data.length >> 16) & 0xFF,
-    (data.length >> 8) & 0xFF, data.length & 0xFF,
+    (data.length >> 24) & 0xFF,
+    (data.length >> 16) & 0xFF,
+    (data.length >> 8) & 0xFF,
+    data.length & 0xFF,
     ...body,
-    (crc >> 24) & 0xFF, (crc >> 16) & 0xFF, (crc >> 8) & 0xFF, crc & 0xFF,
+    (crc >> 24) & 0xFF,
+    (crc >> 16) & 0xFF,
+    (crc >> 8) & 0xFF,
+    crc & 0xFF,
   ];
+}
+
+/// Decoded image, as produced by [decodePng].
+class RawImage {
+  final Uint8List rgba;
+  final int width;
+  final int height;
+
+  const RawImage(this.rgba, this.width, this.height);
+}
+
+/// Reads back a PNG written by [encodePng].
+///
+/// Deliberately narrow: filter type 0, colour type 6, bit depth 8 - exactly
+/// what this file emits. Golden tests compare decoded pixels rather than file
+/// bytes, so a different zlib build cannot fail the suite.
+RawImage decodePng(Uint8List bytes) {
+  var offset = 8; // skip signature
+  int readU32() {
+    final v = (bytes[offset] << 24) |
+        (bytes[offset + 1] << 16) |
+        (bytes[offset + 2] << 8) |
+        bytes[offset + 3];
+    offset += 4;
+    return v;
+  }
+
+  var width = 0;
+  var height = 0;
+  final idat = <int>[];
+
+  while (offset < bytes.length) {
+    final length = readU32();
+    final type = String.fromCharCodes(bytes.sublist(offset, offset + 4));
+    offset += 4;
+    final data = bytes.sublist(offset, offset + length);
+    offset += length + 4; // skip CRC
+
+    switch (type) {
+      case 'IHDR':
+        width = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+        height = (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7];
+        if (data[8] != 8 || data[9] != 6) {
+          throw FormatException('expected 8-bit RGBA, got depth ${data[8]} type ${data[9]}');
+        }
+      case 'IDAT':
+        idat.addAll(data);
+      case 'IEND':
+        offset = bytes.length;
+    }
+  }
+
+  final raw = ZLibCodec().decode(idat);
+  final rgba = Uint8List(width * height * 4);
+  final stride = width * 4;
+  for (var y = 0; y < height; y++) {
+    final filter = raw[y * (stride + 1)];
+    if (filter != 0) throw FormatException('unsupported PNG filter $filter on row $y');
+    rgba.setRange(y * stride, (y + 1) * stride, raw, y * (stride + 1) + 1);
+  }
+  return RawImage(rgba, width, height);
 }
 
 /// Minimal RGBA PNG writer. Filter type 0 on every scanline keeps this simple
@@ -258,13 +324,30 @@ Uint8List encodePng(Uint8List rgba, int width, int height) {
   }
 
   final ihdr = <int>[
-    (width >> 24) & 0xFF, (width >> 16) & 0xFF, (width >> 8) & 0xFF, width & 0xFF,
-    (height >> 24) & 0xFF, (height >> 16) & 0xFF, (height >> 8) & 0xFF, height & 0xFF,
-    8, 6, 0, 0, 0,
+    (width >> 24) & 0xFF,
+    (width >> 16) & 0xFF,
+    (width >> 8) & 0xFF,
+    width & 0xFF,
+    (height >> 24) & 0xFF,
+    (height >> 16) & 0xFF,
+    (height >> 8) & 0xFF,
+    height & 0xFF,
+    8,
+    6,
+    0,
+    0,
+    0,
   ];
 
   return Uint8List.fromList([
-    137, 80, 78, 71, 13, 10, 26, 10,
+    137,
+    80,
+    78,
+    71,
+    13,
+    10,
+    26,
+    10,
     ..._chunk('IHDR', ihdr),
     ..._chunk('IDAT', ZLibCodec(level: 6).encode(raw)),
     ..._chunk('IEND', const []),
