@@ -1,0 +1,26 @@
+{
+  "$comment": "Registry of YHQ sign and rule codes used by content. NOT a schema - the validator reads it to warn about codes nobody has checked against the official text yet.",
+
+  "_note": [
+    "Every code below was drafted from Russian-PDD-style numbering and is",
+    "UNVERIFIED against the official Uzbek YHQ (Yo'l harakati qoidalari).",
+    "A domain expert must confirm each one and flip `verified` to true.",
+    "Until then the validator emits a warning per use, so the debt stays visible.",
+    "Fixing this is cheap across 5 scenarios and expensive across 1200."
+  ],
+
+  "signs": {
+    "2.1": { "verified": false, "meaning_en": "Priority road" },
+    "2.2": { "verified": false, "meaning_en": "End of priority road" },
+    "2.3": { "verified": false, "meaning_en": "Intersection with a secondary road" },
+    "2.4": { "verified": false, "meaning_en": "Give way" },
+    "2.5": { "verified": false, "meaning_en": "No entry without stopping (STOP)" },
+    "3.24": { "verified": false, "meaning_en": "Maximum speed limit" }
+  },
+
+  "rules": {
+    "13.9": { "verified": false, "meaning_en": "Secondary road must give way to the main road" },
+    "13.11": { "verified": false, "meaning_en": "Equal-priority intersection: give way to the right; trams have priority over non-rail vehicles" },
+    "13.12": { "verified": false, "meaning_en": "Turning left or reversing: give way to oncoming traffic going straight" }
+  }
+}

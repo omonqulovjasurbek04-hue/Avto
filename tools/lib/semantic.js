@@ -6,7 +6,31 @@
  * failures - the editor surfaces them verbatim.
  */
 
+const fs = require('fs');
+const path = require('path');
+
 const CARDINAL = ['N', 'S', 'E', 'W'];
+
+const REGISTRY = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '..', '..', 'schema', 'yhq_registry.json'), 'utf8')
+);
+
+/**
+ * Marking types the Dart renderer has artwork for.
+ * Mirrors `kRenderedMarkings` in engine_dart/lib/src/render/scene_builder.dart.
+ * Kept here as well so an author is told before a render is ever attempted.
+ */
+const RENDERED_MARKINGS = new Set([
+  'stop_line',
+  'give_way_line',
+  'crosswalk',
+  'solid_line',
+  'dashed_line',
+  'double_solid',
+]);
+
+/** Markings that describe a road's centreline rather than a point on it. */
+const CENTRELINE_MARKINGS = new Set(['solid_line', 'dashed_line', 'double_solid']);
 
 /** Required road directions per scene type. `null` = engine has no layout rule yet. */
 const SCENE_ROADS = {
@@ -99,6 +123,41 @@ function check(sc, { fileBase } = {}) {
   attached(sc.scene.signs, 'scene.signs');
   attached(sc.scene.markings, 'scene.markings');
   attached(sc.scene.lights, 'scene.lights');
+
+  // --- renderability: declared but undrawable content ---------------------
+  (sc.scene.markings || []).forEach((m, i) => {
+    if (!RENDERED_MARKINGS.has(m.type)) {
+      warnings.push(
+        `scene.markings[${i}]: "${m.type}" has no renderer artwork yet and will not appear`
+      );
+    } else if (m.at === undefined && !CENTRELINE_MARKINGS.has(m.type)) {
+      warnings.push(`scene.markings[${i}]: "${m.type}" needs an "at" road to be placed against`);
+    }
+  });
+
+  // --- YHQ code provenance -------------------------------------------------
+  (sc.scene.signs || []).forEach((s, i) => {
+    const entry = REGISTRY.signs[s.code];
+    if (!entry) {
+      warnings.push(`scene.signs[${i}]: sign code "${s.code}" is not in schema/yhq_registry.json`);
+    } else if (!entry.verified) {
+      warnings.push(
+        `scene.signs[${i}]: sign code "${s.code}" is unverified against the official YHQ text`
+      );
+    }
+  });
+
+  const ruleCode = sc.resolution?.rule?.code;
+  if (ruleCode) {
+    const entry = REGISTRY.rules[ruleCode];
+    if (!entry) {
+      warnings.push(`resolution.rule.code: "${ruleCode}" is not in schema/yhq_registry.json`);
+    } else if (!entry.verified) {
+      warnings.push(
+        `resolution.rule.code: "${ruleCode}" is unverified against the official YHQ text`
+      );
+    }
+  }
 
   if (sc.scene.tram_track) {
     for (const d of sc.scene.tram_track.along.split('')) {

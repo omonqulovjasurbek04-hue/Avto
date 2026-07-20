@@ -45,10 +45,13 @@ for (const input of inputs) {
   }
 }
 
+const SCHEMA_DIR = path.join(ROOT, 'schema');
+
 const results = [];
 let errorCount = 0;
 let warningCount = 0;
 const seenIds = new Map();
+const seenQuestionIds = new Map();
 
 for (const file of files) {
   const rel = path.relative(ROOT, file).replace(/\\/g, '/');
@@ -63,7 +66,7 @@ for (const file of files) {
   }
 
   if (sc) {
-    errors.push(...validate(schema, sc, schema));
+    errors.push(...validate(schema, sc, schema, '', SCHEMA_DIR));
     if (errors.length === 0) {
       const fileBase = path.basename(file, '.json');
       const sem = check(sc, { fileBase });
@@ -73,6 +76,15 @@ for (const file of files) {
       const prev = seenIds.get(sc.id);
       if (prev) errors.push(`duplicate scenario id "${sc.id}" (also in ${prev})`);
       else seenIds.set(sc.id, rel);
+
+      // Two scenarios pointing at one question would make progress tracking
+      // and spaced repetition ambiguous.
+      const prevQ = seenQuestionIds.get(sc.question_id);
+      if (prevQ) {
+        errors.push(`duplicate question_id "${sc.question_id}" (also in ${prevQ})`);
+      } else {
+        seenQuestionIds.set(sc.question_id, rel);
+      }
     }
   }
 
