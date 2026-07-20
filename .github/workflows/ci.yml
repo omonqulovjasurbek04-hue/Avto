@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate-content:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Codegen is up to date
+        run: |
+          node tools/codegen.js
+          git diff --exit-code -- engine_dart/lib/src/generated editor/src/generated schema/generated
+      - name: Validate scenarios
+        run: node tools/validate.js content
+
+  engine:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.5.4
+      - name: Analyze
+        working-directory: engine_dart
+        run: |
+          dart pub get
+          dart analyze --fatal-infos
+      - name: Test (unit + golden snapshots)
+        working-directory: engine_dart
+        run: dart test
+      - name: Render previews
+        working-directory: engine_dart
+        run: dart run bin/render.dart ../content ../build/preview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scene-previews
+          path: build/preview/*.png
