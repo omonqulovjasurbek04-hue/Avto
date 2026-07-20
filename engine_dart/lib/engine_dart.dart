@@ -7,6 +7,8 @@ library;
 export 'src/generated/scenario.g.dart';
 export 'src/geom.dart';
 export 'src/layout.dart';
+export 'src/motion/curve.dart';
+export 'src/motion/trajectory.dart';
 export 'src/render/content_warning.dart';
 export 'src/render/draw_op.dart';
 export 'src/render/palette.dart';
