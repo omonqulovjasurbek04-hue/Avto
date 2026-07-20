@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yhq.uz/schema/scenario.schema.json",
+  "title": "Scenario",
+  "description": "Declarative scene data for one driving-rules question. Contains no human-readable text outside `question` and `resolution.rule`.",
+  "$ref": "#/$defs/Scenario",
+
+  "$defs": {
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema_version", "question_id", "scene", "actors", "question", "resolution"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^sc-[0-9]{4,}$" },
+        "schema_version": { "type": "integer", "const": 1 },
+        "question_id": { "type": "string", "pattern": "^q-[0-9]{4,}$" },
+        "scene": { "$ref": "#/$defs/Scene" },
+        "actors": { "type": "array", "minItems": 1, "maxItems": 12, "items": { "$ref": "#/$defs/Actor" } },
+        "question": { "$ref": "#/$defs/Question" },
+        "resolution": { "$ref": "#/$defs/Resolution" }
+      }
+    },
+
+    "Scene": {
+      "type": "object",
+      "description": "Language-independent. No human-readable strings may appear here.",
+      "additionalProperties": false,
+      "required": ["type", "roads"],
+      "properties": {
+        "type": { "$ref": "#/$defs/SceneType" },
+        "roads": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/Road" } },
+        "tram_track": { "$ref": "#/$defs/TramTrack" },
+        "signs": { "type": "array", "items": { "$ref": "#/$defs/Sign" }, "default": [] },
+        "markings": { "type": "array", "items": { "$ref": "#/$defs/Marking" }, "default": [] },
+        "lights": { "type": "array", "items": { "$ref": "#/$defs/TrafficLight" }, "default": [] },
+        "conditions": { "$ref": "#/$defs/Conditions" }
+      }
+    },
+
+    "Road": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dir", "lanes_in", "lanes_out", "priority"],
+      "properties": {
+        "dir": { "$ref": "#/$defs/Dir" },
+        "lanes_in": { "type": "integer", "minimum": 0, "maximum": 4, "description": "Lanes carrying traffic toward the intersection." },
+        "lanes_out": { "type": "integer", "minimum": 0, "maximum": 4, "description": "Lanes carrying traffic away from the intersection." },
+        "priority": { "$ref": "#/$defs/Priority" }
+      }
+    },
+
+    "TramTrack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["along"],
+      "properties": { "along": { "$ref": "#/$defs/TramAxis" } }
+    },
+
+    "Sign": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "code"],
+      "properties": {
+        "at": { "$ref": "#/$defs/Dir" },
+        "code": { "type": "string", "pattern": "^[0-9]{1,2}\\.[0-9]{1,2}(\\.[0-9]{1,2})?$", "description": "YHQ sign code, e.g. \"2.4\". A code, not prose." }
+      }
+    },
+
+    "Marking": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "$ref": "#/$defs/MarkingType" },
+        "at": { "$ref": "#/$defs/Dir" }
+      }
+    },
+
+    "TrafficLight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "state"],
+      "properties": {
+        "at": { "$ref": "#/$defs/LightPlacement" },
+        "state": { "$ref": "#/$defs/LightState" }
+      }
+    },
+
+    "Conditions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "time": { "$ref": "#/$defs/TimeOfDay", "default": "day" },
+        "weather": { "$ref": "#/$defs/Weather", "default": "clear" }
+      }
+    },
+
+    "Actor": {
+      "type": "object",
+      "description": "Language-independent. No human-readable strings may appear here.",
+      "additionalProperties": false,
+      "required": ["id", "kind", "from", "to"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,15}$" },
+        "kind": { "$ref": "#/$defs/ActorKind" },
+        "role": { "$ref": "#/$defs/ActorRole", "default": "traffic" },
+        "from": { "$ref": "#/$defs/Dir" },
+        "to": { "$ref": "#/$defs/Dir" },
+        "lane_in": { "type": "integer", "minimum": 0, "maximum": 3, "default": 0, "description": "Index of the incoming lane on the `from` road, 0 = nearest the centreline." },
+        "lane_out": { "type": "integer", "minimum": 0, "maximum": 3, "default": 0, "description": "Index of the outgoing lane on the `to` road, 0 = nearest the centreline." }
+      }
+    },
+
+    "Question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "options", "correct"],
+      "properties": {
+        "text": { "$ref": "#/$defs/LocalizedText" },
+        "options": { "type": "array", "minItems": 2, "maxItems": 5, "items": { "$ref": "#/$defs/Option" } },
+        "correct": { "type": "string" }
+      }
+    },
+
+    "Option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^o[0-9]{1,2}$" },
+        "refers_to": { "type": "string", "description": "Actor id this option asserts should proceed first. Omitted for options that assert nobody proceeds." },
+        "label": { "$ref": "#/$defs/LocalizedText" }
+      }
+    },
+
+    "Resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "rule"],
+      "properties": {
+        "order": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "Sequence in which actors clear the conflict zone." },
+        "rule": { "$ref": "#/$defs/Rule" },
+        "wrong_outcomes": {
+          "type": "object",
+          "description": "Authoring hint for content review only. Never authoritative over simulation.",
+          "additionalProperties": { "$ref": "#/$defs/Outcome" },
+          "default": {}
+        }
+      }
+    },
+
+    "Rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "text"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[0-9]{1,2}\\.[0-9]{1,2}(\\.[0-9]{1,2})?$" },
+        "text": { "$ref": "#/$defs/LocalizedText" }
+      }
+    },
+
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "$ref": "#/$defs/OutcomeType" },
+        "with": { "type": "string", "description": "Actor id involved, where the outcome type implies a second party." }
+      }
+    },
+
+    "LocalizedText": {
+      "type": "object",
+      "description": "Locale code -> string. No locale is privileged; completeness is reported by tooling, not enforced here.",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z]{2}(-[A-Z][a-z]{3})?$" },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+
+    "SceneType": {
+      "type": "string",
+      "enum": [
+        "crossroads_4way", "t_junction", "y_junction", "roundabout", "straight_road",
+        "overtaking", "pedestrian_crossing", "railway_crossing", "narrow_road",
+        "parking_stopping", "residential_yard", "tunnel"
+      ]
+    },
+    "Dir": { "type": "string", "enum": ["N", "S", "E", "W", "NE", "NW", "SE", "SW"] },
+    "LightPlacement": { "type": "string", "enum": ["N", "S", "E", "W", "NE", "NW", "SE", "SW", "all"] },
+    "Priority": { "type": "string", "enum": ["main", "secondary", "equal"] },
+    "ActorKind": { "type": "string", "enum": ["car", "truck", "bus", "tram", "motorcycle", "bicycle", "pedestrian", "emergency"] },
+    "ActorRole": { "type": "string", "enum": ["player", "traffic"] },
+    "OutcomeType": {
+      "type": "string",
+      "enum": ["collision", "priority_violation", "sign_violation", "marking_violation", "unnecessary_wait", "unsafe_but_legal"]
+    },
+    "LightState": { "type": "string", "enum": ["off", "red", "yellow", "green", "green_blink", "yellow_blink"] },
+    "MarkingType": {
+      "type": "string",
+      "enum": ["stop_line", "give_way_line", "crosswalk", "solid_line", "dashed_line", "double_solid", "stop_box", "no_stopping", "no_parking", "lane_arrow"]
+    },
+    "TramAxis": { "type": "string", "enum": ["NS", "EW"] },
+    "TimeOfDay": { "type": "string", "enum": ["day", "night", "dusk"] },
+    "Weather": { "type": "string", "enum": ["clear", "rain", "snow", "fog"] }
+  }
+}
