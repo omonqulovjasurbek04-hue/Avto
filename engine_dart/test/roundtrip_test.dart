@@ -26,7 +26,8 @@ void main() {
       final original = jsonDecode(f.readAsStringSync()) as Map<String, dynamic>;
 
       final once = Scenario.fromJson(original).toJson();
-      final twice = Scenario.fromJson(jsonDecode(jsonEncode(once)) as Map<String, dynamic>).toJson();
+      final twice =
+          Scenario.fromJson(jsonDecode(jsonEncode(once)) as Map<String, dynamic>).toJson();
 
       expect(jsonEncode(twice), jsonEncode(once), reason: 'encode/decode must be a fixpoint');
 
@@ -38,15 +39,15 @@ void main() {
 }
 
 void _expectSubset(dynamic authored, dynamic kept, String path) {
-  if (authored is Map) {
-    expect(kept, isA<Map>(), reason: '$path changed shape');
+  if (authored is Map<String, dynamic>) {
+    expect(kept, isA<Map<String, dynamic>>(), reason: '$path changed shape');
     for (final k in authored.keys) {
-      expect((kept as Map).containsKey(k), isTrue, reason: '$path.$k was dropped');
+      expect((kept as Map<String, dynamic>).containsKey(k), isTrue, reason: '$path.$k was dropped');
       _expectSubset(authored[k], kept[k], '$path.$k');
     }
-  } else if (authored is List) {
-    expect(kept, isA<List>(), reason: '$path changed shape');
-    expect((kept as List).length, authored.length, reason: '$path changed length');
+  } else if (authored is List<dynamic>) {
+    expect(kept, isA<List<dynamic>>(), reason: '$path changed shape');
+    expect((kept as List<dynamic>).length, authored.length, reason: '$path changed length');
     for (var i = 0; i < authored.length; i++) {
       _expectSubset(authored[i], kept[i], '$path[$i]');
     }

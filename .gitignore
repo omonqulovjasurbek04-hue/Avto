@@ -11,7 +11,8 @@ node_modules/
 # Dart
 .dart_tool/
 .packages
-pubspec.lock
+# Libraries do not pin; the shipped application does.
+engine_dart/pubspec.lock
 
 # App assets are synced from /content by tools/sync_content.js
 app/assets/content/
