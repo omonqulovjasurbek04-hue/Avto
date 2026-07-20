@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:engine_dart/engine_dart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 
 import 'scene_painter.dart';
 
@@ -10,13 +10,18 @@ import 'scene_painter.dart';
 /// Auth, sync and the real question flow arrive in Phase 7.
 void main() => runApp(const PreviewApp());
 
-const _bundled = [
-  'assets/content/sc-0001.json',
-  'assets/content/sc-0002.json',
-  'assets/content/sc-0003.json',
-  'assets/content/sc-0004.json',
-  'assets/content/sc-0005.json',
-];
+const _contentRoot = 'assets/content/';
+
+/// Discovers bundled scenarios from the asset manifest rather than a hardcoded
+/// list - the bank grows to ~1200 entries, and a list would rot immediately.
+Future<List<String>> _contentAssets() async {
+  final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+  return manifest
+      .listAssets()
+      .where((a) => a.startsWith(_contentRoot) && a.endsWith('.json'))
+      .toList()
+    ..sort();
+}
 
 class PreviewApp extends StatelessWidget {
   const PreviewApp({super.key});
@@ -43,7 +48,7 @@ class _ScenarioListScreenState extends State<ScenarioListScreen> {
 
   Future<List<Scenario>> _load() async {
     final list = <Scenario>[];
-    for (final asset in _bundled) {
+    for (final asset in await _contentAssets()) {
       final raw = await rootBundle.loadString(asset);
       list.add(Scenario.fromJson(jsonDecode(raw) as Map<String, dynamic>));
     }

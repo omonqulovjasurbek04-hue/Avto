@@ -103,8 +103,7 @@ extension DirGeometry on Dir {
         Dir.se => Dir.nw,
       };
 
-  bool get isCardinal =>
-      this == Dir.n || this == Dir.s || this == Dir.e || this == Dir.w;
+  bool get isCardinal => this == Dir.n || this == Dir.s || this == Dir.e || this == Dir.w;
 
   /// True when the road runs top-to-bottom on screen, so its width spans X.
   bool get isVertical => this == Dir.n || this == Dir.s;

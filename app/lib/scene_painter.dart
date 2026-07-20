@@ -103,14 +103,23 @@ class ScenePainter extends CustomPainter {
 class ScenarioPreview extends StatelessWidget {
   final engine.Scenario scenario;
 
-  const ScenarioPreview({super.key, required this.scenario});
+  /// Called with anything the engine could not draw. The editor shows these;
+  /// the student-facing app should report them rather than ship a scene that
+  /// silently omits a declared sign or marking.
+  final void Function(List<engine.ContentWarning>)? onWarnings;
+
+  const ScenarioPreview({super.key, required this.scenario, this.onWarnings});
 
   @override
   Widget build(BuildContext context) {
+    final built = engine.SceneBuilder(scenario).build();
+    if (built.warnings.isNotEmpty && onWarnings != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => onWarnings!(built.warnings));
+    }
     return AspectRatio(
       aspectRatio: 1,
       child: CustomPaint(
-        painter: ScenePainter(engine.SceneBuilder(scenario).build()),
+        painter: ScenePainter(built.scene),
         size: Size.infinite,
       ),
     );
