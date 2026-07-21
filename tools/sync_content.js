@@ -11,9 +11,10 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'content');
 const DSTS = [
   path.join(ROOT, 'app', 'assets', 'content'),
-  // The browser viewer fetches these over HTTP, so they must sit under the
-  // editor's served directory.
   path.join(ROOT, 'editor', 'public', 'content'),
+  path.join(ROOT, 'server', 'public', 'content'),
+  path.join(ROOT, 'web', 'public', 'content'),
+  path.join(ROOT, 'mobile', 'assets', 'content'),
 ];
 
 // Refuse to ship invalid content.
