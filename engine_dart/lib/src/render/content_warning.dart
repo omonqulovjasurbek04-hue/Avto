@@ -26,6 +26,10 @@ enum WarningCode {
   /// Choreographed playback runs shorter or longer than the 4-9s the spec
   /// wants a scene to land in, so it will feel rushed or draggy.
   playbackDurationOutOfRange,
+
+  /// The outcome simulation computed for an option disagrees with the authored
+  /// `wrong_outcomes` hint. The simulation is authoritative; the hint is stale.
+  outcomeHintMismatch,
 }
 
 class ContentWarning {

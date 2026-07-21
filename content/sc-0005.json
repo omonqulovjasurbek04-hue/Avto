@@ -110,7 +110,7 @@
     },
     "wrong_outcomes": {
       "o2": {
-        "type": "collision",
+        "type": "priority_violation",
         "with": "a1"
       }
     }

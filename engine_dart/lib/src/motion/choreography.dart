@@ -70,7 +70,7 @@ class Choreography {
       var release = 0.0;
       for (var j = 0; j < i; j++) {
         final earlier = sequence[j];
-        if (!_conflict(trajectories[id]!, trajectories[earlier]!)) continue;
+        if (!trajectoriesConflict(trajectories[id]!, trajectories[earlier]!)) continue;
         final clearAt = _clearTime(
           trajectories[earlier]!,
           MotionProfile(restDistance: restDistances[earlier]!, releaseTime: releaseTimes[earlier]!),
@@ -150,8 +150,9 @@ double _clearTime(Trajectory t, MotionProfile p, Actor actor) =>
 
 /// Whether two trajectories share space inside the intersection box. Only the
 /// conflict-zone portion of each path matters; the straight approaches and
-/// departures run down separate lanes and never touch.
-bool _conflict(Trajectory a, Trajectory b) {
+/// departures run down separate lanes and never touch. Public so outcome
+/// classification asks the same question the same way.
+bool trajectoriesConflict(Trajectory a, Trajectory b) {
   final pa = _conflictPolyline(a);
   final pb = _conflictPolyline(b);
   for (var i = 0; i < pa.length - 1; i++) {
