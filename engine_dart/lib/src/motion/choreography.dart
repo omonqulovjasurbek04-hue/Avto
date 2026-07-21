@@ -29,6 +29,12 @@ class Choreography {
     return p;
   }
 
+  Trajectory trajectory(String actorId) {
+    final t = trajectories[actorId];
+    if (t == null) throw StateError('no trajectory for actor "$actorId"');
+    return t;
+  }
+
   /// Solves release times for [order] - the sequence in which actors clear the
   /// conflict zone (`resolution.order`, or a candidate order for outcome
   /// classification).
@@ -75,9 +81,27 @@ class Choreography {
       releaseTimes[id] = release;
     }
 
+    return Choreography.fromReleaseTimes(layout, actors, releaseTimes);
+  }
+
+  /// Builds a choreography from explicit release times, bypassing the yielding
+  /// rule. The outcome classifier uses this to make a chosen actor assert
+  /// itself (release at t=0) while the others keep their correct timing, so a
+  /// wrong choice can actually collide.
+  factory Choreography.fromReleaseTimes(
+    IntersectionLayout layout,
+    List<Actor> actors,
+    Map<String, double> releaseTimes,
+  ) {
+    final trajectories = {
+      for (final a in actors) a.id: trajectoryFor(layout, a),
+    };
     final profiles = {
       for (final a in actors)
-        a.id: MotionProfile(restDistance: restDistances[a.id]!, releaseTime: releaseTimes[a.id]!),
+        a.id: MotionProfile(
+          restDistance: _restDistance(trajectories[a.id]!, a),
+          releaseTime: releaseTimes[a.id] ?? 0,
+        ),
     };
 
     // Playback ends when the last actor has driven its tail off the canvas.
@@ -92,9 +116,23 @@ class Choreography {
     return Choreography(profiles, trajectories, duration);
   }
 
-  /// Absolute time at which every actor has come to rest again (none moving).
-  /// Same as [duration]; named for the reader at the call site.
-  double get endTime => duration;
+  /// Pose of one actor at absolute time [t], derived from its trajectory and
+  /// motion profile. The single place position and heading are read, so
+  /// simulation and playback cannot compute them differently.
+  ActorPose poseAt(Actor a, double t) {
+    final tr = trajectory(a.id);
+    final d = profile(a.id).distanceAt(t);
+    return ActorPose(a, tr.path.pointAt(d), tr.path.headingAt(d), sizeOf(a.kind));
+  }
+
+  List<ActorPose> posesAt(List<Actor> actors, double t) => [for (final a in actors) poseAt(a, t)];
+
+  /// Whether the actor has reached the end of its trajectory by time [t] - i.e.
+  /// it has driven off the canvas edge and left the scene. Callers use this to
+  /// stop simulating and drawing an actor that is gone, rather than leaving it
+  /// clamped at the exit point.
+  bool hasExited(String actorId, double t) =>
+      profile(actorId).distanceAt(t) >= trajectory(actorId).length - 1e-9;
 }
 
 /// Distance along the path at which an actor rests before release: its centre

@@ -10,6 +10,7 @@ export 'src/layout.dart';
 export 'src/motion/choreography.dart';
 export 'src/motion/curve.dart';
 export 'src/motion/motion_profile.dart';
+export 'src/motion/simulation.dart';
 export 'src/motion/trajectory.dart';
 export 'src/render/content_warning.dart';
 export 'src/render/draw_op.dart';
