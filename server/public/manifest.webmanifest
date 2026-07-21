@@ -1,0 +1,18 @@
+{
+  "name": "YHQ Simulyator — Avto Qoidalar",
+  "short_name": "YHQ",
+  "description": "Yo'l harakati qoidalarini animatsiya orqali o'rganish. Javobingiz real dvigatel tomonidan o'ynatiladi.",
+  "lang": "uz",
+  "dir": "ltr",
+  "start_url": "/player.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "categories": ["education"],
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

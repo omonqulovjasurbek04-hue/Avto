@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YHQ — Ssenariylar</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0b0f19" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<script>if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));</script>
+<style>
+  /* Self-contained dashboard. Every thumbnail is drawn by the real engine
+     (buildFrame at t=0); every number comes from the API. No stock images. */
+  :root {
+    --bg: #0b0f19; --card: #151c2c; --line: #26334d; --fg: #f8fafc;
+    --muted: #94a3b8; --accent: #3b82f6; --good: #10b981; --bad: #ef4444; --warn: #f59e0b; --bg2: #090d14;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  header { display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    background: rgba(21,28,44,.7); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 10; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+  .brand .logo { font-size: 22px; }
+  .nav { display: flex; gap: 8px; }
+  .nav a { padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 13px;
+    color: var(--muted); border: 1px solid transparent; }
+  .nav a.active { color: var(--accent); border-color: var(--line); background: rgba(59,130,246,.1); }
+  .nav a.primary { background: var(--accent); color: #fff; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 20px 64px; }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 22px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .stat .n { font-size: 28px; font-weight: 800; }
+  .stat .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .scard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    cursor: pointer; transition: border-color .15s, transform .15s; display: flex; flex-direction: column; }
+  .scard:hover { border-color: var(--accent); transform: translateY(-3px); }
+  .thumb { position: relative; aspect-ratio: 1 / 1; background: var(--bg2); }
+  .thumb canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .thumb .type { position: absolute; left: 10px; top: 10px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; padding: 4px 8px; border-radius: 8px;
+    background: rgba(9,13,20,.72); border-left: 3px solid var(--accent); }
+  .scard .body { padding: 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .scard .id { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .04em; }
+  .scard .q { font-size: 14px; font-weight: 600; line-height: 1.4; }
+  .scard .go { margin-top: auto; font-size: 12px; color: var(--muted); font-weight: 700; }
+  #fatal { display: none; margin: 20px 0; padding: 16px; border-radius: 12px;
+    background: rgba(239,68,68,.12); border: 1px solid var(--bad); color: #fecaca; font-size: 14px; }
+</style>
+<script>
+  window.__engineRegister = (buildScene, buildFrame, sceneInfo, optionFrame, version) => {
+    window.__yhqEngine = { buildScene, buildFrame, sceneInfo, optionFrame, version };
+  };
+</script>
+<script src="/engine.js"></script>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="logo">🚗</span> YHQ SIMULYATOR</div>
+  <nav class="nav">
+    <a href="landing.html">Kirish</a>
+    <a class="active" href="index.html">Ssenariylar</a>
+    <a class="primary" href="player.html">Mashq</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <h1>Ssenariylar</h1>
+  <p class="lead">Har bir kartochka — dvigatel chizgan real sahna. Bosing va animatsiyani o'ynating.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="n" id="s-scenarios" style="color:var(--accent)">—</div><div class="l">Ssenariy</div></div>
+    <div class="stat"><div class="n" id="s-solved" style="color:var(--fg)">—</div><div class="l">Yechilgan</div></div>
+    <div class="stat"><div class="n" id="s-correct" style="color:var(--good)">—</div><div class="l">To'g'ri</div></div>
+    <div class="stat"><div class="n" id="s-accuracy" style="color:var(--warn)">—</div><div class="l">Aniqlik</div></div>
+  </div>
+
+  <div id="fatal"></div>
+  <section class="grid" id="grid"></section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const USER_ID = "user-player";
+  const $ = (id) => document.getElementById(id);
+  const engine = () => window.__yhqEngine;
+
+  // Inline display-list renderer (same contract as the player / renderer.mjs).
+  function rgba(argb) { const a = ((argb >>> 24) & 0xff) / 255; return "rgba(" + ((argb >> 16) & 0xff) + "," + ((argb >> 8) & 0xff) + "," + (argb & 0xff) + "," + a + ")"; }
+  function trace(ctx, flat, closed) { ctx.beginPath(); ctx.moveTo(flat[0], flat[1]); for (let i = 2; i < flat.length; i += 2) ctx.lineTo(flat[i], flat[i + 1]); if (closed) ctx.closePath(); }
+  function drawDisplayList(ctx, frame, size) {
+    const s = size / frame.canvas;
+    ctx.setTransform(s, 0, 0, s, 0, 0); ctx.clearRect(0, 0, frame.canvas, frame.canvas);
+    ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+    for (const op of frame.ops) {
+      if (op.op === "fillPolygon") { trace(ctx, op.points, true); ctx.fillStyle = rgba(op.colour); ctx.fill(); }
+      else if (op.op === "strokePath") { trace(ctx, op.points, op.closed); ctx.strokeStyle = rgba(op.colour); ctx.lineWidth = op.width; ctx.setLineDash(op.dash || []); ctx.stroke(); ctx.setLineDash([]); }
+      else if (op.op === "fillCircle") { ctx.beginPath(); ctx.arc(op.centre[0], op.centre[1], op.radius, 0, Math.PI * 2); ctx.fillStyle = rgba(op.colour); ctx.fill(); }
+    }
+  }
+
+  function fatal(msg) { const el = $("fatal"); el.textContent = msg; el.style.display = "block"; }
+
+  function card(sc) {
+    const a = document.createElement("a");
+    a.className = "scard"; a.href = "player.html?id=" + encodeURIComponent(sc.id);
+    a.innerHTML =
+      "<div class='thumb'><span class='type'></span><canvas width='300' height='300'></canvas></div>" +
+      "<div class='body'><div class='id'>" + sc.id.toUpperCase() + "</div>" +
+      "<div class='q'></div><div class='go'>O'ynatish →</div></div>";
+    a.querySelector(".type").textContent = (sc.type || "").replace(/_/g, " ");
+    a.querySelector(".q").textContent = (sc.question && (sc.question.uz || sc.question.en)) || sc.id;
+    return a;
+  }
+
+  async function renderThumb(canvas, id) {
+    const e = engine(); if (!e) return;
+    try {
+      const raw = await fetch("/api/scenarios/" + id).then((r) => r.text());
+      const frame = JSON.parse(e.buildFrame(raw, 0));
+      drawDisplayList(canvas.getContext("2d"), frame, canvas.width);
+    } catch (err) { /* leave the empty road-coloured canvas */ }
+  }
+
+  async function load() {
+    let list = [], prog = { correct: 0, wrong: 0 };
+    try { list = await fetch("/api/scenarios").then((r) => r.json()); }
+    catch (e) { fatal("Ssenariylar ro'yxati yuklanmadi. Server ishlayaptimi?"); return; }
+    try { prog = await fetch("/api/progress/" + USER_ID).then((r) => r.json()); } catch (e) {}
+
+    const total = (prog.correct || 0) + (prog.wrong || 0);
+    $("s-scenarios").textContent = list.length;
+    $("s-solved").textContent = total;
+    $("s-correct").textContent = prog.correct || 0;
+    $("s-accuracy").textContent = (total ? Math.round((prog.correct / total) * 100) : 0) + "%";
+
+    if (!engine()) fatal("Engine bundle yuklanmadi (/engine.js) — kartochka rasmlari chizilmaydi, lekin havolalar ishlaydi.");
+
+    const grid = $("grid"); grid.innerHTML = "";
+    for (const sc of list) {
+      const el = card(sc);
+      grid.appendChild(el);
+      renderThumb(el.querySelector("canvas"), sc.id); // async; fills in as they arrive
+    }
+  }
+  load();
+})();
+</script>
+</body>
+</html>

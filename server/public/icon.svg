@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="YHQ">
+  <rect width="512" height="512" rx="112" fill="#0b0f19"/>
+  <rect x="48" y="48" width="416" height="416" rx="88" fill="#3b82f6"/>
+  <!-- car body -->
+  <rect x="120" y="248" width="272" height="96" rx="30" fill="#ffffff"/>
+  <!-- cabin -->
+  <path d="M168 248 l34 -60 h108 l34 60 z" fill="#ffffff"/>
+  <!-- windows -->
+  <path d="M206 240 l22 -40 h56 l22 40 z" fill="#3b82f6"/>
+  <!-- wheels -->
+  <circle cx="188" cy="356" r="34" fill="#0b0f19"/>
+  <circle cx="324" cy="356" r="34" fill="#0b0f19"/>
+  <circle cx="188" cy="356" r="14" fill="#ffffff"/>
+  <circle cx="324" cy="356" r="14" fill="#ffffff"/>
+</svg>

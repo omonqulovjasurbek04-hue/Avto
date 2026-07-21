@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>YHQ Simulator — Ssenariy Pleer</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0b0f19" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<script>if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));</script>
+<style>
+  /* Self-contained: no external CDN/fonts, so it works on a local Wi-Fi with no
+     internet — exactly the phone checkpoint (see docs/telefonga-yuklash.md §0).
+     Every pixel of the scene comes from the real engine display list. */
+  :root {
+    --bg: #0b0f19; --bg2: #090d14; --card: #151c2c; --line: #26334d;
+    --fg: #f8fafc; --muted: #94a3b8; --accent: #3b82f6;
+    --good: #10b981; --bad: #ef4444; --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+
+  header { display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 12px 16px; background: var(--card);
+    border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .brand .logo { font-size: 22px; }
+  .brand small { display: block; color: var(--muted); font-weight: 500; font-size: 11px; }
+  .langs { display: flex; gap: 4px; }
+  .lang { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line);
+    background: transparent; color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer; }
+  .lang.active { color: var(--accent); border-color: var(--accent); background: rgba(59,130,246,.15); }
+
+  .pills { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px;
+    scrollbar-width: none; }
+  .pills::-webkit-scrollbar { display: none; }
+  .pill { flex: 0 0 auto; padding: 8px 14px; border-radius: 10px;
+    border: 1.5px solid var(--line); background: var(--card); color: var(--fg);
+    font-weight: 600; font-size: 13px; white-space: nowrap; cursor: pointer; }
+  .pill.active { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,.15); }
+
+  main { flex: 1; display: grid; gap: 16px; padding: 0 16px 24px;
+    grid-template-columns: 1fr; max-width: 1180px; width: 100%; margin: 0 auto; }
+  @media (min-width: 900px) { main { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); align-items: start; } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+
+  .stage { padding: 12px; }
+  .viewport { position: relative; width: 100%; aspect-ratio: 1 / 1;
+    background: var(--bg2); border-radius: 12px; overflow: hidden; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .badge { position: absolute; left: 12px; top: 12px; z-index: 3; padding: 6px 10px;
+    border-radius: 10px; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; background: rgba(9,13,20,.7); border-left: 3px solid var(--accent); }
+  .overlay { position: absolute; inset: 0; z-index: 4; display: none;
+    align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+    backdrop-filter: blur(1px); }
+  .overlay.show { display: flex; }
+  .overlay .big { font-size: 40px; }
+  .overlay .txt { font-size: 20px; font-weight: 800; letter-spacing: .02em; }
+  .overlay.collision { background: rgba(239,68,68,.14); }
+  .overlay.collision .txt { color: #fecaca; }
+  .overlay.violation { background: rgba(245,158,11,.14); }
+  .overlay.violation .txt { color: #fde68a; }
+  .overlay.correct { background: rgba(16,185,129,.12); }
+  .overlay.correct .txt { color: #a7f3d0; }
+
+  .controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .icon-btn { width: 44px; height: 44px; flex: 0 0 auto; border-radius: 50%;
+    border: none; background: var(--accent); color: #fff; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; }
+  .icon-btn.ghost { background: #1e293b; color: var(--fg); }
+  input[type=range] { flex: 1; accent-color: var(--accent); min-width: 40px; }
+  .clock { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; min-width: 40px; text-align: right; }
+  .speeds { display: flex; gap: 4px; }
+  .speed { padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line);
+    background: transparent; color: var(--muted); font-weight: 700; font-size: 11px; cursor: pointer; }
+  .speed.active { color: var(--accent); border-color: var(--accent); }
+
+  .meta { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .topic { align-self: flex-start; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--accent); background: rgba(59,130,246,.12);
+    padding: 4px 10px; border-radius: 999px; }
+  .question { font-size: 19px; font-weight: 700; line-height: 1.35; margin: 0; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option { text-align: left; padding: 14px 16px; border-radius: 12px;
+    border: 1.5px solid var(--line); background: #0f1524; color: var(--fg);
+    font-size: 15px; font-weight: 600; cursor: pointer; display: flex;
+    align-items: center; justify-content: space-between; gap: 10px; transition: border-color .15s; }
+  .option:hover { border-color: var(--accent); }
+  .option.correct { border-color: var(--good); background: rgba(16,185,129,.12); }
+  .option.wrong { border-color: var(--bad); background: rgba(239,68,68,.12); }
+  .option .mark { font-size: 18px; }
+
+  .banner { display: none; gap: 12px; align-items: center; padding: 14px;
+    border-radius: 12px; font-weight: 700; }
+  .banner.show { display: flex; }
+  .banner.good { background: rgba(16,185,129,.14); color: #a7f3d0; }
+  .banner.bad { background: rgba(239,68,68,.14); color: #fecaca; }
+  .banner .big { font-size: 26px; }
+  .banner small { display: block; font-weight: 400; font-size: 12px; opacity: .85; margin-top: 2px; }
+
+  .rule { display: none; padding: 14px; border-radius: 12px; background: #0f1524;
+    border: 1px solid var(--line); font-size: 14px; line-height: 1.5; }
+  .rule.show { display: block; }
+  .rule .code { color: var(--accent); font-weight: 700; margin-bottom: 4px; font-size: 12px;
+    text-transform: uppercase; letter-spacing: .04em; }
+  .replay-correct { display: none; margin-top: 2px; padding: 12px; border-radius: 12px;
+    border: 1px solid var(--good); background: rgba(16,185,129,.1); color: var(--good);
+    font-weight: 700; font-size: 14px; cursor: pointer; }
+  .replay-correct.show { display: block; }
+
+  #fatal { display: none; margin: 24px 16px; padding: 16px; border-radius: 12px;
+    background: rgba(239,68,68,.12); border: 1px solid var(--bad); color: #fecaca; font-size: 14px; }
+</style>
+<script>
+  // The dart2js bundle hands its exports to this hook (it never assigns globals
+  // directly — see the repo README). Capture them into window.__yhqEngine.
+  window.__engineRegister = (buildScene, buildFrame, sceneInfo, optionFrame, version) => {
+    window.__yhqEngine = { buildScene, buildFrame, sceneInfo, optionFrame, version };
+  };
+</script>
+<script src="/engine.js"></script>
+</head>
+<body>
+<header>
+  <a class="brand" href="landing.html" style="text-decoration:none;color:inherit">
+    <span class="logo">🚗</span>
+    <div>AVTO QOIDALAR<small>YHQ interaktiv pleer</small></div>
+  </a>
+  <div style="display:flex;align-items:center;gap:14px">
+    <a href="index.html" style="color:var(--muted);font-weight:700;font-size:13px;text-decoration:none">Ssenariylar</a>
+    <div class="langs" id="langs"></div>
+  </div>
+</header>
+
+<div class="pills" id="pills"></div>
+
+<div id="fatal"></div>
+
+<main id="main" hidden>
+  <section class="card stage">
+    <div class="viewport">
+      <div class="badge" id="badge">Ssenariy</div>
+      <canvas id="cv" width="900" height="900"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="big" id="overlayIcon">💥</div>
+        <div class="txt" id="overlayTxt"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="icon-btn" id="playBtn" title="O'ynatish">▶</button>
+      <input type="range" id="scrub" min="0" max="1" step="0.001" value="0" />
+      <span class="clock" id="clock">0.0s</span>
+    </div>
+    <div class="controls" style="margin-top:8px; justify-content:flex-end;">
+      <div class="speeds" id="speeds"></div>
+      <button class="icon-btn ghost" id="replayBtn" title="Qaytadan">↺</button>
+    </div>
+  </section>
+
+  <section class="card meta">
+    <span class="topic" id="topic"></span>
+    <h2 class="question" id="question"></h2>
+    <div class="options" id="options"></div>
+    <div class="banner" id="banner">
+      <span class="big" id="bannerIcon"></span>
+      <div><span id="bannerTitle"></span><small id="bannerSub"></small></div>
+    </div>
+    <button class="replay-correct" id="watchCorrect">✅ To'g'ri javobni ko'rish</button>
+    <div class="rule" id="rule">
+      <div class="code" id="ruleCode"></div>
+      <div id="ruleText"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Display-list renderer (the only drawing code; same contract as
+  // shared/engine-js/renderer.mjs — fills a polygon, strokes a path, fills a
+  // circle, nothing about roads or lanes). --------------------------------
+  function rgba(argb) {
+    const a = ((argb >>> 24) & 0xff) / 255;
+    return "rgba(" + ((argb >> 16) & 0xff) + "," + ((argb >> 8) & 0xff) + "," + (argb & 0xff) + "," + a + ")";
+  }
+  function trace(ctx, flat, closed) {
+    ctx.beginPath();
+    ctx.moveTo(flat[0], flat[1]);
+    for (let i = 2; i < flat.length; i += 2) ctx.lineTo(flat[i], flat[i + 1]);
+    if (closed) ctx.closePath();
+  }
+  function drawDisplayList(ctx, frame, size) {
+    const s = size / frame.canvas;
+    ctx.setTransform(s, 0, 0, s, 0, 0);
+    ctx.clearRect(0, 0, frame.canvas, frame.canvas);
+    ctx.lineCap = "butt"; ctx.lineJoin = "miter";
+    for (const op of frame.ops) {
+      if (op.op === "fillPolygon") {
+        trace(ctx, op.points, true); ctx.fillStyle = rgba(op.colour); ctx.fill();
+      } else if (op.op === "strokePath") {
+        trace(ctx, op.points, op.closed); ctx.strokeStyle = rgba(op.colour);
+        ctx.lineWidth = op.width; ctx.setLineDash(op.dash || []); ctx.stroke(); ctx.setLineDash([]);
+      } else if (op.op === "fillCircle") {
+        ctx.beginPath(); ctx.arc(op.centre[0], op.centre[1], op.radius, 0, Math.PI * 2);
+        ctx.fillStyle = rgba(op.colour); ctx.fill();
+      }
+    }
+  }
+
+  // ---- Localisation of the UI chrome (scene text always comes from content) --
+  const LANGS = ["uz", "ru", "en"];
+  const T = {
+    uz: { loading: "Yuklanmoqda…", correct: "To'g'ri javob!",
+      correctSub: "Chorrahadan xavfsiz va qoidaga muvofiq o'tildi.",
+      watchCorrect: "✅ To'g'ri javobni ko'rish", first: "Navbatni aniqlang",
+      collision: "TO'QNASHUV!", priority_violation: "YO'L BERILMADI!",
+      sign_violation: "BELGI BUZILDI!", marking_violation: "CHIZIQ BUZILDI!",
+      unnecessary_wait: "KUTISH SHART EMAS EDI", unsafe_but_legal: "XAVFLI, LEKIN QONUNIY",
+      sub: "Oqibatni animatsiyada ko'ring." },
+    ru: { loading: "Загрузка…", correct: "Правильный ответ!",
+      correctSub: "Перекрёсток пройден безопасно и по правилам.",
+      watchCorrect: "✅ Посмотреть правильный ответ", first: "Определите очерёдность",
+      collision: "СТОЛКНОВЕНИЕ!", priority_violation: "НЕ УСТУПИЛ ДОРОГУ!",
+      sign_violation: "НАРУШЕН ЗНАК!", marking_violation: "НАРУШЕНА РАЗМЕТКА!",
+      unnecessary_wait: "ЖДАТЬ БЫЛО НЕ НУЖНО", unsafe_but_legal: "ОПАСНО, НО ЗАКОННО",
+      sub: "Смотрите последствие в анимации." },
+    en: { loading: "Loading…", correct: "Correct!",
+      correctSub: "The intersection was cleared safely and lawfully.",
+      watchCorrect: "✅ Watch the correct answer", first: "Work out the order",
+      collision: "COLLISION!", priority_violation: "FAILED TO GIVE WAY!",
+      sign_violation: "SIGN VIOLATION!", marking_violation: "MARKING VIOLATION!",
+      unnecessary_wait: "NO NEED TO WAIT", unsafe_but_legal: "UNSAFE BUT LEGAL",
+      sub: "Watch the consequence in the animation." },
+  };
+  const USER_ID = "user-player"; // progress bucket for this standalone page
+
+  // ---- State ----------------------------------------------------------------
+  const S = {
+    lang: "uz", list: [], id: null, data: null, raw: null, info: null,
+    activeOption: null,        // option id whose frame we render (null = t=0 preview)
+    mode: "preview",           // preview | user | correct
+    t: 0, playing: false, speed: 1, answered: false,
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const engine = () => window.__yhqEngine;
+  const ctx = $("cv").getContext("2d");
+
+  function fatal(msg) { const el = $("fatal"); el.textContent = msg; el.style.display = "block"; }
+
+  function activeDuration() {
+    if (S.activeOption && S.info && S.info.options[S.activeOption]) {
+      return S.info.options[S.activeOption].duration || S.info.duration || 5;
+    }
+    return (S.info && S.info.duration) || 5;
+  }
+
+  function currentFrameJson() {
+    const e = engine();
+    if (!e || !S.raw) return null;
+    if (S.activeOption) return e.optionFrame(S.raw, S.activeOption, S.t);
+    return e.buildFrame(S.raw, S.t);
+  }
+
+  function draw() {
+    const json = currentFrameJson();
+    if (json) drawDisplayList(ctx, JSON.parse(json), $("cv").width);
+  }
+
+  // ---- Render loop (wall-clock only paces playback; the engine is the pure,
+  // deterministic source of every frame). ------------------------------------
+  let last = performance.now();
+  function loop(now) {
+    const dt = (now - last) / 1000; last = now;
+    if (S.playing) {
+      const dur = activeDuration();
+      S.t += dt * S.speed;
+      if (S.t >= dur) { S.t = dur; S.playing = false; syncPlayBtn(); }
+      $("scrub").value = String(S.t);
+      $("clock").textContent = S.t.toFixed(1) + "s";
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function syncPlayBtn() { $("playBtn").textContent = S.playing ? "⏸" : "▶"; }
+
+  function setScrubMax() { $("scrub").max = String(activeDuration()); }
+
+  // ---- Answer flow ----------------------------------------------------------
+  function selectOption(optId) {
+    const out = S.info && S.info.options[optId];
+    if (!out) return;
+    S.activeOption = optId; S.mode = "user"; S.t = 0; S.playing = true;
+    S.answered = true;
+    setScrubMax(); syncPlayBtn();
+    paintOptionResult(optId, out);
+    showOutcome(optId, out);
+    $("watchCorrect").classList.add("show");
+    recordAnswer(optId);
+  }
+
+  function paintOptionResult(optId, out) {
+    for (const btn of $("options").children) {
+      btn.classList.remove("correct", "wrong");
+      const mk = btn.querySelector(".mark"); if (mk) mk.textContent = "";
+      if (btn.dataset.opt === optId) {
+        btn.classList.add(out.clean ? "correct" : "wrong");
+        if (mk) mk.textContent = out.clean ? "✅" : "❌";
+      }
+    }
+  }
+
+  function outcomeLabel(out) {
+    const t = T[S.lang];
+    if (out.clean) return t.correct;
+    return t[out.type] || t.collision;
+  }
+
+  function showOutcome(optId, out) {
+    const t = T[S.lang];
+    // In-canvas overlay
+    const ov = $("overlay");
+    ov.className = "overlay show " + (out.clean ? "correct" : (out.type === "collision" ? "collision" : "violation"));
+    $("overlayIcon").textContent = out.clean ? "✅" : (out.type === "collision" ? "💥" : "⚠️");
+    $("overlayTxt").textContent = outcomeLabel(out);
+    // Side banner
+    const banner = $("banner");
+    banner.className = "banner show " + (out.clean ? "good" : "bad");
+    $("bannerIcon").textContent = out.clean ? "✅" : "💥";
+    $("bannerTitle").textContent = outcomeLabel(out);
+    $("bannerSub").textContent = out.clean ? t.correctSub : t.sub;
+    // Rule box (real YHQ provenance from the scenario)
+    const rule = S.data && S.data.resolution && S.data.resolution.rule;
+    if (rule) {
+      $("rule").classList.add("show");
+      $("ruleCode").textContent = "YHQ " + (rule.code || "") + (S.lang === "ru" ? " п." : S.lang === "en" ? " §" : "-band");
+      $("ruleText").textContent = (rule.text && (rule.text[S.lang] || rule.text.uz)) || "";
+    }
+  }
+
+  function watchCorrect() {
+    const correctId = S.data && S.data.question && S.data.question.correct;
+    if (!correctId) return;
+    S.activeOption = correctId; S.mode = "correct"; S.t = 0; S.playing = true;
+    setScrubMax(); syncPlayBtn();
+    const ov = $("overlay");
+    ov.className = "overlay show correct";
+    $("overlayIcon").textContent = "✅";
+    $("overlayTxt").textContent = T[S.lang].correct;
+  }
+
+  function recordAnswer(optId) {
+    fetch("/api/progress/" + USER_ID + "/answer", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scenarioId: S.id, optionId: optId }),
+    }).catch(() => {}); // progress is best-effort; never block the lesson on it
+  }
+
+  // ---- Scenario loading -----------------------------------------------------
+  function buildOptions() {
+    const box = $("options"); box.innerHTML = "";
+    const opts = (S.data.question && S.data.question.options) || [];
+    for (const opt of opts) {
+      const btn = document.createElement("button");
+      btn.className = "option"; btn.dataset.opt = opt.id;
+      const label = (opt.label && (opt.label[S.lang] || opt.label.uz)) || opt.id;
+      btn.innerHTML = "<span></span><span class='mark'></span>";
+      btn.firstChild.textContent = label;
+      btn.addEventListener("click", () => selectOption(opt.id));
+      box.appendChild(btn);
+    }
+  }
+
+  function resetView() {
+    S.activeOption = null; S.mode = "preview"; S.t = 0; S.playing = false; S.answered = false;
+    $("overlay").className = "overlay";
+    $("banner").className = "banner";
+    $("rule").className = "rule";
+    $("watchCorrect").classList.remove("show");
+    $("scrub").value = "0"; $("clock").textContent = "0.0s";
+    syncPlayBtn();
+  }
+
+  async function loadScenario(id) {
+    S.id = id;
+    for (const p of $("pills").children) p.classList.toggle("active", p.dataset.id === id);
+    const [data, info] = await Promise.all([
+      fetch("/api/scenarios/" + id).then((r) => r.json()),
+      fetch("/api/scenarios/" + id + "/info").then((r) => r.json()),
+    ]);
+    S.data = data; S.raw = JSON.stringify(data); S.info = info;
+    resetView(); setScrubMax();
+    $("topic").textContent = (data.topic || "").replace(/_/g, " ");
+    const q = data.question && data.question.text;
+    $("question").textContent = (q && (q[S.lang] || q.uz)) || "";
+    $("badge").textContent = T[S.lang].first;
+    buildOptions();
+    draw();
+  }
+
+  function buildPills() {
+    const box = $("pills"); box.innerHTML = "";
+    for (const sc of S.list) {
+      const b = document.createElement("button");
+      b.className = "pill"; b.dataset.id = sc.id; b.textContent = sc.id.toUpperCase();
+      b.addEventListener("click", () => loadScenario(sc.id));
+      box.appendChild(b);
+    }
+  }
+
+  function buildLangs() {
+    const box = $("langs"); box.innerHTML = "";
+    for (const l of LANGS) {
+      const b = document.createElement("button");
+      b.className = "lang" + (l === S.lang ? " active" : ""); b.textContent = l.toUpperCase();
+      b.addEventListener("click", () => {
+        S.lang = l; buildLangs();
+        if (S.data) {
+          const q = S.data.question && S.data.question.text;
+          $("question").textContent = (q && (q[S.lang] || q.uz)) || "";
+          $("badge").textContent = T[S.lang].first;
+          buildOptions();
+          if (S.answered && S.activeOption && S.info.options[S.activeOption]) {
+            paintOptionResult(S.activeOption, S.info.options[S.activeOption]);
+            showOutcome(S.activeOption, S.info.options[S.activeOption]);
+          }
+          $("watchCorrect").textContent = T[S.lang].watchCorrect;
+        }
+      });
+      box.appendChild(b);
+    }
+  }
+
+  function buildSpeeds() {
+    const box = $("speeds"); box.innerHTML = "";
+    for (const sp of [0.25, 0.5, 1]) {
+      const b = document.createElement("button");
+      b.className = "speed" + (sp === S.speed ? " active" : ""); b.textContent = sp + "x";
+      b.addEventListener("click", () => {
+        S.speed = sp;
+        for (const c of box.children) c.classList.toggle("active", c.textContent === sp + "x");
+      });
+      box.appendChild(b);
+    }
+  }
+
+  // ---- Controls -------------------------------------------------------------
+  $("playBtn").addEventListener("click", () => {
+    if (!S.playing && S.t >= activeDuration()) S.t = 0; // replay from start if ended
+    S.playing = !S.playing; last = performance.now(); syncPlayBtn();
+  });
+  $("replayBtn").addEventListener("click", () => { S.t = 0; S.playing = true; last = performance.now(); syncPlayBtn(); });
+  $("scrub").addEventListener("input", (e) => {
+    S.t = parseFloat(e.target.value); S.playing = false; syncPlayBtn();
+    $("clock").textContent = S.t.toFixed(1) + "s";
+  });
+  $("watchCorrect").addEventListener("click", watchCorrect);
+
+  // ---- Boot -----------------------------------------------------------------
+  async function boot() {
+    buildLangs(); buildSpeeds();
+    $("watchCorrect").textContent = T[S.lang].watchCorrect;
+    if (!engine()) { fatal("Engine bundle yuklanmadi (/engine.js). Serverni qayta ishga tushiring: npm run dev:server"); return; }
+    try {
+      S.list = await fetch("/api/scenarios").then((r) => r.json());
+    } catch (e) {
+      fatal("Ssenariylar ro'yxati yuklanmadi. API ishlayaptimi? (/api/scenarios)"); return;
+    }
+    if (!S.list.length) { fatal("Ssenariylar topilmadi."); return; }
+    buildPills();
+    $("main").hidden = false;
+    // Deep link: /player.html?id=sc-0003 (from the dashboard cards). Fall back
+    // to the first scenario if the id is absent or unknown.
+    const wanted = new URLSearchParams(location.search).get("id");
+    const startId = S.list.some((s) => s.id === wanted) ? wanted : S.list[0].id;
+    await loadScenario(startId);
+    requestAnimationFrame(loop);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>

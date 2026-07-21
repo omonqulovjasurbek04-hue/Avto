@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YHQ — Kirish</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0b0f19" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<script>if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));</script>
+<style>
+  /* Self-contained (no external CDN/fonts): works on a local Wi-Fi with no
+     internet, same as the player. Numbers on this page are real — pulled from
+     the engine/API, never hardcoded. */
+  :root {
+    --bg: #0b0f19; --card: #151c2c; --line: #26334d; --fg: #f8fafc;
+    --muted: #94a3b8; --accent: #3b82f6; --good: #10b981; --bad: #ef4444; --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  header { display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    background: rgba(21,28,44,.7); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 10; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+  .brand .logo { font-size: 22px; }
+  .nav { display: flex; gap: 8px; }
+  .nav a { padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 13px;
+    color: var(--muted); border: 1px solid transparent; }
+  .nav a.primary { background: var(--accent); color: #fff; }
+  .nav a.ghost { border-color: var(--line); }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  .hero { display: grid; gap: 28px; align-items: center; margin-bottom: 48px; }
+  @media (min-width: 820px) { .hero { grid-template-columns: 1.2fr 0.8fr; } }
+  .tagpill { display: inline-block; padding: 5px 12px; border-radius: 999px; font-size: 11px;
+    font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--accent);
+    background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.25); margin-bottom: 18px; }
+  .hero h1 { font-size: clamp(30px, 6vw, 52px); line-height: 1.05; margin: 0 0 18px; font-weight: 800; }
+  .hero h1 .grad { background: linear-gradient(90deg, #60a5fa, #22d3ee); -webkit-background-clip: text;
+    background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 40ch; margin: 0 0 26px; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { padding: 14px 22px; border-radius: 12px; font-weight: 800; font-size: 15px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--fg); display: inline-flex; align-items: center; gap: 8px; }
+  .btn.primary { background: linear-gradient(90deg, var(--accent), #2563eb); border: none;
+    box-shadow: 0 8px 24px rgba(59,130,246,.35); }
+
+  .glass { background: var(--card); border: 1px solid var(--line); border-radius: 18px; }
+  .hero-stat { padding: 22px; }
+  .hero-stat h3 { margin: 0 0 4px; font-size: 15px; }
+  .hero-stat .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat { background: #0f1524; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .stat .n { font-size: 26px; font-weight: 800; }
+  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+  .section-title { text-align: center; margin: 40px 0 20px; }
+  .section-title h2 { margin: 0 0 6px; font-size: 26px; font-weight: 800; }
+  .section-title p { margin: 0; color: var(--muted); }
+
+  .topics { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .topic-card { padding: 20px; display: flex; flex-direction: column; gap: 6px; cursor: pointer;
+    transition: border-color .15s, transform .15s; }
+  .topic-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .topic-card .ic { font-size: 30px; }
+  .topic-card .t { font-weight: 700; font-size: 16px; }
+  .topic-card .d { color: var(--muted); font-size: 13px; line-height: 1.5; flex: 1; }
+  .topic-card .count { align-self: flex-start; margin-top: 8px; font-size: 12px; font-weight: 700;
+    padding: 4px 10px; border-radius: 999px; background: rgba(59,130,246,.12); color: var(--accent); }
+
+  .rules { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+  .rule-row { display: flex; align-items: center; gap: 16px; padding: 16px 18px; }
+  .rule-row .num { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 800; color: var(--accent);
+    background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.25); }
+  .rule-row .rt { font-weight: 700; text-transform: uppercase; letter-spacing: .02em; font-size: 13px; margin-bottom: 2px; }
+  .rule-row .rd { color: var(--muted); font-size: 13px; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="logo">🚗</span> YHQ SIMULYATOR</div>
+  <nav class="nav">
+    <a class="ghost" href="index.html">Ssenariylar</a>
+    <a class="primary" href="player.html">Mashqni boshlash</a>
+  </nav>
+</header>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <span class="tagpill">Tizim tayyor · YHQ 2D Engine</span>
+      <h1>Simulyatsiyaga <span class="grad">Xush Kelibsiz</span></h1>
+      <p>Yo'l harakati qoidalarini animatsiya orqali o'rganing. Har bir savolga bergan
+         javobingiz real dvigatel tomonidan o'ynatiladi — to'qnashuv, imtiyoz buzilishi
+         yoki keraksiz kutish oqibatini o'z ko'zingiz bilan ko'rasiz.</p>
+      <div class="cta-row">
+        <a class="btn primary" href="player.html">🚀 Mashg'ulotni Boshlash</a>
+        <a class="btn" href="index.html">Ssenariylarni ko'rish</a>
+        <button class="btn" id="installBtn" style="display:none">📲 Ilovani o'rnatish</button>
+      </div>
+    </div>
+    <div class="glass hero-stat">
+      <h3>Sizning Progressingiz</h3>
+      <div class="sub">Ushbu qurilmadagi mashq natijalari.</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="n" id="s-accuracy" style="color:var(--accent)">—</div><div class="l">Aniqlik</div></div>
+        <div class="stat"><div class="n" id="s-solved" style="color:var(--good)">—</div><div class="l">Yechilgan</div></div>
+        <div class="stat"><div class="n" id="s-correct" style="color:var(--good)">—</div><div class="l">To'g'ri</div></div>
+        <div class="stat"><div class="n" id="s-scenarios" style="color:var(--warn)">—</div><div class="l">Ssenariy</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-title">
+    <h2>Mavzular</h2>
+    <p>Ssenariylar mavzu bo'yicha guruhlangan — bosing va animatsiyada o'ynating.</p>
+  </div>
+  <section class="topics" id="topics"></section>
+
+  <div class="section-title">
+    <h2>Qanday ishlaydi</h2>
+    <p>Uch qadamda — o'qish emas, ko'rish orqali o'rganish.</p>
+  </div>
+  <section class="rules">
+    <div class="glass rule-row"><div class="num">01</div><div><div class="rt">Savolni o'qing</div><div class="rd">Chorraha holati va navbat haqidagi savolga javob tanlang.</div></div></div>
+    <div class="glass rule-row"><div class="num">02</div><div><div class="rt">Javobingiz o'ynaydi</div><div class="rd">Dvigatel sizning tanlovingizni animatsiya qiladi — xato bo'lsa oqibatida muzlaydi.</div></div></div>
+    <div class="glass rule-row"><div class="num">03</div><div><div class="rt">To'g'risini ko'ring</div><div class="rd">To'g'ri ketma-ketlik va tegishli YHQ qoidasi ko'rsatiladi.</div></div></div>
+  </section>
+</div>
+
+<footer>YHQ Simulyator · barcha animatsiyalar deterministik dvigatel tomonidan chiziladi</footer>
+
+<script>
+(function () {
+  "use strict";
+  const USER_ID = "user-player";
+  const $ = (id) => document.getElementById(id);
+
+  // Human labels + icons per topic. Unknown topics still render (fallback).
+  const TOPICS = {
+    priority_and_intersections: { icon: "🚦", title: "Imtiyoz va chorrahalar", desc: "Chorrahalarda harakatlanish ketma-ketligi va yo'l berish qoidalari." },
+    signs: { icon: "⚠️", title: "Yo'l belgilari", desc: "Ogohlantiruvchi, taqiqlovchi va buyuruvchi belgilar." },
+    traffic_lights: { icon: "🚥", title: "Svetoforlar", desc: "Svetofor signallari va tartibga soluvchi ishoralar." },
+  };
+  function labelFor(topic) {
+    return TOPICS[topic] || { icon: "🛣️", title: (topic || "Boshqa").replace(/_/g, " "), desc: "YHQ ssenariylari." };
+  }
+
+  async function load() {
+    let list = [], prog = { correct: 0, wrong: 0 };
+    try { list = await fetch("/api/scenarios").then((r) => r.json()); } catch (e) {}
+    try { prog = await fetch("/api/progress/" + USER_ID).then((r) => r.json()); } catch (e) {}
+
+    // Real progress
+    const total = (prog.correct || 0) + (prog.wrong || 0);
+    const acc = total ? Math.round((prog.correct / total) * 100) : 0;
+    $("s-accuracy").textContent = acc + "%";
+    $("s-solved").textContent = total;
+    $("s-correct").textContent = prog.correct || 0;
+    $("s-scenarios").textContent = list.length;
+
+    // Real topic groups with real counts, deep-linking into the player
+    const groups = {};
+    for (const s of list) (groups[s.topic] = groups[s.topic] || []).push(s);
+    const box = $("topics");
+    box.innerHTML = "";
+    const entries = Object.entries(groups);
+    if (!entries.length) { box.innerHTML = "<div class='glass topic-card'><div class='d'>Ssenariylar topilmadi. Server ishlayaptimi?</div></div>"; return; }
+    for (const [topic, items] of entries) {
+      const info = labelFor(topic);
+      const card = document.createElement("a");
+      card.className = "glass topic-card";
+      card.href = "player.html?id=" + encodeURIComponent(items[0].id);
+      card.innerHTML =
+        "<div class='ic'>" + info.icon + "</div>" +
+        "<div class='t'></div><div class='d'></div>" +
+        "<div class='count'>" + items.length + " ta ssenariy</div>";
+      card.querySelector(".t").textContent = info.title;
+      card.querySelector(".d").textContent = info.desc;
+      box.appendChild(card);
+    }
+  }
+  load();
+
+  // PWA install: show the button when the browser offers installation.
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    $("installBtn").style.display = "inline-flex";
+  });
+  $("installBtn").addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    $("installBtn").style.display = "none";
+  });
+  window.addEventListener("appinstalled", () => { $("installBtn").style.display = "none"; });
+})();
+</script>
+</body>
+</html>
