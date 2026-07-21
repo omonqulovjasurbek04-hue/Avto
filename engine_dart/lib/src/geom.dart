@@ -129,3 +129,84 @@ List<Vec2> orientedBox(Vec2 centre, Vec2 heading, double length, double width) {
   final r = heading.normalized.perpRight * (width / 2);
   return [centre - f - r, centre + f - r, centre + f + r, centre - f + r];
 }
+
+double _cross(Vec2 a, Vec2 b) => a.x * b.y - a.y * b.x;
+
+/// Sign of the area of triangle (a, b, c): +1 left turn, -1 right turn, 0
+/// collinear. The orientation primitive both segment tests are built on.
+int _orientation(Vec2 a, Vec2 b, Vec2 c) {
+  final v = _cross(b - a, c - a);
+  if (v > 1e-9) return 1;
+  if (v < -1e-9) return -1;
+  return 0;
+}
+
+bool _onSegment(Vec2 a, Vec2 b, Vec2 p) =>
+    p.x >= math.min(a.x, b.x) - 1e-9 &&
+    p.x <= math.max(a.x, b.x) + 1e-9 &&
+    p.y >= math.min(a.y, b.y) - 1e-9 &&
+    p.y <= math.max(a.y, b.y) + 1e-9;
+
+/// Whether segments `a-b` and `c-d` intersect, endpoints and collinear overlap
+/// included. Used to decide whether two trajectories share space in the box.
+bool segmentsIntersect(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
+  final o1 = _orientation(a, b, c);
+  final o2 = _orientation(a, b, d);
+  final o3 = _orientation(c, d, a);
+  final o4 = _orientation(c, d, b);
+
+  if (o1 != o2 && o3 != o4) return true;
+
+  // Collinear endpoints that fall on the other segment still count as touching.
+  if (o1 == 0 && _onSegment(a, b, c)) return true;
+  if (o2 == 0 && _onSegment(a, b, d)) return true;
+  if (o3 == 0 && _onSegment(c, d, a)) return true;
+  if (o4 == 0 && _onSegment(c, d, b)) return true;
+  return false;
+}
+
+/// The point where segments `a-b` and `c-d` cross, or null when they are
+/// parallel or do not meet. Used to place a [CollisionEvent] at the overlap.
+Vec2? segmentIntersectionPoint(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
+  final r = b - a;
+  final s = d - c;
+  final denom = _cross(r, s);
+  if (denom.abs() < 1e-12) return null; // parallel or degenerate
+  final t = _cross(c - a, s) / denom;
+  final u = _cross(c - a, r) / denom;
+  if (t < -1e-9 || t > 1 + 1e-9 || u < -1e-9 || u > 1 + 1e-9) return null;
+  return a + r * t;
+}
+
+/// Whether two convex polygons overlap, by the separating-axis theorem.
+///
+/// The narrow phase of collision detection: each vehicle is an oriented box, so
+/// a real overlap means the two footprints intersect. Touching edges (a gap of
+/// exactly zero) do not count as overlapping, so vehicles may sit bumper to
+/// bumper without registering a crash.
+bool obbOverlap(List<Vec2> a, List<Vec2> b) {
+  for (final poly in [a, b]) {
+    for (var i = 0; i < poly.length; i++) {
+      // Outward normal of one edge is a candidate separating axis.
+      final edge = poly[(i + 1) % poly.length] - poly[i];
+      final axis = edge.perpRight;
+      if (axis.length < 1e-12) continue;
+
+      var minA = double.infinity, maxA = double.negativeInfinity;
+      var minB = double.infinity, maxB = double.negativeInfinity;
+      for (final p in a) {
+        final d = p.dot(axis);
+        if (d < minA) minA = d;
+        if (d > maxA) maxA = d;
+      }
+      for (final p in b) {
+        final d = p.dot(axis);
+        if (d < minB) minB = d;
+        if (d > maxB) maxB = d;
+      }
+      // A gap on any axis proves the polygons are disjoint.
+      if (maxA <= minB + 1e-9 || maxB <= minA + 1e-9) return false;
+    }
+  }
+  return true;
+}
