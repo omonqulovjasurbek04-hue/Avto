@@ -1,0 +1,20 @@
+{
+  "name": "@yhq/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thin JS wrapper around the compiled Dart scenario engine. Loads the dart2js bundle and exposes typed frame/scene functions. Also ships the display-list renderer shared by every client. No engine logic lives here.",
+  "type": "module",
+  "types": "./types.d.ts",
+  "exports": {
+    ".": "./index.mjs",
+    "./node": "./load.node.mjs",
+    "./renderer": "./renderer.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "load.node.mjs",
+    "renderer.mjs",
+    "types.d.ts",
+    "engine.js"
+  ]
+}
