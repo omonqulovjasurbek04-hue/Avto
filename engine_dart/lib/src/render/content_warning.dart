@@ -22,6 +22,10 @@ enum WarningCode {
 
   /// A road declares no lanes in a direction an actor needs.
   laneUnavailable,
+
+  /// Choreographed playback runs shorter or longer than the 4-9s the spec
+  /// wants a scene to land in, so it will feel rushed or draggy.
+  playbackDurationOutOfRange,
 }
 
 class ContentWarning {
