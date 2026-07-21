@@ -55,7 +55,23 @@ class SceneBuilder {
       : layout = IntersectionLayout(scenario.scene),
         palette = Palette.forConditions(scenario.scene.conditions);
 
+  /// The `preview` scene, frozen at t = 0: vehicles at their staged positions.
   BuiltScene build() {
+    final static_ = buildStatic();
+    return BuiltScene(
+      RenderScene([...static_.scene.ops, ...vehicleOps(stagedPoses(layout, scenario.actors))]),
+      static_.warnings,
+    );
+  }
+
+  /// Every layer except the vehicles, plus the warnings.
+  ///
+  /// Split out from the vehicles so playback can build the static scene once and
+  /// redraw only the moving parts per frame - the whole point of keeping motion
+  /// cheap on a low-end phone. Layers are sorted back-to-front at paint time
+  /// (`RenderScene.ordered`), so emitting the vehicles separately, and later,
+  /// changes nothing in the final image.
+  BuiltScene buildStatic() {
     _ops.clear();
     _warnings.clear();
 
@@ -74,12 +90,11 @@ class SceneBuilder {
     _laneMarkings();
     _authoredMarkings();
     _tramTrack();
-    _vehicles();
     _signs();
     _lights();
     _atmosphere();
 
-    return BuiltScene(RenderScene(_ops), List.unmodifiable(_warnings));
+    return BuiltScene(RenderScene(List.of(_ops)), List.unmodifiable(_warnings));
   }
 
   void _warn(WarningCode code, String path, String detail) =>
@@ -322,8 +337,12 @@ class SceneBuilder {
 
   // ---------------------------------------------------------------- vehicles
 
-  void _vehicles() {
-    for (final pose in stagedPoses(layout, scenario.actors)) {
+  /// Draws each actor at the given pose. Playback calls this per frame with
+  /// `Playback.posesAt(t)`; [build] calls it once with the staged poses. An
+  /// actor that has left the scene simply is not in [poses], so it vanishes.
+  List<DrawOp> vehicleOps(List<ActorPose> poses) {
+    final ops = <DrawOp>[];
+    for (final pose in poses) {
       final isPlayer = pose.actor.role == ActorRole.player;
       final body = switch (pose.actor.kind) {
         ActorKind.tram => palette.tramBody,
@@ -331,13 +350,13 @@ class SceneBuilder {
       };
       final id = pose.actor.id;
 
-      _ops.add(FillPolygon(Layer.vehicles, pose.boxCorners, body, actorId: id));
-      _ops.add(StrokePath(Layer.vehicles, pose.boxCorners, palette.outline,
+      ops.add(FillPolygon(Layer.vehicles, pose.boxCorners, body, actorId: id));
+      ops.add(StrokePath(Layer.vehicles, pose.boxCorners, palette.outline,
           width: 3, closed: true, actorId: id));
 
       // Windshield sits toward the nose, so heading is readable at a glance.
       final noseOffset = pose.heading.normalized * (pose.size.length * 0.22);
-      _ops.add(FillPolygon(
+      ops.add(FillPolygon(
         Layer.vehicles,
         orientedBox(pose.position + noseOffset, pose.heading, pose.size.length * 0.26,
             pose.size.width * 0.72),
@@ -345,6 +364,7 @@ class SceneBuilder {
         actorId: id,
       ));
     }
+    return ops;
   }
 
   // ------------------------------------------------------------- signs/lights
