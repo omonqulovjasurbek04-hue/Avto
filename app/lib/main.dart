@@ -6,8 +6,9 @@ import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 
 import 'scene_painter.dart';
 
-/// Phase 1 shell: browse the bundled scenarios and see each rendered at t = 0.
-/// Auth, sync and the real question flow arrive in Phase 7.
+/// Phase 2 shell: browse the bundled scenarios and watch each one play - the
+/// correct answer, or your own choice unfolding to its consequence. Auth, sync
+/// and the real question flow arrive in Phase 7.
 void main() => runApp(const PreviewApp());
 
 const _contentRoot = 'assets/content/';
@@ -100,15 +101,19 @@ class ScenarioScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(scenario.id)),
-      body: Column(
-        children: [
-          ScenarioPreview(scenario: scenario),
-          if (text != null)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text(text, style: Theme.of(context).textTheme.titleMedium),
-            ),
-        ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (text != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+              ),
+            ScenarioPlayer(scenario: scenario),
+          ],
+        ),
       ),
     );
   }

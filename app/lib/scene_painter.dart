@@ -1,6 +1,9 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:engine_dart/engine_dart.dart' as engine;
+import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
 import 'package:flutter/widgets.dart';
 
 /// Replays the engine's display list onto a Flutter canvas.
@@ -121,6 +124,162 @@ class ScenarioPreview extends StatelessWidget {
       child: CustomPaint(
         painter: ScenePainter(built.scene),
         size: Size.infinite,
+      ),
+    );
+  }
+}
+
+/// Plays a scenario: the correct answer, or - once the student taps an option -
+/// their own choice, freezing at the crash for a wrong one.
+///
+/// The engine does all the work. This widget only owns the clock (a [Ticker]
+/// with a fixed 60Hz accumulator, so the animation is frame-rate independent)
+/// and asks [engine.ScenePlayer.frameAt] for a display list to paint. It is the
+/// Flutter twin of editor/public/viewer.html; both drive the identical engine.
+class ScenarioPlayer extends StatefulWidget {
+  final engine.Scenario scenario;
+
+  const ScenarioPlayer({super.key, required this.scenario});
+
+  @override
+  State<ScenarioPlayer> createState() => _ScenarioPlayerState();
+}
+
+class _ScenarioPlayerState extends State<ScenarioPlayer> with SingleTickerProviderStateMixin {
+  static const _dt = 1 / 60;
+  static const _speeds = [0.25, 0.5, 1.0, 2.0];
+
+  late final Ticker _ticker;
+  late engine.ScenePlayer _player;
+  late Map<String, engine.OutcomeResult> _outcomes;
+
+  /// The option being played, or null for the correct answer.
+  String? _selected;
+  double _time = 0;
+  double _speed = 1;
+  bool _playing = false;
+  double _acc = 0;
+  Duration _last = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _outcomes = engine.classifyOptions(widget.scenario);
+    _player = engine.ScenePlayer.of(widget.scenario);
+    _ticker = createTicker(_onTick);
+    _play();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  void _onTick(Duration elapsed) {
+    final delta = ((elapsed - _last).inMicroseconds / 1e6).clamp(0.0, 0.25);
+    _last = elapsed;
+    _acc += delta * _speed;
+    final dur = _player.duration;
+    while (_acc >= _dt) {
+      _time = math.min(_time + _dt, dur);
+      _acc -= _dt;
+    }
+    if (_time >= dur) _pause();
+    setState(() {});
+  }
+
+  void _play() {
+    if (_playing) return;
+    if (_time >= _player.duration) _time = 0; // replay from the top
+    _playing = true;
+    _acc = 0;
+    _last = Duration.zero;
+    _ticker.start();
+    setState(() {});
+  }
+
+  void _pause() {
+    _playing = false;
+    if (_ticker.isActive) _ticker.stop();
+    setState(() {});
+  }
+
+  void _select(String? optionId) {
+    _pause();
+    _selected = optionId;
+    _player = optionId == null
+        ? engine.ScenePlayer.of(widget.scenario)
+        : engine.ScenePlayer.forPlayback(widget.scenario, _outcomes[optionId]!.playback);
+    _time = 0;
+    _play();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.maybeLocaleOf(context)?.languageCode;
+    final options = widget.scenario.question.options;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: CustomPaint(painter: ScenePainter(_player.frameAt(_time).scene)),
+        ),
+        _transport(),
+        const SizedBox(height: 8),
+        for (final o in options) _optionTile(o, locale),
+      ],
+    );
+  }
+
+  Widget _transport() {
+    final dur = _player.duration;
+    return Row(
+      children: [
+        IconButton(
+          icon: Icon(_playing ? Icons.pause : Icons.play_arrow),
+          onPressed: () => _playing ? _pause() : _play(),
+        ),
+        Expanded(
+          child: Slider(
+            value: _time.clamp(0, dur),
+            max: dur,
+            onChanged: (v) {
+              _pause();
+              setState(() => _time = v);
+            },
+          ),
+        ),
+        Text('${_time.toStringAsFixed(1)}s'),
+        const SizedBox(width: 8),
+        for (final s in _speeds)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: ChoiceChip(
+              label: Text('${s}x'),
+              selected: _speed == s,
+              onSelected: (_) => setState(() => _speed = s),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _optionTile(engine.Option o, String? locale) {
+    final outcome = _outcomes[o.id]!;
+    final label = locale == null ? o.id : (o.label[locale] ?? o.id);
+    final verdict = outcome.isClean ? 'correct' : (outcome.violation?.wire ?? 'wrong');
+    return Card(
+      color: o.id == _selected ? Theme.of(context).colorScheme.primaryContainer : null,
+      child: ListTile(
+        title: Text(label),
+        trailing: Text(
+          verdict,
+          style: TextStyle(color: outcome.isClean ? Colors.green : Colors.red),
+        ),
+        onTap: () => _select(o.id),
       ),
     );
   }
