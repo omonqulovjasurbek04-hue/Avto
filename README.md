@@ -95,3 +95,4 @@ them is cheap now and expensive at 1200 questions.
 
 The Flutter app (`app/`) compiles against `engine_dart` but needs a Flutter SDK
 installed to build; the engine itself is verified headlessly.
+# mashina-test
