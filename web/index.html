@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avto Qoidalar (YHQ) - Interaktiv Haydovchilik Platformasi</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      // Register hook for compiled Dart scenario engine bundle
+      window.__engineRegister = (buildScene, buildFrame, sceneInfo, optionFrame, version) => {
+        window.__yhqEngine = { buildScene, buildFrame, sceneInfo, optionFrame, version };
+      };
+    </script>
+    <script src="/engine.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
