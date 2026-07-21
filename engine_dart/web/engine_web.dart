@@ -25,12 +25,46 @@ import 'package:engine_dart/engine_dart.dart';
 /// host-supplied function cannot be proven pure, so it is kept. Verified by
 /// tools/verify_js.js, which fails loudly if the export goes missing again.
 @JS('__engineRegister')
-external void _register(JSFunction buildScene, JSString version);
+external void _register(
+  JSFunction buildScene,
+  JSFunction buildFrame,
+  JSFunction sceneInfo,
+  JSFunction optionFrame,
+  JSString version,
+);
 
-String buildSceneJson(String scenarioJson) {
+/// Static scene at t = 0 (the `preview`).
+String buildSceneJson(String scenarioJson) => _guard(() {
+      final sc = _parse(scenarioJson);
+      return sceneToJson(sc);
+    });
+
+/// One animation frame of the correct answer, at time [t].
+String buildFrameJson(String scenarioJson, double t) => _guard(() {
+      final sc = _parse(scenarioJson);
+      return sceneFrameToJson(sc, t);
+    });
+
+/// Playback timing plus the computed outcome of every option.
+String sceneInfoJson(String scenarioJson) => _guard(() {
+      final sc = _parse(scenarioJson);
+      return scenePlaybackInfo(sc);
+    });
+
+/// One animation frame of a specific option's playback, at time [t] - so the
+/// viewer can show a student their own (possibly wrong) answer unfolding.
+String optionFrameJson(String scenarioJson, String optionId, double t) => _guard(() {
+      final sc = _parse(scenarioJson);
+      final option = sc.question.options.firstWhere((o) => o.id == optionId);
+      final player = ScenePlayer.forPlayback(sc, classifyOption(sc, option).playback);
+      return playerFrameToJson(player, sc.id, t);
+    });
+
+Scenario _parse(String json) => Scenario.fromJson(jsonDecode(json) as Map<String, dynamic>);
+
+String _guard(Map<String, dynamic> Function() body) {
   try {
-    final sc = Scenario.fromJson(jsonDecode(scenarioJson) as Map<String, dynamic>);
-    return jsonEncode(sceneToJson(sc));
+    return jsonEncode(body());
   } catch (e) {
     return jsonEncode({'error': e.toString()});
   }
@@ -38,7 +72,11 @@ String buildSceneJson(String scenarioJson) {
 
 void main() {
   _register(
-    ((JSString json) => buildSceneJson(json.toDart).toJS).toJS,
+    ((JSString j) => buildSceneJson(j.toDart).toJS).toJS,
+    ((JSString j, JSNumber t) => buildFrameJson(j.toDart, t.toDartDouble).toJS).toJS,
+    ((JSString j) => sceneInfoJson(j.toDart).toJS).toJS,
+    ((JSString j, JSString o, JSNumber t) =>
+        optionFrameJson(j.toDart, o.toDart, t.toDartDouble).toJS).toJS,
     '0.1.0'.toJS,
   );
 }

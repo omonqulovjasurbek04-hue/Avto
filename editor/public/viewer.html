@@ -27,7 +27,27 @@
   button.scenario small { display: block; color: var(--dim); font-size: 12px; }
   button.scenario[aria-current="true"] small { color: #dce7f7; }
   main { padding: 24px; display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 24px; align-items: start; }
-  canvas { width: 100%; max-width: 640px; aspect-ratio: 1; background: #000; border-radius: 10px; display: block; }
+  .stage { max-width: 640px; }
+  canvas { width: 100%; aspect-ratio: 1; background: #000; border-radius: 10px; display: block; }
+  .transport {
+    display: flex; align-items: center; gap: 10px; margin-top: 12px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 8px 12px;
+  }
+  .transport button {
+    background: transparent; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 6px; width: 34px; height: 30px; cursor: pointer; font-size: 14px; flex: none;
+  }
+  .transport button:hover { border-color: var(--accent); }
+  .transport input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .transport .clock { color: var(--dim); font-variant-numeric: tabular-nums; font-size: 12px; min-width: 42px; }
+  .speeds { display: flex; gap: 4px; }
+  .speeds button { width: auto; padding: 0 7px; font-size: 12px; }
+  .speeds button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .opt { cursor: pointer; }
+  .opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .opt .verdict { float: right; font-size: 12px; }
+  .opt .verdict.bad { color: #e0603c; }
+  .opt .verdict.good { color: #3fb55c; }
   .meta h2 { font-size: 17px; margin: 0 0 4px; }
   .meta .rule { color: var(--dim); font-size: 13px; margin-bottom: 18px; }
   .opt { padding: 8px 11px; border: 1px solid var(--line); border-radius: 7px; margin-bottom: 6px; }
@@ -51,7 +71,16 @@
   <div class="stat" id="engineInfo"></div>
 </aside>
 <main>
-  <canvas id="cv" width="900" height="900"></canvas>
+  <div class="stage">
+    <canvas id="cv" width="900" height="900"></canvas>
+    <div class="transport">
+      <button id="play" title="Play / pause">▶</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" step="1">
+      <span class="clock" id="clock">0.0s</span>
+      <span class="speeds" id="speeds"></span>
+      <button id="replay" title="Replay">↺</button>
+    </div>
+  </div>
   <div class="meta" id="meta"></div>
 </main>
 
@@ -59,9 +88,12 @@
 // The engine bundle calls this on startup to hand over its entry points.
 // It must exist before engine.js loads. See engine_dart/web/engine_web.dart
 // for why the engine does not simply assign the globals itself.
-let engineBuildScene, engineVersion;
-globalThis.__engineRegister = (buildScene, version) => {
+let engineBuildScene, engineBuildFrame, engineSceneInfo, engineOptionFrame, engineVersion;
+globalThis.__engineRegister = (buildScene, buildFrame, sceneInfo, optionFrame, version) => {
   engineBuildScene = buildScene;
+  engineBuildFrame = buildFrame;
+  engineSceneInfo = sceneInfo;
+  engineOptionFrame = optionFrame;
   engineVersion = version;
 };
 </script>
@@ -126,10 +158,102 @@ function draw(scene) {
   }
 }
 
-function renderMeta(scenario, scene) {
-  const t = (loc) => (obj) => (obj && obj[loc]) || '—';
-  const tr = t(locale);
-  const correct = scenario.question.correct;
+// ---- playback clock ------------------------------------------------------
+// The page owns the clock; the engine is a pure function of the time we pass
+// it. A fixed 60Hz accumulator advances the animation, so the delta from
+// requestAnimationFrame never reaches the engine (invariant: deterministic
+// rendering). The frame each tick comes from engineBuildFrame - the same Dart
+// engine the app runs, compiled to JS.
+const SPEEDS = [0.25, 0.5, 1, 2];
+const DT = 1 / 60;
+
+let scenario = null;       // current scenario JSON
+let selected = null;       // which option is being played (null = correct answer)
+let info = null;           // engineSceneInfo output for the current scenario
+let time = 0;              // playback clock, seconds
+let speed = 1;
+let playing = false;
+let rafId = null;
+let acc = 0;
+let lastMs = 0;
+
+function frameJson() {
+  const src = JSON.stringify(scenario);
+  const raw = selected == null
+    ? engineBuildFrame(src, time)
+    : engineOptionFrame(src, selected, time);
+  return JSON.parse(raw);
+}
+
+function activeDuration() {
+  if (selected == null) return info.duration;
+  return info.options[selected].duration;
+}
+
+function renderFrame() {
+  const scene = frameJson();
+  if (scene.error) {
+    document.getElementById('meta').insertAdjacentHTML('afterbegin',
+      `<div class="warn">engine error: ${scene.error}</div>`);
+    stop();
+    return;
+  }
+  draw(scene);
+  const dur = activeDuration();
+  document.getElementById('scrub').value = Math.round((time / dur) * 1000);
+  document.getElementById('clock').textContent = `${time.toFixed(1)}s`;
+}
+
+function tick(ms) {
+  if (!playing) return;
+  const delta = Math.min((ms - lastMs) / 1000, 0.25); // ignore long stalls
+  lastMs = ms;
+  acc += delta * speed;
+  const dur = activeDuration();
+  while (acc >= DT) { time = Math.min(time + DT, dur); acc -= DT; }
+  renderFrame();
+  if (time >= dur) { stop(); return; }
+  rafId = requestAnimationFrame(tick);
+}
+
+function play() {
+  if (playing) return;
+  const dur = activeDuration();
+  if (time >= dur) time = 0; // replay from the top
+  playing = true;
+  acc = 0;
+  lastMs = performance.now();
+  document.getElementById('play').textContent = '⏸';
+  rafId = requestAnimationFrame(tick);
+}
+
+function stop() {
+  playing = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  document.getElementById('play').textContent = '▶';
+}
+
+function seek(t) {
+  time = Math.max(0, Math.min(t, activeDuration()));
+  renderFrame();
+}
+
+// Switch what is being played (correct answer, or a chosen option) and restart.
+function playOption(optionId) {
+  selected = optionId;
+  time = 0;
+  renderMeta(); // reflect the new selection in the option list and status line
+  renderFrame();
+  play();
+}
+
+const VERDICT = { collision: 'crashes', priority_violation: 'fails to give way',
+  unnecessary_wait: 'waits needlessly', sign_violation: 'ignores a sign',
+  marking_violation: 'crosses a marking', unsafe_but_legal: 'cuts it fine' };
+
+function renderMeta() {
+  const tr = (obj) => (obj && obj[locale]) || '—';
+  const opts = info.options;
 
   document.getElementById('meta').innerHTML = `
     <div class="langs">
@@ -137,17 +261,24 @@ function renderMeta(scenario, scene) {
     </div>
     <h2>${tr(scenario.question.text)}</h2>
     <div class="rule">${scenario.topic} &middot; rule ${scenario.resolution.rule.code}</div>
-    ${scenario.question.options.map((o) => `
-      <div class="opt ${o.id === correct ? 'correct' : ''}">
-        ${tr(o.label)}${o.id === correct ? '<span class="tag">correct</span>' : ''}
-      </div>`).join('')}
+    ${scenario.question.options.map((o) => {
+      const oc = opts[o.id];
+      const verdict = oc.clean
+        ? '<span class="verdict good">correct</span>'
+        : `<span class="verdict bad">${VERDICT[oc.type] || oc.type}</span>`;
+      return `<div class="opt" data-opt="${o.id}" aria-pressed="${o.id === selected}">
+        ${tr(o.label)}${verdict}</div>`;
+    }).join('')}
     <div class="rule" style="margin-top:16px">${tr(scenario.resolution.rule.text)}</div>
-    ${scene.warnings.map((w) => `<div class="warn">${w.code}: ${w.detail}</div>`).join('')}
-    <div class="stat">${scene.ops.length} draw ops &middot; ${scenario.actors.length} actors</div>
+    <div class="stat">
+      playing: ${selected == null ? 'correct answer' : `your answer (${selected})`}
+      &middot; ${activeDuration().toFixed(1)}s
+    </div>
   `;
   document.querySelectorAll('.langs button').forEach((b) =>
-    b.addEventListener('click', () => { locale = b.dataset.loc; show(current); })
-  );
+    b.addEventListener('click', () => { locale = b.dataset.loc; renderMeta(); }));
+  document.querySelectorAll('.opt').forEach((el) =>
+    el.addEventListener('click', () => playOption(el.dataset.opt)));
 }
 
 async function load(id) {
@@ -161,32 +292,53 @@ async function load(id) {
 
 async function show(id) {
   current = id;
+  stop();
   document.querySelectorAll('button.scenario').forEach((b) =>
-    b.setAttribute('aria-current', String(b.dataset.id === id))
-  );
+    b.setAttribute('aria-current', String(b.dataset.id === id)));
 
-  const scenario = await load(id);
-  // The entire scene is derived here, by the Dart engine, in the browser.
-  const scene = JSON.parse(engineBuildScene(JSON.stringify(scenario)));
-  if (scene.error) {
-    document.getElementById('meta').innerHTML = `<div class="warn">engine error: ${scene.error}</div>`;
+  scenario = await load(id);
+  info = JSON.parse(engineSceneInfo(JSON.stringify(scenario)));
+  if (info.error) {
+    document.getElementById('meta').innerHTML = `<div class="warn">engine error: ${info.error}</div>`;
     return;
   }
-  draw(scene);
-  renderMeta(scenario, scene);
+  selected = null;
+  time = 0;
+  renderMeta();
+  renderFrame();
+  play(); // auto-play the correct answer on open
+}
+
+function wireTransport() {
+  document.getElementById('play').addEventListener('click', () => playing ? stop() : play());
+  document.getElementById('replay').addEventListener('click', () => { time = 0; play(); });
+  document.getElementById('scrub').addEventListener('input', (e) => {
+    stop();
+    seek((e.target.value / 1000) * activeDuration());
+  });
+  const speedsEl = document.getElementById('speeds');
+  speedsEl.innerHTML = SPEEDS.map((s) =>
+    `<button data-speed="${s}" aria-pressed="${s === speed}">${s}×</button>`).join('');
+  speedsEl.querySelectorAll('button').forEach((b) =>
+    b.addEventListener('click', () => {
+      speed = parseFloat(b.dataset.speed);
+      speedsEl.querySelectorAll('button').forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)));
+    }));
 }
 
 (async function init() {
   document.getElementById('engineInfo').textContent =
     `engine_dart ${engineVersion} compiled to JS`;
+  wireTransport();
 
   const list = document.getElementById('list');
   for (const id of IDS) {
-    const scenario = await load(id);
+    const sc = await load(id);
     const b = document.createElement('button');
     b.className = 'scenario';
     b.dataset.id = id;
-    b.innerHTML = `${id}<small>${scenario.scene.type}</small>`;
+    b.innerHTML = `${id}<small>${sc.scene.type}</small>`;
     b.addEventListener('click', () => show(id));
     list.appendChild(b);
   }
