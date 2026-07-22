@@ -1,0 +1,30 @@
+{
+  "id": "lesson-04",
+  "title": "4. Quvib o'tish va to'xtash qoidalari",
+  "topic": "overtaking",
+  "description": "Quvib o me'yorlari, taqiqlangan joylar va to'xtab turish qoidalari.",
+  "ruleCode": "YHQ 11-12-bandlar",
+  "icon": "🏎️",
+  "readTime": "12 daqiqa",
+  "sections": [
+    {
+      "heading": "Quvib o'tish taqiqlangan joylar",
+      "content": "Chorrahalarda, piyodalar o'tish joylarida, temir yo'l o'tish joylarida (100m yaqinida), ko'priklarda va ko'rish imkoniyati cheklangan burilishlarda quvib o'tish taqiqlanadi.",
+      "signs": [
+        "3.20"
+      ]
+    },
+    {
+      "heading": "To'xtash va to'xtab turish",
+      "content": "Yo'lning o'ng tomonidagi yon chekkasida, trotuarga yaqin joyda ruxsat etiladi. Chorraha kesishmasidan 5 metr va piyodalar o'tish joyidan 5 metr masofada to'xtash taqiqlanadi.",
+      "signs": [
+        "3.27",
+        "3.28"
+      ]
+    }
+  ],
+  "relatedScenarioIds": [
+    "sc-0002",
+    "sc-0004"
+  ]
+}

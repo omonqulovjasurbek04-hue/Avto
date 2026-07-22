@@ -1,0 +1,34 @@
+{
+  "id": "lesson-02",
+  "title": "2. Chorrahalardan o'tish qoidalari",
+  "topic": "crossroads",
+  "description": "Teng ahamiyatli va teng ahamiyatga ega bo'lmagan chorrahalarda harakatlanish imtiyozlari hamda o'ng qo'l qoidasi.",
+  "ruleCode": "YHQ 13-band",
+  "icon": "🚦",
+  "readTime": "15 daqiqa",
+  "sections": [
+    {
+      "heading": "Tartibga solinggan chorrahalar",
+      "content": "Svetofor yoki tartibga soluvchining ishoralari barcha imtiyoz belgilaridan ustun turadi. Svetoforning yashil chirog'i yonib tursa, imtiyoz belgisiga amal qilinmaydi.",
+      "signs": []
+    },
+    {
+      "heading": "Tartibga solinmagan chorrahalar va Asosiy yo'l",
+      "content": "Asosiy yo'lda kelayotgan haydovchi ikkinchi darajali yo'ldagilarga nisbatan imtiyozga ega. Agar yo'llar teng ahamiyatli bo'lsa, 'O'ng qo'l qoidasi' amal qiladi: o'ng tomondan kelayotgan transport vositasiga yo'l beriladi.",
+      "signs": [
+        "2.1",
+        "2.4"
+      ]
+    },
+    {
+      "heading": "Chorrahada burilish holatlari",
+      "content": "Chapga yoki qayta burilayotgan haydovchi qarama-qarshi tomondan to'g'ri yoki o'ngga harakatlanayotgan transport vositalariga yo'l berishi shart.",
+      "signs": []
+    }
+  ],
+  "relatedScenarioIds": [
+    "sc-0001",
+    "sc-0003",
+    "sc-0005"
+  ]
+}

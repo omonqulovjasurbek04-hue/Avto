@@ -1,11 +1,32 @@
-// The engine, shared across every request. Loading it evaluates the dart2js
-// bundle once; the returned functions are pure (JSON in, JSON out), so a single
-// instance serves all requests. See @yhq/engine for how loading works.
-import { loadEngineNode } from "@yhq/engine/node";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-export const engine = loadEngineNode();
+const BUNDLE_PATH = fileURLToPath(new URL("../public/engine.js", import.meta.url));
 
-/** Thrown when the engine returns its {error} sentinel (bad scenario/option). */
+let _engine = null;
+
+function loadEngine() {
+  if (_engine) return _engine;
+
+  try {
+    const code = readFileSync(BUNDLE_PATH, "utf8");
+
+    if (typeof globalThis.self === "undefined") globalThis.self = globalThis;
+
+    (0, eval)(code);
+
+    const api = globalThis.__yhqEngine;
+    if (!api) throw new Error("engine bundle loaded but no __yhqEngine found");
+
+    _engine = api;
+    return api;
+  } catch (err) {
+    throw new Error(`Failed to load engine: ${err.message}`);
+  }
+}
+
+export const engine = loadEngine();
+
 export class EngineError extends Error {
   constructor(message) {
     super(message);
@@ -14,24 +35,22 @@ export class EngineError extends Error {
   }
 }
 
-// The engine_web bundle catches everything and returns {"error": "..."} rather
-// than a valid frame/info (see engine_dart/web/engine_web.dart). Callers must
-// not treat that shape as a result — surface it as an error instead.
 function unwrap(raw) {
-  const parsed = JSON.parse(raw);
-  if (parsed && typeof parsed === "object" && "error" in parsed) {
-    throw new EngineError(String(parsed.error));
+  if (raw && typeof raw === "object" && "error" in raw) {
+    throw new EngineError(String(raw.error));
   }
-  return parsed;
+  return raw;
 }
 
-/** Parsed scene metadata for a scenario JSON string. */
 export function sceneInfo(src) {
-  return unwrap(engine.sceneInfo(src));
+  const result = engine.sceneInfo(src);
+  return unwrap(typeof result === "string" ? JSON.parse(result) : result);
 }
 
-/** A single correct-answer or per-option frame, as a plain object. */
 export function frame(src, { t = 0, option = null } = {}) {
-  const raw = option == null ? engine.buildFrame(src, t) : engine.optionFrame(src, option, t);
-  return unwrap(raw);
+  const raw = option == null
+    ? engine.buildFrame(src, t)
+    : engine.optionFrame(src, option, t);
+  const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  return unwrap(parsed);
 }

@@ -2,7 +2,7 @@
   "name": "@yhq/engine",
   "version": "0.1.0",
   "private": true,
-  "description": "Thin JS wrapper around the compiled Dart scenario engine. Loads the dart2js bundle and exposes typed frame/scene functions. Also ships the display-list renderer shared by every client. No engine logic lives here.",
+  "description": "Pure JavaScript scenario engine for YHQ driving education platform. Layout derivation, Bézier trajectories, 60fps simulation, OBB collision detection, 6 outcome classifiers, Canvas 2D renderer.",
   "type": "module",
   "types": "./types.d.ts",
   "exports": {
@@ -10,11 +10,17 @@
     "./node": "./load.node.mjs",
     "./renderer": "./renderer.mjs"
   },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test"
+  },
   "files": [
     "index.mjs",
     "load.node.mjs",
     "renderer.mjs",
+    "build.mjs",
     "types.d.ts",
-    "engine.js"
+    "engine.js",
+    "src/"
   ]
 }

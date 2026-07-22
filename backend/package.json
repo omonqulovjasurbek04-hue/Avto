@@ -2,17 +2,25 @@
   "name": "@yhq/server",
   "version": "0.1.0",
   "private": true,
-  "description": "Express REST API over the scenario content, with a JSON progress store. Runs the compiled Dart engine (via @yhq/engine) to classify answers and to serve the engine bundle to clients.",
+  "description": "Express REST API for YHQ driving education platform. Supports JSON file fallback, PostgreSQL via Prisma, and JWT auth.",
   "type": "module",
   "main": "src/index.mjs",
   "scripts": {
     "start": "node src/index.mjs",
     "dev": "node --watch src/index.mjs",
-    "test": "node --test"
+    "test": "node --test",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
-    "@yhq/engine": "*",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "optionalDependencies": {
+    "@prisma/client": "^6.5.0",
+    "prisma": "^6.5.0"
   }
 }

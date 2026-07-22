@@ -1,0 +1,26 @@
+{
+  "id": "lesson-03",
+  "title": "3. Harakatlanish tezligi va masofa",
+  "topic": "speed_limits",
+  "description": "Aholi punktlarida va ulardan tashqaridagi tezlik me me'yorlari hamda xavfsiz oraliq masofa.",
+  "ruleCode": "YHQ 9-band",
+  "icon": "⚡",
+  "readTime": "8 daqiqa",
+  "sections": [
+    {
+      "heading": "Ruxsat etilgan maksimal tezliklar",
+      "content": "Aholi punktlarida yengil avtomobillar uchun maksimal tezlik 60 km/soat (maktab va turar-joy hududlarida 30-50 km/soat). Aholi punktlaridan tashqarida — 90 km/soat.",
+      "signs": [
+        "3.24"
+      ]
+    },
+    {
+      "heading": "Xavfsiz masofa",
+      "content": "Haydovchi oldinda borayotgan transport vositasi keskin to'xtaganda to'qnashuvning oldini oladigan xavfsiz masofani saqlashi shart.",
+      "signs": []
+    }
+  ],
+  "relatedScenarioIds": [
+    "sc-0004"
+  ]
+}

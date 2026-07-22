@@ -1,37 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { ScenarioPlayer } from '../components/ScenarioPlayer';
+import { useScenarios } from '../hooks/useScenarios';
+import { useProgress } from '../hooks/useProgress';
 
 export function PracticePage({ lang = 'uz' }) {
-  const [scenarios, setScenarios] = useState([]);
+  const { list: scenarios, loading, error, getById } = useScenarios();
+  const { recordAnswer } = useProgress();
   const [activeTopic, setActiveTopic] = useState('all');
   const [selectedId, setSelectedId] = useState(null);
   const [currentScenario, setCurrentScenario] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/scenarios')
-      .then((res) => res.json())
-      .then((data) => {
-        setScenarios(data);
-        if (data.length > 0) {
-          setSelectedId(data[0].id);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Failed to load scenario list', err);
-        setLoading(false);
-      });
-  }, []);
+    if (scenarios.length > 0 && !selectedId) {
+      setSelectedId(scenarios[0].id);
+    }
+  }, [scenarios, selectedId]);
 
   useEffect(() => {
     if (selectedId) {
-      fetch(`/api/scenarios/${selectedId}`)
-        .then((res) => res.json())
-        .then((data) => setCurrentScenario(data))
-        .catch((err) => console.error('Failed to load scenario detail', err));
+      getById(selectedId)
+        .then(setCurrentScenario)
+        .catch((err) => console.error('Failed to load scenario', err));
     }
-  }, [selectedId]);
+  }, [selectedId, getById]);
 
   const filteredScenarios =
     activeTopic === 'all'
@@ -56,9 +47,12 @@ export function PracticePage({ lang = 'uz' }) {
     return <div style={{ padding: 60, textAlign: 'center', color: '#94a3b8' }}>Ssenariylar yuklanmoqda...</div>;
   }
 
+  if (error) {
+    return <div style={{ padding: 60, textAlign: 'center', color: '#ef4444' }}>Xatolik: {error.message}</div>;
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Header & Topic Filter */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 700 }}>🚦 Interaktiv Chorraha Testlari</h2>
@@ -67,7 +61,6 @@ export function PracticePage({ lang = 'uz' }) {
           </p>
         </div>
 
-        {/* Topic Filters */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {[
             { id: 'all', label: 'Barcha Savollar' },
@@ -91,7 +84,6 @@ export function PracticePage({ lang = 'uz' }) {
         </div>
       </div>
 
-      {/* Scenario Pills Selector */}
       <div className="scenarios-pill-bar">
         {filteredScenarios.map((sc, idx) => {
           const isSelected = selectedId === sc.id;
@@ -108,31 +100,25 @@ export function PracticePage({ lang = 'uz' }) {
         })}
       </div>
 
-      {/* Main Scenario Player */}
       {currentScenario ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <ScenarioPlayer
             scenarioData={currentScenario}
             lang={lang}
             onAnswerSelected={(optionId) => {
-              fetch('/api/progress/user-web/answer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scenarioId: currentScenario.id, optionId }),
-              }).catch((err) => console.error('Failed to record answer', err));
+              recordAnswer(currentScenario.id, optionId).catch((err) =>
+                console.error('Failed to record answer', err)
+              );
             }}
           />
 
-          {/* Navigation Prev/Next Controls */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <button className="btn-secondary" onClick={handlePrev} disabled={currentIndex <= 0}>
               ← Oldingi Savol
             </button>
-
             <span style={{ color: '#94a3b8', fontSize: 14, fontWeight: 600 }}>
               {currentIndex + 1} / {filteredScenarios.length} ta savol
             </span>
-
             <button className="btn-primary" onClick={handleNext} disabled={currentIndex >= filteredScenarios.length - 1}>
               Keyingi Savol →
             </button>

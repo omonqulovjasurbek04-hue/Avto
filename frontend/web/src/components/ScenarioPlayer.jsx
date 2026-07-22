@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { drawDisplayList } from '@yhq/engine/renderer';
+import { PlaybackBar } from './PlaybackBar';
+import { OptionsList } from './OptionsList';
+import { OutcomeBanner } from './OutcomeBanner';
+import { RuleExplanation } from './RuleExplanation';
 
 export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) {
   const canvasRef = useRef(null);
@@ -7,13 +10,12 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [playbackMode, setPlaybackMode] = useState('user'); // 'user' | 'correct'
+  const [playbackMode, setPlaybackMode] = useState('user');
   const [sceneInfoData, setSceneInfoData] = useState(null);
   const [userResult, setUserResult] = useState(null);
 
   const rawJsonStr = JSON.stringify(scenarioData);
 
-  // Reset player state when current scenario changes
   useEffect(() => {
     setSelectedOption(null);
     setUserResult(null);
@@ -21,27 +23,23 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
     setIsPlaying(false);
   }, [scenarioData?.id]);
 
-  // Initialize scene info using engine
   useEffect(() => {
     if (window.__yhqEngine && scenarioData) {
       try {
-        const info = JSON.parse(window.__yhqEngine.sceneInfo(rawJsonStr));
-        setSceneInfoData(info);
+        const info = window.__yhqEngine.sceneInfo(rawJsonStr);
+        const parsed = typeof info === 'string' ? JSON.parse(info) : info;
+        setSceneInfoData(parsed);
       } catch (err) {
-        console.error("Failed to parse scene info from engine", err);
+        console.error('Failed to parse scene info from engine', err);
       }
     }
   }, [scenarioData, rawJsonStr]);
 
-  // Playback length: the engine reports a duration per option (a collision
-  // freezes early), so a chosen answer scrubs over its own timeline; otherwise
-  // the correct-answer duration. Field name is `duration` (see sceneInfo).
   const maxTime =
     (selectedOption && sceneInfoData?.options?.[selectedOption]?.duration) ??
     sceneInfoData?.duration ??
     5.0;
 
-  // Animation Loop
   useEffect(() => {
     let animId;
     let lastStamp = performance.now();
@@ -61,7 +59,6 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
         });
       }
 
-      // Draw current frame onto Canvas with DPR scaling
       if (canvasRef.current && window.__yhqEngine) {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -76,15 +73,21 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
             canvas.height = displayHeight || 900;
           }
 
-          let frameJson;
+          let frameObj;
           if (playbackMode === 'user' && selectedOption) {
-            frameJson = window.__yhqEngine.optionFrame(rawJsonStr, selectedOption, currentTime);
+            const raw = window.__yhqEngine.optionFrame(rawJsonStr, selectedOption, currentTime);
+            frameObj = typeof raw === 'string' ? JSON.parse(raw) : raw;
           } else {
-            frameJson = window.__yhqEngine.buildFrame(rawJsonStr, currentTime);
+            const raw = window.__yhqEngine.buildFrame(rawJsonStr, currentTime);
+            frameObj = typeof raw === 'string' ? JSON.parse(raw) : raw;
           }
-          if (frameJson) {
-            const frameObj = JSON.parse(frameJson);
-            drawDisplayList(ctx, frameObj, { size: canvas.width });
+
+          if (frameObj && !frameObj.error) {
+            if (window.__yhqDraw) {
+              window.__yhqDraw(ctx, frameObj, { size: canvas.width });
+            } else {
+              drawCanvasFallback(ctx, frameObj, canvas.width);
+            }
           }
         }
       }
@@ -96,7 +99,7 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
     return () => cancelAnimationFrame(animId);
   }, [isPlaying, currentTime, playbackSpeed, selectedOption, playbackMode, rawJsonStr, maxTime]);
 
-  const handleSelectOption = async (optionId) => {
+  const handleSelectOption = (optionId) => {
     setSelectedOption(optionId);
     setPlaybackMode('user');
     setCurrentTime(0);
@@ -110,139 +113,102 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
       });
     }
 
-    if (onAnswerSelected) {
-      onAnswerSelected(optionId);
-    }
+    if (onAnswerSelected) onAnswerSelected(optionId);
   };
 
   const questionText = scenarioData?.question?.text?.[lang] || scenarioData?.question?.text?.['uz'] || '';
   const options = scenarioData?.question?.options || [];
   const correctId = scenarioData?.question?.correct;
-  const ruleText = scenarioData?.resolution?.rule?.text?.[lang] || scenarioData?.resolution?.rule?.text?.['uz'] || '';
   const ruleCode = scenarioData?.resolution?.rule?.code || '';
+  const ruleText = scenarioData?.resolution?.rule?.text || null;
 
   return (
     <div className="grid-2col">
-      {/* Canvas & Playback Stage */}
       <div className="stage-card">
         <div className="canvas-wrapper">
           <canvas ref={canvasRef} width={900} height={900} className="scenario-canvas" />
         </div>
 
-        <div className="playback-bar">
-          <button
-            className="btn-icon"
-            onClick={() => setIsPlaying(!isPlaying)}
-            title={isPlaying ? "Pauza" : "O'ynatish"}
-          >
-            {isPlaying ? '⏸' : '▶'}
-          </button>
-
-          <input
-            type="range"
-            min="0"
-            max={maxTime}
-            step="0.01"
-            value={currentTime}
-            onChange={(e) => setCurrentTime(parseFloat(e.target.value))}
-            className="timeline-scrubber"
-          />
-
-          <span className="clock-badge">{currentTime.toFixed(1)}s</span>
-
-          <div className="speed-selector">
-            {[0.25, 0.5, 1].map((s) => (
-              <button
-                key={s}
-                className={`speed-btn ${playbackSpeed === s ? 'active' : ''}`}
-                onClick={() => setPlaybackSpeed(s)}
-              >
-                {s}x
-              </button>
-            ))}
-          </div>
-
-          <button
-            className="btn-icon"
-            onClick={() => {
-              setCurrentTime(0);
-              setIsPlaying(true);
-            }}
-            title="Qaytadan"
-          >
-            ↺
-          </button>
-        </div>
+        <PlaybackBar
+          isPlaying={isPlaying}
+          onTogglePlay={() => setIsPlaying(!isPlaying)}
+          currentTime={currentTime}
+          maxTime={maxTime}
+          onSeek={setCurrentTime}
+          playbackSpeed={playbackSpeed}
+          onSpeedChange={setPlaybackSpeed}
+          onReplay={() => { setCurrentTime(0); setIsPlaying(true); }}
+        />
       </div>
 
-      {/* Question Metadata & Option Selection */}
       <div className="meta-card">
-        <span className="topic-tag">{scenarioData?.topic?.replace(/_/g, ' ') || 'Mavzu'}</span>
+        <span className="topic-tag">
+          {scenarioData?.topic?.replace(/_/g, ' ') || 'Mavzu'}
+        </span>
 
         <h2 className="question-title">{questionText}</h2>
 
-        <div className="options-list">
-          {options.map((opt) => {
-            const label = opt.label?.[lang] || opt.label?.['uz'] || '';
-            const isSelected = selectedOption === opt.id;
-            const isCorrect = opt.id === correctId;
-            let extraClass = '';
-            if (userResult) {
-              if (isSelected && userResult.correct) extraClass = 'correct-highlight';
-              if (isSelected && !userResult.correct) extraClass = 'wrong-highlight';
-            }
+        <OptionsList
+          options={options}
+          lang={lang}
+          selectedOption={selectedOption}
+          userResult={userResult}
+          correctId={correctId}
+          onSelect={handleSelectOption}
+        />
 
-            return (
-              <button
-                key={opt.id}
-                className={`option-btn ${isSelected ? 'selected' : ''} ${extraClass}`}
-                onClick={() => handleSelectOption(opt.id)}
-              >
-                <span>{label}</span>
-                {isSelected && userResult?.correct && <span>✅</span>}
-                {isSelected && !userResult?.correct && <span>❌</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Outcome Feedback Banner */}
-        {userResult && (
-          <div className={`outcome-banner ${userResult.type}`}>
-            {userResult.correct ? (
-              <>
-                <span>✅</span>
-                <div>
-                  <div>To'g'ri javob!</div>
-                  <div style={{ fontSize: '12px', fontWeight: 400 }}>Chorrahadan xavfsiz va qoidaga muvofiq o'tildi.</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <span>💥</span>
-                <div>
-                  <div>
-                    {userResult.type === 'collision' && "Diqqat: To'qnashuv yuz berdi!"}
-                    {userResult.type === 'priority_violation' && "Xato: Asosiy yo'ldagi transportga yo'l berilmadi!"}
-                    {userResult.type === 'unnecessary_wait' && "Xato: Imtiyozga ega bo'lsangiz ham bekorga kutdingiz!"}
-                  </div>
-                  <div style={{ fontSize: '13px', fontWeight: 500, marginTop: '4px', color: '#cbd5e1' }}>
-                    Animatsiyada {userResult.type === 'collision' ? "qizil ramka bilan to'qnashuv nuqtasi" : "xato manevr"} ko'rsatildi. Iltimos, xavfsizlik qoidasiga va o'tish ketma-ketligiga e'tibor qarating!
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Rule Explanation */}
-        {userResult && ruleText && (
-          <div className="rule-box">
-            <div className="rule-code">YHQ {ruleCode}-band:</div>
-            <div>{ruleText}</div>
-          </div>
-        )}
+        <OutcomeBanner userResult={userResult} />
+        <RuleExplanation ruleCode={ruleCode} ruleText={ruleText} lang={lang} />
       </div>
     </div>
   );
+}
+
+function drawCanvasFallback(ctx, frame, size) {
+  const scale = size / 1000;
+  const ops = frame.ops || [];
+  ctx.save();
+  ctx.scale(scale, scale);
+  for (const op of ops) {
+    switch (op.type) {
+      case 'fillPolygon': {
+        const p = op.points;
+        if (p && p.length >= 3) {
+          ctx.beginPath();
+          ctx.moveTo(p[0].x, p[0].y);
+          for (let i = 1; i < p.length; i++) ctx.lineTo(p[i].x, p[i].y);
+          ctx.closePath();
+          ctx.fillStyle = argb(op.colour);
+          ctx.fill();
+        }
+        break;
+      }
+      case 'strokePath': {
+        const p = op.points;
+        if (p && p.length >= 2) {
+          ctx.beginPath();
+          ctx.moveTo(p[0].x, p[0].y);
+          for (let i = 1; i < p.length; i++) ctx.lineTo(p[i].x, p[i].y);
+          if (op.dash) ctx.setLineDash(op.dash);
+          ctx.strokeStyle = argb(op.colour);
+          ctx.lineWidth = op.width || 2;
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+        break;
+      }
+      case 'fillCircle': {
+        ctx.beginPath();
+        ctx.arc(op.centre.x, op.centre.y, op.radius || 5, 0, Math.PI * 2);
+        ctx.fillStyle = argb(op.colour);
+        ctx.fill();
+        break;
+      }
+    }
+  }
+  ctx.restore();
+}
+
+function argb(c) {
+  return `rgba(${(c >> 16) & 255},${(c >> 8) & 255},${c & 255},${((c >> 24) & 255) / 255})`;
 }

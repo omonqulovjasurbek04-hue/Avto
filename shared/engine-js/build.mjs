@@ -1,5 +1,25 @@
-// AVTO (YHQ) Scenario Engine v0.1.0
-// Built from: src/core.js, layout.js, trajectory.js, simulation.js, outcome.js, scene_builder.js, api.js, renderer.js
+#!/usr/bin/env node
+// Builds engine.js bundle from src/ modules.
+// Usage: node build.mjs
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const SRC = path.join(__dirname, 'src');
+const DEST = path.join(__dirname, 'engine.js');
+
+function build() {
+  const files = [
+    'core.js', 'layout.js', 'trajectory.js',
+    'simulation.js', 'outcome.js', 'scene_builder.js',
+    'api.js', 'renderer.js',
+  ];
+
+  let bundle = `// AVTO (YHQ) Scenario Engine v0.1.0
+// Built from: src/${files.join(', ')}
 // Do not edit directly — edit src/ and run node build.mjs
 
 (function(global) {
@@ -350,3 +370,10 @@
   global.__yhqDraw = drawDisplayList;
 
 })(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this));
+`;
+
+  fs.writeFileSync(DEST, bundle, 'utf8');
+  console.log(`Built engine bundle: ${DEST} (${(bundle.length / 1024).toFixed(1)} KB)`);
+}
+
+build();
