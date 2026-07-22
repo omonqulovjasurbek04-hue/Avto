@@ -1,5 +1,5 @@
 {
-  "id": "sc-0005",
+  "id": "sc-0010",
   "schema_version": 1,
   "question_id": "q-0005",
   "topic": "priority_and_intersections",
@@ -58,18 +58,20 @@
       "kind": "car",
       "role": "player",
       "from": "W",
-      "to": "S"
+      "to": "S",
+      "color": "black"
     },
     {
       "id": "a1",
       "kind": "car",
       "from": "N",
-      "to": "S"
+      "to": "S",
+      "color": "yellow"
     }
   ],
   "question": {
     "text": {
-      "uz": "T-shaklidagi chorrahaga qo'shilayotganda birinchi bo'lib kim o'tadi?",
+      "uz": "T-shaklidagi chorrahaga qo'shilayotganda birinchi bo'lib kim o'tadi (Vaziyat 10)?",
       "ru": "Кто проезжает первым при выезде на Т-образный перекрёсток?",
       "en": "Who proceeds first when merging onto the T-junction?"
     },
@@ -95,7 +97,7 @@
       {
         "id": "D",
         "label": {
-          "uz": "Boshqa transport vositalarini kuzatadi"
+          "uz": "Signal berib o'tadi"
         }
       }
     ],

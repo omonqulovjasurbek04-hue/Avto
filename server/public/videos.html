@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YHQ — Video darslar</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0b0f19" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<script>if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));</script>
+<style>
+  :root {
+    --bg: #0b0f19; --bg2: #090d14; --card: #151c2c; --line: #26334d; --fg: #f8fafc;
+    --muted: #94a3b8; --accent: #3b82f6; --good: #10b981; --bad: #ef4444; --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 20px; border-bottom: 1px solid var(--line);
+    background: rgba(21,28,44,.7); backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 10; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+  .brand .logo { font-size: 22px; }
+  .right { display: flex; align-items: center; gap: 12px; }
+  .nav { display: flex; gap: 8px; }
+  .nav a { padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; color: var(--muted); border: 1px solid transparent; }
+  .nav a.active { color: var(--accent); border-color: var(--line); background: rgba(59,130,246,.1); }
+  .langs { display: flex; gap: 4px; }
+  .lang { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); font-weight: 700; font-size: 12px; cursor: pointer; }
+  .lang.active { color: var(--accent); border-color: var(--accent); background: rgba(59,130,246,.15); }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 26px 20px 64px; }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 22px; max-width: 70ch; line-height: 1.5; }
+  .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .vcard { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+  .vwrap { position: relative; background: var(--bg2); aspect-ratio: 1 / 1; }
+  .vwrap video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--bg2); }
+  .pending { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; }
+  .body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .idrow { display: flex; align-items: center; gap: 8px; }
+  .id { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: .04em; }
+  .type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .q { font-size: 15px; font-weight: 600; line-height: 1.4; }
+  .rule { font-size: 13px; line-height: 1.5; color: #dbe4f3; background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .rule .code { color: var(--accent); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+  .play-link { margin-top: auto; font-size: 12px; font-weight: 700; color: var(--muted); }
+  #fatal { display: none; margin: 20px 0; padding: 16px; border-radius: 12px; background: rgba(239,68,68,.12); border: 1px solid var(--bad); color: #fecaca; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="landing.html"><span class="logo">🚗</span> YHQ SIMULYATOR</a>
+  <div class="right">
+    <nav class="nav">
+      <a href="index.html">Ssenariylar</a>
+      <a class="active" href="videos.html">Videolar</a>
+      <a href="player.html">Mashq</a>
+    </nav>
+    <div class="langs" id="langs"></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1>Video darslar</h1>
+  <p class="lead">Har bir video — dvigatel chizgan <b>to'g'ri javob</b> animatsiyasi (interaktiv pleerdagi aynan o'sha harakat, MP4 ko'rinishida). Pastda savol va tegishli YHQ qoidasi.</p>
+  <div id="fatal"></div>
+  <section class="grid" id="grid"></section>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const LANGS = ["uz", "ru", "en"];
+  let lang = "uz";
+  const $ = (id) => document.getElementById(id);
+  const cards = []; // { el, data }
+
+  function fatal(msg) { const el = $("fatal"); el.textContent = msg; el.style.display = "block"; }
+
+  function paint(card) {
+    const d = card.data;
+    const q = (d.question && d.question.text) || {};
+    card.el.querySelector(".q").textContent = q[lang] || q.uz || d.id;
+    const rule = d.resolution && d.resolution.rule;
+    const box = card.el.querySelector(".rule");
+    if (rule) {
+      box.querySelector(".code").textContent = "YHQ " + (rule.code || "");
+      box.querySelector(".rtext").textContent = (rule.text && (rule.text[lang] || rule.text.uz)) || "";
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
+    }
+  }
+
+  function buildLangs() {
+    const box = $("langs"); box.innerHTML = "";
+    for (const l of LANGS) {
+      const b = document.createElement("button");
+      b.className = "lang" + (l === lang ? " active" : ""); b.textContent = l.toUpperCase();
+      b.addEventListener("click", () => { lang = l; buildLangs(); cards.forEach(paint); });
+      box.appendChild(b);
+    }
+  }
+
+  function makeCard(item) {
+    const el = document.createElement("div");
+    el.className = "vcard";
+    el.innerHTML =
+      "<div class='vwrap'>" +
+      "<video preload='metadata' controls playsinline muted></video>" +
+      "<div class='pending' style='display:none'>Video tayyorlanmoqda…<br>(tools/make_videos.js)</div>" +
+      "</div>" +
+      "<div class='body'>" +
+      "<div class='idrow'><span class='id'></span><span class='type'></span></div>" +
+      "<div class='q'></div>" +
+      "<div class='rule' style='display:none'><div class='code'></div><div class='rtext'></div></div>" +
+      "<div class='play-link'>▶ To'g'ri javob animatsiyasi</div>" +
+      "</div>";
+    el.querySelector(".id").textContent = item.id.toUpperCase();
+    el.querySelector(".type").textContent = (item.type || "").replace(/_/g, " ");
+    const video = el.querySelector("video");
+    video.src = "/videos/" + item.id + ".mp4";
+    video.addEventListener("error", () => {
+      video.style.display = "none";
+      el.querySelector(".pending").style.display = "flex";
+    });
+    return el;
+  }
+
+  async function load() {
+    let list;
+    try { list = await fetch("/api/scenarios").then((r) => r.json()); }
+    catch (e) { fatal("Ssenariylar ro'yxati yuklanmadi. Server ishlayaptimi?"); return; }
+    const grid = $("grid");
+    for (const item of list) {
+      const el = makeCard(item);
+      grid.appendChild(el);
+      const card = { el, data: { id: item.id, question: { text: item.question || {} } } };
+      cards.push(card);
+      paint(card);
+      // Lazy-load the rule (needs the full scenario) without blocking the grid.
+      fetch("/api/scenarios/" + item.id)
+        .then((r) => r.json())
+        .then((full) => { card.data = full; paint(card); })
+        .catch(() => {});
+    }
+  }
+
+  buildLangs();
+  load();
+})();
+</script>
+</body>
+</html>

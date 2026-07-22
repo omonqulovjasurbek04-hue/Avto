@@ -11,8 +11,11 @@ const PORT = Number(process.env.PORT ?? 4000);
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 
 const app = express();
-app.use(cors()); // clients (web dev server, Expo) are on other origins
-app.use(express.json());
+// Restrict origins when CORS_ORIGINS is set (comma-separated). Default is open,
+// for local dev; set it in production now that the API can be tunneled publicly.
+const corsOrigins = process.env.CORS_ORIGINS;
+app.use(cors(corsOrigins ? { origin: corsOrigins.split(",").map((s) => s.trim()) } : {}));
+app.use(express.json({ limit: "256kb" }));
 
 app.use("/api", api);
 
@@ -23,6 +26,16 @@ app.get("/", (_req, res) => res.redirect("/player.html"));
 // Serves the engine bundle, the three pages, the PWA manifest and service
 // worker (offline install), all from one origin as the API above.
 app.use(express.static(PUBLIC_DIR));
+
+// Error handler (registered last). The engine's EngineError carries status 422
+// (bad scenario/option); everything else is a 500. Never leak a stack to the
+// client, but log server faults.
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  const status = err.status || 500;
+  if (status >= 500) console.error(err);
+  res.status(status).json({ error: err.message || "internal error" });
+});
 
 // Bind to 0.0.0.0 so a phone on the same Wi-Fi can reach it.
 app.listen(PORT, "0.0.0.0", async () => {

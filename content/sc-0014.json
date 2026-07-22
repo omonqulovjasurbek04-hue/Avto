@@ -1,10 +1,10 @@
 {
-  "id": "sc-0005",
+  "id": "sc-0014",
   "schema_version": 1,
-  "question_id": "q-0005",
+  "question_id": "q-0004",
   "topic": "priority_and_intersections",
   "scene": {
-    "type": "t_junction",
+    "type": "crossroads_4way",
     "roads": [
       {
         "dir": "N",
@@ -19,6 +19,12 @@
         "priority": "main"
       },
       {
+        "dir": "E",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      },
+      {
         "dir": "W",
         "lanes_in": 1,
         "lanes_out": 1,
@@ -27,18 +33,26 @@
     ],
     "signs": [
       {
+        "at": "N",
+        "code": "2.1"
+      },
+      {
+        "at": "S",
+        "code": "2.1"
+      },
+      {
+        "at": "E",
+        "code": "2.4"
+      },
+      {
         "at": "W",
         "code": "2.4"
       }
     ],
     "markings": [
       {
-        "type": "give_way_line",
-        "at": "W"
-      },
-      {
-        "type": "crosswalk",
-        "at": "N"
+        "type": "dashed_line",
+        "at": "S"
       }
     ],
     "lights": [
@@ -57,30 +71,32 @@
       "id": "ego",
       "kind": "car",
       "role": "player",
-      "from": "W",
-      "to": "S"
+      "from": "S",
+      "to": "W",
+      "color": "green"
     },
     {
       "id": "a1",
       "kind": "car",
       "from": "N",
-      "to": "S"
+      "to": "S",
+      "color": "white"
     }
   ],
   "question": {
     "text": {
-      "uz": "T-shaklidagi chorrahaga qo'shilayotganda birinchi bo'lib kim o'tadi?",
-      "ru": "Кто проезжает первым при выезде на Т-образный перекрёсток?",
-      "en": "Who proceeds first when merging onto the T-junction?"
+      "uz": "Chapga burilayotganda birinchi bo'lib kim o'tadi (Vaziyat 14)?",
+      "ru": "Кто проезжает первым при повороте налево?",
+      "en": "Who proceeds first when turning left?"
     },
     "options": [
       {
         "id": "o1",
         "refers_to": "a1",
         "label": {
-          "uz": "Bosh yo'ldagi avtomobil",
-          "ru": "Автомобиль на главной дороге",
-          "en": "The car on the main road"
+          "uz": "Qarama-qarshi kelayotgan avtomobil",
+          "ru": "Встречный автомобиль",
+          "en": "The oncoming car"
         }
       },
       {
@@ -95,7 +111,7 @@
       {
         "id": "D",
         "label": {
-          "uz": "Boshqa transport vositalarini kuzatadi"
+          "uz": "Signal berib o'tadi"
         }
       }
     ],
@@ -107,16 +123,16 @@
       "ego"
     ],
     "rule": {
-      "code": "13.9",
+      "code": "13.12",
       "text": {
-        "uz": "Ikkilamchi yo'ldan bosh yo'lga chiqayotgan haydovchi bosh yo'ldagi transport vositalariga yo'l berishi shart.",
-        "ru": "Выезжая со второстепенной дороги на главную, водитель обязан уступить дорогу транспортным средствам на главной дороге.",
-        "en": "When entering a main road from a secondary road, a driver must give way to vehicles on the main road."
+        "uz": "Chapga burilayotgan haydovchi to'g'riga harakatlanayotgan qarama-qarshi transport vositalariga yo'l berishi shart.",
+        "ru": "При повороте налево водитель обязан уступить дорогу встречным транспортным средствам, движущимся прямо.",
+        "en": "When turning left a driver must give way to oncoming vehicles travelling straight ahead."
       }
     },
     "wrong_outcomes": {
       "o2": {
-        "type": "priority_violation",
+        "type": "collision",
         "with": "a1"
       }
     }

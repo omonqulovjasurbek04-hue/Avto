@@ -81,6 +81,12 @@
           "ru": "Вы",
           "en": "You"
         }
+      },
+      {
+        "id": "D",
+        "label": {
+          "uz": "Boshqa transport vositalarini kuzatadi"
+        }
       }
     ],
     "correct": "o1"

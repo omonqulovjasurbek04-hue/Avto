@@ -1,7 +1,7 @@
 {
-  "id": "sc-0002",
+  "id": "sc-0018",
   "schema_version": 1,
-  "question_id": "q-0002",
+  "question_id": "q-0003",
   "topic": "priority_and_intersections",
   "scene": {
     "type": "crossroads_4way",
@@ -20,24 +20,15 @@
       },
       {
         "dir": "E",
-        "lanes_in": 2,
-        "lanes_out": 2,
+        "lanes_in": 1,
+        "lanes_out": 1,
         "priority": "equal"
       },
       {
         "dir": "W",
-        "lanes_in": 2,
-        "lanes_out": 2,
+        "lanes_in": 1,
+        "lanes_out": 1,
         "priority": "equal"
-      }
-    ],
-    "tram_track": {
-      "along": "EW"
-    },
-    "markings": [
-      {
-        "type": "crosswalk",
-        "at": "S"
       }
     ],
     "lights": [
@@ -57,19 +48,20 @@
       "kind": "car",
       "role": "player",
       "from": "S",
-      "to": "W",
-      "lane_out": 1
+      "to": "N",
+      "color": "red"
     },
     {
       "id": "a1",
-      "kind": "tram",
+      "kind": "car",
       "from": "E",
-      "to": "W"
+      "to": "W",
+      "color": "blue"
     }
   ],
   "question": {
     "text": {
-      "uz": "Teng ahamiyatli chorrahada birinchi bo'lib kim o'tadi?",
+      "uz": "Teng ahamiyatli chorrahada birinchi bo'lib kim o'tadi (Vaziyat 18)?",
       "ru": "Кто проезжает первым на равнозначном перекрёстке?",
       "en": "Who proceeds first at this equal-priority intersection?"
     },
@@ -78,9 +70,9 @@
         "id": "o1",
         "refers_to": "a1",
         "label": {
-          "uz": "Tramvay",
-          "ru": "Трамвай",
-          "en": "The tram"
+          "uz": "O'ngdan kelayotgan avtomobil",
+          "ru": "Автомобиль, приближающийся справа",
+          "en": "The car approaching from the right"
         }
       },
       {
@@ -95,7 +87,7 @@
       {
         "id": "D",
         "label": {
-          "uz": "Boshqa transport vositalarini kuzatadi"
+          "uz": "Signal berib o'tadi"
         }
       }
     ],
@@ -109,9 +101,9 @@
     "rule": {
       "code": "13.11",
       "text": {
-        "uz": "Teng ahamiyatli chorrahalarda relssiz transport vositasi tramvayga yo'l berishi shart.",
-        "ru": "На равнозначных перекрёстках безрельсовое транспортное средство обязано уступить дорогу трамваю.",
-        "en": "At an equal-priority intersection a non-rail vehicle must give way to a tram."
+        "uz": "Teng ahamiyatli chorrahada haydovchi o'ng tomondan yaqinlashayotgan transport vositalariga yo'l berishi shart.",
+        "ru": "На равнозначном перекрёстке водитель обязан уступить дорогу транспортным средствам, приближающимся справа.",
+        "en": "At an equal-priority intersection a driver must give way to vehicles approaching from the right."
       }
     },
     "wrong_outcomes": {

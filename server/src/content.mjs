@@ -1,7 +1,7 @@
 // Scenario content. The canonical source stays /content at the repo root — the
 // single source of truth the Dart engine, validator and editor all use. The
 // server reads it directly rather than keeping a second copy.
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, existsSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
@@ -29,12 +29,42 @@ export function listScenarios() {
     .filter((f) => f.endsWith(".json"))
     .sort()
     .map((f) => {
-      const s = JSON.parse(readFileSync(path.join(CONTENT_DIR, f), "utf8"));
-      return {
-        id: f.replace(/\.json$/, ""),
-        type: s.scene?.type,
-        topic: s.topic,
-        question: s.question?.text ?? {},
-      };
-    });
+      try {
+        const s = JSON.parse(readFileSync(path.join(CONTENT_DIR, f), "utf8"));
+        return {
+          id: f.replace(/\.json$/, ""),
+          type: s.scene?.type,
+          topic: s.topic,
+          question: s.question?.text ?? {},
+          correct: s.question?.correct ?? "A",
+          ruleCode: s.resolution?.rule?.code ?? "",
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+/** Save or update scenario */
+export function saveScenario(scenarioData) {
+  if (!scenarioData.id) {
+    const existing = listScenarios();
+    const count = existing.length + 1;
+    scenarioData.id = `sc-${String(count).padStart(4, "0")}`;
+  }
+  const file = path.join(CONTENT_DIR, `${scenarioData.id}.json`);
+  writeFileSync(file, JSON.stringify(scenarioData, null, 2));
+  return scenarioData;
+}
+
+/** Delete scenario */
+export function deleteScenario(id) {
+  if (!/^[\w-]+$/.test(id)) return false;
+  const file = path.join(CONTENT_DIR, `${id}.json`);
+  if (existsSync(file)) {
+    unlinkSync(file);
+    return true;
+  }
+  return false;
 }

@@ -9,11 +9,14 @@
 //
 // Install also best-effort pre-fetches every scenario, so a single online visit
 // leaves the whole app usable with no network.
-const CACHE = "yhq-v1";
+// Bump this on every release: activate() drops caches with a different name, so
+// a new version reaches installed phones on their next visit.
+const CACHE = "yhq-v2";
 const SHELL = [
   "/player.html",
   "/landing.html",
   "/index.html",
+  "/videos.html",
   "/engine.js",
   "/manifest.webmanifest",
   "/icon.svg",
@@ -52,12 +55,15 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return; // answers/exams post straight to network
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // leave cross-origin alone
+  // Media (video) uses Range requests -> 206 partials, which cannot be cached;
+  // let the browser stream them straight from the network.
+  if (req.headers.has("range")) return;
 
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/content/")) {
     event.respondWith((async () => {
       try {
         const res = await fetch(req);
-        if (res.ok) (await caches.open(CACHE)).put(req, res.clone());
+        if (res.status === 200) (await caches.open(CACHE)).put(req, res.clone());
         return res;
       } catch (e) {
         const cached = await caches.match(req);
@@ -74,7 +80,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith((async () => {
     const cached = await caches.match(req);
     const network = fetch(req)
-      .then((res) => { if (res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone())); return res; })
+      .then((res) => { if (res.status === 200) caches.open(CACHE).then((c) => c.put(req, res.clone())); return res; })
       .catch(() => cached);
     return cached || network;
   })());

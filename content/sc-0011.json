@@ -1,19 +1,25 @@
 {
-  "id": "sc-0005",
+  "id": "sc-0011",
   "schema_version": 1,
-  "question_id": "q-0005",
+  "question_id": "q-0001",
   "topic": "priority_and_intersections",
   "scene": {
-    "type": "t_junction",
+    "type": "crossroads_4way",
     "roads": [
       {
         "dir": "N",
         "lanes_in": 1,
         "lanes_out": 1,
-        "priority": "main"
+        "priority": "secondary"
       },
       {
         "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      },
+      {
+        "dir": "E",
         "lanes_in": 1,
         "lanes_out": 1,
         "priority": "main"
@@ -22,19 +28,27 @@
         "dir": "W",
         "lanes_in": 1,
         "lanes_out": 1,
-        "priority": "secondary"
+        "priority": "main"
       }
     ],
     "signs": [
       {
-        "at": "W",
+        "at": "S",
         "code": "2.4"
+      },
+      {
+        "at": "E",
+        "code": "2.1"
+      },
+      {
+        "at": "W",
+        "code": "2.1"
       }
     ],
     "markings": [
       {
         "type": "give_way_line",
-        "at": "W"
+        "at": "S"
       },
       {
         "type": "crosswalk",
@@ -57,21 +71,23 @@
       "id": "ego",
       "kind": "car",
       "role": "player",
-      "from": "W",
-      "to": "S"
+      "from": "S",
+      "to": "N",
+      "color": "yellow"
     },
     {
       "id": "a1",
       "kind": "car",
-      "from": "N",
-      "to": "S"
+      "from": "E",
+      "to": "W",
+      "color": "red"
     }
   ],
   "question": {
     "text": {
-      "uz": "T-shaklidagi chorrahaga qo'shilayotganda birinchi bo'lib kim o'tadi?",
-      "ru": "Кто проезжает первым при выезде на Т-образный перекрёсток?",
-      "en": "Who proceeds first when merging onto the T-junction?"
+      "uz": "Chorrahadan birinchi bo'lib kim o'tadi (Vaziyat 11)?",
+      "ru": "Кто проезжает перекрёсток первым?",
+      "en": "Who proceeds through the intersection first?"
     },
     "options": [
       {
@@ -95,7 +111,7 @@
       {
         "id": "D",
         "label": {
-          "uz": "Boshqa transport vositalarini kuzatadi"
+          "uz": "Signal berib o'tadi"
         }
       }
     ],
@@ -109,14 +125,14 @@
     "rule": {
       "code": "13.9",
       "text": {
-        "uz": "Ikkilamchi yo'ldan bosh yo'lga chiqayotgan haydovchi bosh yo'ldagi transport vositalariga yo'l berishi shart.",
-        "ru": "Выезжая со второстепенной дороги на главную, водитель обязан уступить дорогу транспортным средствам на главной дороге.",
-        "en": "When entering a main road from a secondary road, a driver must give way to vehicles on the main road."
+        "uz": "Ikkilamchi yo'ldan harakatlanayotgan haydovchi bosh yo'ldagi transport vositalariga yo'l berishi shart.",
+        "ru": "Водитель, движущийся по второстепенной дороге, обязан уступить дорогу транспортным средствам на главной дороге.",
+        "en": "A driver on a secondary road must give way to vehicles on the main road."
       }
     },
     "wrong_outcomes": {
       "o2": {
-        "type": "priority_violation",
+        "type": "collision",
         "with": "a1"
       }
     }

@@ -203,12 +203,12 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
                 <span>💥</span>
                 <div>
                   <div>
-                    {userResult.type === 'collision' && "To'qnashuv yuz berdi!"}
-                    {userResult.type === 'priority_violation' && "Imtiyoz buzildi (Yo'l berilmadi)!"}
-                    {userResult.type === 'unnecessary_wait' && "Kutish shart emas edi!"}
+                    {userResult.type === 'collision' && "Diqqat: To'qnashuv yuz berdi!"}
+                    {userResult.type === 'priority_violation' && "Xato: Asosiy yo'ldagi transportga yo'l berilmadi!"}
+                    {userResult.type === 'unnecessary_wait' && "Xato: Imtiyozga ega bo'lsangiz ham bekorga kutdingiz!"}
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 400 }}>
-                    Keltirilgan oqibatni animatsiyada ko'rishingiz mumkin.
+                  <div style={{ fontSize: '13px', fontWeight: 500, marginTop: '4px', color: '#cbd5e1' }}>
+                    Animatsiyada {userResult.type === 'collision' ? "qizil ramka bilan to'qnashuv nuqtasi" : "xato manevr"} ko'rsatildi. Iltimos, xavfsizlik qoidasiga va o'tish ketma-ketligiga e'tibor qarating!
                   </div>
                 </div>
               </>

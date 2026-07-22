@@ -1,5 +1,5 @@
 {
-  "id": "sc-0002",
+  "id": "sc-0012",
   "schema_version": 1,
   "question_id": "q-0002",
   "topic": "priority_and_intersections",
@@ -58,7 +58,8 @@
       "role": "player",
       "from": "S",
       "to": "W",
-      "lane_out": 1
+      "lane_out": 1,
+      "color": "red"
     },
     {
       "id": "a1",
@@ -69,7 +70,7 @@
   ],
   "question": {
     "text": {
-      "uz": "Teng ahamiyatli chorrahada birinchi bo'lib kim o'tadi?",
+      "uz": "Teng ahamiyatli chorrahada birinchi bo'lib kim o'tadi (Vaziyat 12)?",
       "ru": "Кто проезжает первым на равнозначном перекрёстке?",
       "en": "Who proceeds first at this equal-priority intersection?"
     },
@@ -95,7 +96,7 @@
       {
         "id": "D",
         "label": {
-          "uz": "Boshqa transport vositalarini kuzatadi"
+          "uz": "Signal berib o'tadi"
         }
       }
     ],
