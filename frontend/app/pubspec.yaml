@@ -11,6 +11,21 @@ dependencies:
     sdk: flutter
   engine_dart:
     path: ../../engine_dart
+  drift: ^2.22.0
+  flutter_riverpod: ^2.6.1
+  riverpod: ^2.6.1
+  path_provider: ^2.1.5
+  path: ^1.9.1
+  http: ^1.3.0
+  sqlite3_flutter_libs: ^0.5.28
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  drift_dev: ^2.22.0
+  build_runner: ^2.4.14
+  mockito: ^5.4.5
+  sqlite3: ^2.4.7
 
 flutter:
   uses-material-design: true
