@@ -65,30 +65,41 @@ export function AdminPage() {
     const form = e.target;
     const scenarioData = {
       id: editingScenario?.id || form.sc_id.value || `sc-${Date.now()}`,
-      scene: {
+      schema_version: 1,
+      question_id: editingScenario?.question_id || `q-${Date.now()}`,
+      scene: editingScenario?.scene || {
         type: form.sc_type.value || 'crossroads_4way',
+        roads: [
+          { dir: 'N', lanes_in: 1, lanes_out: 1, priority: 'secondary' },
+          { dir: 'S', lanes_in: 1, lanes_out: 1, priority: 'secondary' },
+          { dir: 'E', lanes_in: 1, lanes_out: 1, priority: 'main' },
+          { dir: 'W', lanes_in: 1, lanes_out: 1, priority: 'main' },
+        ],
       },
-      topic: form.sc_topic.value || 'crossroads',
+      actors: editingScenario?.actors || [
+        { id: 'ego', kind: 'car', role: 'player', from: 'S', to: 'N' },
+        { id: 'a1', kind: 'car', from: 'E', to: 'W' },
+      ],
+      topic: form.sc_topic.value || 'priority_and_intersections',
       question: {
         text: {
           uz: form.sc_q_uz.value,
-          ru: form.sc_q_ru.value,
-          en: form.sc_q_en.value,
+          ru: form.sc_q_ru.value || form.sc_q_uz.value,
+          en: form.sc_q_en.value || form.sc_q_uz.value,
         },
-        correct: form.sc_correct.value || 'A',
+        correct: form.sc_correct.value || 'o1',
         options: [
-          { id: 'A', label: { uz: form.sc_opt_a.value } },
-          { id: 'B', label: { uz: form.sc_opt_b.value } },
-          { id: 'C', label: { uz: form.sc_opt_c.value } },
-          { id: 'D', label: { uz: form.sc_opt_d?.value || '' } },
+          { id: 'o1', refers_to: 'a1', label: { uz: form.sc_opt_a.value } },
+          { id: 'o2', refers_to: 'ego', label: { uz: form.sc_opt_b.value } },
+          { id: 'D', label: { uz: form.sc_opt_c?.value || "Boshqa transport vositalarini kuzatadi" } },
         ].filter((o) => o.label.uz),
       },
-      resolution: {
+      resolution: editingScenario?.resolution || {
+        order: ['a1', 'ego'],
         rule: {
-          code: form.sc_rule_code.value || '13.1',
+          code: form.sc_rule_code.value || '13.9',
           text: { uz: form.sc_rule_text.value || '' },
         },
-        order: ['player'],
       },
     };
 
@@ -97,12 +108,16 @@ export function AdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(scenarioData),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) return res.json().then((err) => { throw new Error(err.error || 'Failed to save'); });
+        return res.json();
+      })
       .then(() => {
         setShowScenarioModal(false);
         setEditingScenario(null);
         loadAll();
-      });
+      })
+      .catch((err) => alert(`Xatolik: ${err.message}`));
   };
 
   const handleSaveLesson = (e) => {

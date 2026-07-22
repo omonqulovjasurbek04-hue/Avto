@@ -283,6 +283,6 @@ console.log('codegen: ' + SCHEMA_FILES.map((f) => 'schema/' + f).join(', '));
 const dart = genDart();
 const ts = genTs();
 write(path.join(ROOT, 'engine_dart', 'lib', 'src', 'generated', 'scenario.g.dart'), dart);
-write(path.join(ROOT, 'editor', 'src', 'generated', 'scenario.g.ts'), ts);
+write(path.join(ROOT, 'frontend', 'editor', 'src', 'generated', 'scenario.g.ts'), ts);
 write(path.join(ROOT, 'schema', 'generated', 'scenario.g.ts'), ts);
 console.log(`codegen: ${enumDefs.length} enums, ${objectDefs.length} classes, ${mapDefs.length} aliases`);

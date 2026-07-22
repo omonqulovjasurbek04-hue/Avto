@@ -16,7 +16,7 @@ const path = require('path');
 const vm = require('vm');
 
 const ROOT = path.resolve(__dirname, '..');
-const ENGINE_JS = path.join(ROOT, 'editor', 'public', 'engine.js');
+const ENGINE_JS = path.join(ROOT, 'frontend', 'editor', 'public', 'engine.js');
 const CONTENT = path.join(ROOT, 'content');
 const EXPECTED = path.join(ROOT, 'build', 'scenes');
 

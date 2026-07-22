@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync, unlinkSync } from
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const CONTENT_DIR = fileURLToPath(new URL("../../content/", import.meta.url));
+const CONTENT_DIR = fileURLToPath(new URL("../../../content/", import.meta.url));
 
 /** Raw scenario JSON *string* by id (what the engine wants). */
 export function rawScenario(id) {

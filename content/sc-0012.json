@@ -1,7 +1,7 @@
 {
   "id": "sc-0012",
   "schema_version": 1,
-  "question_id": "q-0002",
+  "question_id": "q-0012",
   "topic": "priority_and_intersections",
   "scene": {
     "type": "crossroads_4way",

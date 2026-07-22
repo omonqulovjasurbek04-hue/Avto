@@ -5,9 +5,9 @@
   "description": "JS monorepo (Express + React + Expo) built AROUND the deterministic Dart engine, which is reused as its compiled-to-JS bundle. The engine is never rewritten.",
   "workspaces": [
     "shared/*",
-    "server",
-    "web",
-    "mobile"
+    "backend/server",
+    "frontend/web",
+    "frontend/mobile"
   ],
   "scripts": {
     "sync": "node tools/sync_engine.js && node tools/sync_content.js",

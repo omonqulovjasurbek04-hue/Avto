@@ -3,7 +3,7 @@
  * Builds the browser scenario viewer and proves it matches the Dart engine.
  *
  *   node tools/build_viewer.js
- *   then serve editor/public/ and open viewer.html
+ *   then serve frontend/editor/public/ and open viewer.html
  *
  * Steps: sync content -> compile the engine to JS -> export Dart display lists
  * -> compare the two. Everything it writes is a build artifact and git-ignored;
@@ -39,7 +39,7 @@ run('sync content', process.execPath, [path.join(__dirname, 'sync_content.js')])
 run(
   'compile engine to js',
   DART,
-  ['compile', 'js', '-O2', '-o', path.join(ROOT, 'editor', 'public', 'engine.js'),
+  ['compile', 'js', '-O2', '-o', path.join(ROOT, 'frontend', 'editor', 'public', 'engine.js'),
    path.join('web', 'engine_web.dart')],
   ENGINE
 );
@@ -54,4 +54,4 @@ run(
 
 run('verify js == dart', process.execPath, [path.join(__dirname, 'verify_js.js')]);
 
-console.log('\nviewer ready: serve editor/public/ and open viewer.html');
+console.log('\nviewer ready: serve frontend/editor/public/ and open viewer.html');

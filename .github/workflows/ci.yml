@@ -16,7 +16,7 @@ jobs:
       - name: Codegen is up to date
         run: |
           node tools/codegen.js
-          git diff --exit-code -- engine_dart/lib/src/generated editor/src/generated schema/generated
+          git diff --exit-code -- engine_dart/lib/src/generated frontend/editor/src/generated schema/generated
       - name: Validate scenarios
         run: node tools/validate.js content
 

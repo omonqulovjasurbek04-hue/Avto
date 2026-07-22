@@ -328,6 +328,7 @@ export interface Actor {
   role?: ActorRole;
   from: Dir;
   to: Dir;
+  color?: string;
   /** Index of the incoming lane on the `from` road, 0 = nearest the centreline. */
   lane_in?: number;
   /** Index of the outgoing lane on the `to` road, 0 = nearest the centreline. */

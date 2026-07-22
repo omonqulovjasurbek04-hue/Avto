@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   engine_dart:
-    path: ../engine_dart
+    path: ../../engine_dart
 
 flutter:
   uses-material-design: true

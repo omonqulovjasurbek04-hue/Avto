@@ -107,6 +107,7 @@
         "role": { "$ref": "#/$defs/ActorRole", "default": "traffic" },
         "from": { "$ref": "#/$defs/Dir" },
         "to": { "$ref": "#/$defs/Dir" },
+        "color": { "type": "string" },
         "lane_in": { "type": "integer", "minimum": 0, "maximum": 3, "default": 0, "description": "Index of the incoming lane on the `from` road, 0 = nearest the centreline." },
         "lane_out": { "type": "integer", "minimum": 0, "maximum": 3, "default": 0, "description": "Index of the outgoing lane on the `to` road, 0 = nearest the centreline." }
       }
@@ -128,7 +129,7 @@
       "additionalProperties": false,
       "required": ["id", "label"],
       "properties": {
-        "id": { "type": "string", "pattern": "^o[0-9]{1,2}$" },
+        "id": { "type": "string", "pattern": "^(o[0-9]{1,2}|D)$" },
         "refers_to": { "type": "string", "description": "Actor id this option asserts should proceed first. Omitted for options that assert nobody proceeds." },
         "label": { "$ref": "#/$defs/LocalizedText" }
       }

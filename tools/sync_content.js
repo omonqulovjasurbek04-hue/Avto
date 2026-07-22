@@ -10,11 +10,11 @@ const { execFileSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'content');
 const DSTS = [
-  path.join(ROOT, 'app', 'assets', 'content'),
-  path.join(ROOT, 'editor', 'public', 'content'),
-  path.join(ROOT, 'server', 'public', 'content'),
-  path.join(ROOT, 'web', 'public', 'content'),
-  path.join(ROOT, 'mobile', 'assets', 'content'),
+  path.join(ROOT, 'frontend', 'app', 'assets', 'content'),
+  path.join(ROOT, 'frontend', 'editor', 'public', 'content'),
+  path.join(ROOT, 'backend', 'server', 'public', 'content'),
+  path.join(ROOT, 'frontend', 'web', 'public', 'content'),
+  path.join(ROOT, 'frontend', 'mobile', 'assets', 'content'),
 ];
 
 // Refuse to ship invalid content.

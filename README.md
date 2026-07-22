@@ -16,7 +16,7 @@ and phase plan.
 | `schema/` | JSON Schema — the source of truth. Types are generated from it. See [schema/README.md](schema/README.md). |
 | `engine_dart/` | Pure-Dart scenario engine. No Flutter imports; runs headless in CI. |
 | `app/` | Flutter app. Replays the engine's display list via `CustomPainter`. |
-| `editor/` | React content editor (Phase 6). |
+| `frontend/editor/` | React content editor (Phase 6). |
 | `content/` | One scenario JSON per question. |
 | `tools/` | Codegen, validator, content sync. |
 
@@ -42,13 +42,13 @@ cd engine_dart && dart run bin/render.dart ../content ../build/preview
 node tools/sync_content.js
 
 # build the browser scenario viewer (compiles the engine to JS and
-# verifies it against the Dart build), then serve editor/public/
+# verifies it against the Dart build), then serve frontend/editor/public/
 node tools/build_viewer.js
 ```
 
 ## Browser viewer
 
-`editor/public/viewer.html` previews scenarios in a browser. It is not a
+`frontend/editor/public/viewer.html` previews scenarios in a browser. It is not a
 reimplementation: `tools/build_viewer.js` compiles `engine_dart` itself to
 JavaScript, and the page only knows how to fill a polygon, stroke a path and
 fill a circle. All geometry, layering and lane maths stay in the engine, so the

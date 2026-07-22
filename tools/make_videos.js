@@ -19,7 +19,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const CONTENT = path.join(ROOT, 'content');
-const OUT = path.join(ROOT, 'server', 'public', 'videos');
+const OUT = path.join(ROOT, 'backend', 'server', 'public', 'videos');
 const DART = process.env.DART || path.join(ROOT, '.toolchain', 'dart-sdk', 'bin', 'dart.exe');
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const FPS = process.env.FPS || '30';

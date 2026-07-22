@@ -13,6 +13,14 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
 
   const rawJsonStr = JSON.stringify(scenarioData);
 
+  // Reset player state when current scenario changes
+  useEffect(() => {
+    setSelectedOption(null);
+    setUserResult(null);
+    setCurrentTime(0);
+    setIsPlaying(false);
+  }, [scenarioData?.id]);
+
   // Initialize scene info using engine
   useEffect(() => {
     if (window.__yhqEngine && scenarioData) {
@@ -23,7 +31,7 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
         console.error("Failed to parse scene info from engine", err);
       }
     }
-  }, [scenarioData]);
+  }, [scenarioData, rawJsonStr]);
 
   // Playback length: the engine reports a duration per option (a collision
   // freezes early), so a chosen answer scrubs over its own timeline; otherwise
@@ -53,10 +61,21 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
         });
       }
 
-      // Draw current frame onto Canvas
+      // Draw current frame onto Canvas with DPR scaling
       if (canvasRef.current && window.__yhqEngine) {
-        const ctx = canvasRef.current.getContext('2d');
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
         if (ctx) {
+          const dpr = window.devicePixelRatio || 1;
+          const rect = canvas.getBoundingClientRect();
+          const displayWidth = Math.round(rect.width * dpr);
+          const displayHeight = Math.round(rect.height * dpr);
+
+          if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+            canvas.width = displayWidth || 900;
+            canvas.height = displayHeight || 900;
+          }
+
           let frameJson;
           if (playbackMode === 'user' && selectedOption) {
             frameJson = window.__yhqEngine.optionFrame(rawJsonStr, selectedOption, currentTime);
@@ -65,7 +84,7 @@ export function ScenarioPlayer({ scenarioData, lang = 'uz', onAnswerSelected }) 
           }
           if (frameJson) {
             const frameObj = JSON.parse(frameJson);
-            drawDisplayList(ctx, frameObj, { size: canvasRef.current.width });
+            drawDisplayList(ctx, frameObj, { size: canvas.width });
           }
         }
       }

@@ -52,8 +52,11 @@ Keep business logic out of Supabase-specific features so a later migration stays
 ```
 /schema           JSON Schema + generated types (source of truth)
 /engine_dart      Pure Dart scenario engine — NO Flutter imports
-/app              Flutter app (depends on engine_dart)
-/editor           React content editor
+/frontend/app     Flutter app (depends on engine_dart)
+/frontend/editor  React content editor
+/frontend/web     React web app
+/frontend/mobile  Expo/React Native app
+/backend/server   Express REST API server
 /content          Scenario JSON files, one per question
 /tools            Validators, bulk importers, snapshot test runner
 ```
@@ -65,7 +68,7 @@ Keep business logic out of Supabase-specific features so a later migration stays
 ## 4. Scenario schema
 
 See `schema/scenario.schema.json` — the source of truth. Generated types:
-`engine_dart/lib/src/generated/scenario.g.dart` and `editor/src/generated/scenario.g.ts`
+`engine_dart/lib/src/generated/scenario.g.dart` and `frontend/editor/src/generated/scenario.g.ts`
 (regenerate with `node tools/codegen.js`).
 
 **Enums:**

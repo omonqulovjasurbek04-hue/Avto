@@ -191,7 +191,11 @@ api.post(
 // Admin: Save / Create / Update scenario
 api.post("/admin/scenarios", (req, res) => {
   try {
-    const saved = saveScenario(req.body);
+    const data = req.body ?? {};
+    if (!data.question || !data.question.text || !data.question.text.uz) {
+      return res.status(400).json({ error: "Savol matni (Uzbek) kiritilishi shart" });
+    }
+    const saved = saveScenario(data);
     res.json({ ok: true, scenario: saved });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -208,7 +212,11 @@ api.delete("/admin/scenarios/:id", (req, res) => {
 // Admin: Save / Create / Update lesson
 api.post("/admin/lessons", (req, res) => {
   try {
-    const saved = saveLesson(req.body);
+    const data = req.body ?? {};
+    if (!data.title || !data.description) {
+      return res.status(400).json({ error: "Darslik sarlavhasi va tavsifi kiritilishi shart" });
+    }
+    const saved = saveLesson(data);
     res.json({ ok: true, lesson: saved });
   } catch (err) {
     res.status(400).json({ error: err.message });

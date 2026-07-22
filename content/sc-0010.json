@@ -1,7 +1,7 @@
 {
   "id": "sc-0010",
   "schema_version": 1,
-  "question_id": "q-0005",
+  "question_id": "q-0010",
   "topic": "priority_and_intersections",
   "scene": {
     "type": "t_junction",

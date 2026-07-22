@@ -1,7 +1,7 @@
 // JavaScript entry point for the engine.
 //
 // Compiled with:
-//   dart compile js -O2 -o ../editor/public/engine.js web/engine_web.dart
+//   dart compile js -O2 -o ../frontend/editor/public/engine.js web/engine_web.dart
 //
 // This is the payoff for keeping engine_dart pure. Because nothing in lib/
 // imports Flutter or dart:io, the whole layout engine compiles to JavaScript

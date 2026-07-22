@@ -535,6 +535,7 @@ class Actor {
   final ActorRole role;
   final Dir from;
   final Dir to;
+  final String? color;
   /// Index of the incoming lane on the `from` road, 0 = nearest the centreline.
   final int laneIn;
   /// Index of the outgoing lane on the `to` road, 0 = nearest the centreline.
@@ -546,6 +547,7 @@ class Actor {
     this.role = ActorRole.traffic,
     required this.from,
     required this.to,
+    this.color,
     this.laneIn = 0,
     this.laneOut = 0,
   });
@@ -556,6 +558,7 @@ class Actor {
       role: j["role"] == null ? ActorRole.traffic : ActorRole.fromJson(j["role"] as String),
       from: Dir.fromJson(j["from"] as String),
       to: Dir.fromJson(j["to"] as String),
+      color: j["color"] == null ? null : j["color"] as String,
       laneIn: j["lane_in"] == null ? 0 : j["lane_in"] as int,
       laneOut: j["lane_out"] == null ? 0 : j["lane_out"] as int,
     );
@@ -566,6 +569,7 @@ class Actor {
         "role": role.toJson(),
         "from": from.toJson(),
         "to": to.toJson(),
+        if (color != null) "color": color!,
         "lane_in": laneIn,
         "lane_out": laneOut,
       };

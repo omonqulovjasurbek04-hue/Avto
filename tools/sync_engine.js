@@ -3,7 +3,7 @@
 // JS monorepo's consumers. The bundle is the SAME artifact the browser viewer
 // uses; it is built by tools/build_viewer.js. Nothing here recompiles Dart.
 //
-//   node tools/build_viewer.js   # (re)build editor/public/engine.js from Dart
+//   node tools/build_viewer.js   # (re)build frontend/editor/public/engine.js from Dart
 //   node tools/sync_engine.js    # fan it out to the JS stack
 'use strict';
 
@@ -11,15 +11,15 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const SRC = path.join(ROOT, 'editor', 'public', 'engine.js');
+const SRC = path.join(ROOT, 'frontend', 'editor', 'public', 'engine.js');
 
 // Every place a JS package needs the bundle. The shared package loads it under
 // Node (the server); the server also serves a copy to browser clients.
 const DSTS = [
   path.join(ROOT, 'shared', 'engine-js', 'engine.js'),
-  path.join(ROOT, 'server', 'public', 'engine.js'),
-  path.join(ROOT, 'web', 'public', 'engine.js'),
-  path.join(ROOT, 'mobile', 'assets', 'engine.js'),
+  path.join(ROOT, 'backend', 'server', 'public', 'engine.js'),
+  path.join(ROOT, 'frontend', 'web', 'public', 'engine.js'),
+  path.join(ROOT, 'frontend', 'mobile', 'assets', 'engine.js'),
 ];
 
 if (!fs.existsSync(SRC)) {

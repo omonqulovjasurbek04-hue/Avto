@@ -8,7 +8,7 @@ import path from "node:path";
 import { sceneInfo, frame, EngineError } from "../src/engine.mjs";
 import { saveAnswer, getUserProgress } from "../src/db.mjs";
 
-const CONTENT = fileURLToPath(new URL("../../content/", import.meta.url));
+const CONTENT = fileURLToPath(new URL("../../../content/", import.meta.url));
 const sc1 = readFileSync(path.join(CONTENT, "sc-0001.json"), "utf8");
 
 test("engine classifies sc-0001: o1 clean, o2 collision", () => {
