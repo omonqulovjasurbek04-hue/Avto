@@ -1,0 +1,126 @@
+{
+  "id": "sc-0015",
+  "schema_version": 1,
+  "question_id": "q-0015",
+  "topic": "priority_and_intersections",
+  "scene": {
+    "type": "t_junction",
+    "roads": [
+      {
+        "dir": "N",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "W",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      }
+    ],
+    "signs": [
+      {
+        "at": "W",
+        "code": "2.4"
+      }
+    ],
+    "markings": [
+      {
+        "type": "give_way_line",
+        "at": "W"
+      },
+      {
+        "type": "crosswalk",
+        "at": "N"
+      }
+    ],
+    "lights": [
+      {
+        "at": "all",
+        "state": "off"
+      }
+    ],
+    "conditions": {
+      "time": "day",
+      "weather": "clear"
+    }
+  },
+  "actors": [
+    {
+      "id": "ego",
+      "kind": "car",
+      "role": "player",
+      "from": "W",
+      "to": "S",
+      "color": "white"
+    },
+    {
+      "id": "a1",
+      "kind": "car",
+      "from": "N",
+      "to": "S",
+      "color": "black"
+    }
+  ],
+  "question": {
+    "text": {
+      "uz": "T-shaklidagi chorrahaga qo'shilayotganda birinchi bo'lib kim o'tadi (Vaziyat 15)?",
+      "ru": "Кто проезжает первым при выезде на Т-образный перекрёсток?",
+      "en": "Who proceeds first when merging onto the T-junction?"
+    },
+    "options": [
+      {
+        "id": "o1",
+        "refers_to": "a1",
+        "label": {
+          "uz": "Bosh yo'ldagi avtomobil",
+          "ru": "Автомобиль на главной дороге",
+          "en": "The car on the main road"
+        }
+      },
+      {
+        "id": "o2",
+        "refers_to": "ego",
+        "label": {
+          "uz": "Siz",
+          "ru": "Вы",
+          "en": "You"
+        }
+      },
+      {
+        "id": "D",
+        "label": {
+          "uz": "Signal berib o'tadi"
+        }
+      }
+    ],
+    "correct": "o1"
+  },
+  "resolution": {
+    "order": [
+      "a1",
+      "ego"
+    ],
+    "rule": {
+      "code": "13.9",
+      "text": {
+        "uz": "Ikkilamchi yo'ldan bosh yo'lga chiqayotgan haydovchi bosh yo'ldagi transport vositalariga yo'l berishi shart.",
+        "ru": "Выезжая со второстепенной дороги на главную, водитель обязан уступить дорогу транспортным средствам на главной дороге.",
+        "en": "When entering a main road from a secondary road, a driver must give way to vehicles on the main road."
+      }
+    },
+    "wrong_outcomes": {
+      "o2": {
+        "type": "priority_violation",
+        "with": "a1"
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+// AVTO (YHQ) — PostgreSQL Database Schema
+// Prisma ORM orqali boshqariladi.
+//
+// Migratsiya buyruqlari:
+//   npx prisma migrate dev --name init    (development)
+//   npx prisma migrate deploy             (production)
+//   npx prisma generate                   (client qayta generatsiya)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Foydalanuvchi ────────────────────────────────────────────
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique @db.VarChar(255)
+  phone        String?  @unique @db.VarChar(20)
+  passwordHash String   @map("password_hash")
+  name         String?  @db.VarChar(100)
+  role         Role     @default(USER)
+  locale       String   @default("uz") @db.VarChar(5)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  answers      Answer[]
+  examAttempts ExamAttempt[]
+  sessions     Session[]
+
+  @@map("users")
+}
+
+// ─── Sessiya (JWT tokenlarni kuzatish) ────────────────────────
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique @db.VarChar(512)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ─── Javob (foydalanuvchining har bir javobi) ─────────────────
+model Answer {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenarioId String   @map("scenario_id") @db.VarChar(20)
+  optionId   String   @map("option_id") @db.VarChar(10)
+  isCorrect  Boolean  @map("is_correct")
+  outcome    String?  @db.VarChar(30)
+  answeredAt DateTime @default(now()) @map("answered_at")
+
+  @@index([userId])
+  @@index([userId, scenarioId])
+  @@map("answers")
+}
+
+// ─── Imtihon urinishi ─────────────────────────────────────────
+model ExamAttempt {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score           Int
+  total           Int
+  passed          Boolean
+  durationSeconds Int      @default(0) @map("duration_seconds")
+  details         Json     @default("[]")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("exam_attempts")
+}
+
+// ─── Rollar ───────────────────────────────────────────────────
+enum Role {
+  USER
+  ADMIN
+}
