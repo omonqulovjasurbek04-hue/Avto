@@ -5,7 +5,17 @@ import path from "node:path";
 
 const LESSONS_DIR = fileURLToPath(new URL("../data/lessons/", import.meta.url));
 
-// Initial seed lessons if directory is empty or doesn't exist
+function safeLessonPath(id) {
+  if (!id || !/^[\w-]+$/.test(id)) return null;
+  const target = path.join(LESSONS_DIR, `${id}.json`);
+  const resolved = path.resolve(target);
+  const base = path.resolve(LESSONS_DIR);
+  if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+    return null;
+  }
+  return resolved;
+}
+
 const INITIAL_LESSONS = [
   {
     id: "lesson-01",
@@ -134,8 +144,8 @@ export function listLessons() {
 
 export function getLessonById(id) {
   ensureInit();
-  const file = path.join(LESSONS_DIR, `${id}.json`);
-  if (!existsSync(file)) return null;
+  const file = safeLessonPath(id);
+  if (!file || !existsSync(file)) return null;
   try {
     return JSON.parse(readFileSync(file, "utf8"));
   } catch {
@@ -148,14 +158,16 @@ export function saveLesson(lesson) {
   if (!lesson.id) {
     lesson.id = `lesson-${Date.now()}`;
   }
-  const file = path.join(LESSONS_DIR, `${lesson.id}.json`);
+  const file = safeLessonPath(lesson.id);
+  if (!file) throw new Error("Invalid lesson ID format");
   writeFileSync(file, JSON.stringify(lesson, null, 2));
   return lesson;
 }
 
 export function deleteLesson(id) {
   ensureInit();
-  const file = path.join(LESSONS_DIR, `${id}.json`);
+  const file = safeLessonPath(id);
+  if (!file) return false;
   if (existsSync(file)) {
     unlinkSync(file);
     return true;

@@ -3,7 +3,290 @@
 Express REST API + PostgreSQL/Prisma + JWT Auth + pure JS scenario engine.
 
 ---
+# AVTO (YHQ) — Backend uchun To'liq Struktura va Prompt
 
+Bu — barcha oldingi tuzatishlarni (Auth, Prisma/Postgres, dublikatsiyasiz content serving) o'z ichiga olgan **yakuniy backend** brifi.
+
+## 1. To'liq fayl strukturasi (tuzatilgan)
+
+```
+backend/server/
+├── package.json                    ← @yhq/server
+├── .env                             ← DATABASE_URL, JWT_SECRET, PORT, CORS_ORIGINS
+├── prisma/
+│   ├── schema.prisma                ← ✅ YANGI: User, Answer, ExamAttempt
+│   └── migrations/                  ← Prisma avtomatik generatsiya qiladi
+│
+├── src/
+│   ├── index.mjs                   → Server entry (port 4000, 0.0.0.0)
+│   │                                  CORS, static, error handler,
+│   │                                  helmet (xavfsizlik header'lari)
+│   │
+│   ├── auth/                        ← ✅ YANGI
+│   │   ├── auth.routes.mjs         → POST /register, /login, GET /me
+│   │   ├── auth.controller.mjs     → request/response boshqaruvi
+│   │   ├── auth.service.mjs        → parol hash (bcrypt), JWT sign/verify
+│   │   └── auth.middleware.mjs     → Bearer token tekshiruvi (requireAuth)
+│   │
+│   ├── scenarios/
+│   │   ├── scenarios.routes.mjs    → GET /scenarios, /:id, /:id/info, /:id/frame
+│   │   ├── scenarios.controller.mjs
+│   │   └── scenarios.service.mjs   → content.mjs + engine.mjs dan foydalanadi
+│   │
+│   ├── lessons/
+│   │   ├── lessons.routes.mjs      → GET /lessons, /:id
+│   │   └── lessons.service.mjs
+│   │
+│   ├── progress/                    ← ✅ O'ZGARTIRILGAN (endi Prisma orqali)
+│   │   ├── progress.routes.mjs     → GET /progress, POST /progress/answer
+│   │   │                              (requireAuth middleware bilan himoyalangan)
+│   │   └── progress.service.mjs    → Prisma Answer modeliga yozadi/o'qiydi
+│   │
+│   ├── exams/
+│   │   ├── exams.routes.mjs        → GET /exams/generate, POST /exams/submit
+│   │   │                              (requireAuth bilan himoyalangan)
+│   │   └── exams.service.mjs       → Prisma ExamAttempt modeliga yozadi
+│   │
+│   ├── admin/
+│   │   ├── admin.routes.mjs        → POST/DELETE /admin/scenarios, /lessons
+│   │   │                              GET /admin/validate, /admin/stats
+│   │   └── admin.middleware.mjs    → ✅ YANGI: requireAdmin (role tekshiruvi)
+│   │
+│   ├── engine.mjs                  → @yhq/engine wrapper (o'zgarishsiz)
+│   │                                  sceneInfo(), frame(), EngineError
+│   ├── content.mjs                 → Ssenariy JSON fayllarni CRUD
+│   │                                  (path traversal himoyasi, o'zgarishsiz)
+│   │
+│   ├── db.mjs                      → ❌ ESKI JSON-fayl logikasi OLIB TASHLANADI
+│   ├── prisma-client.mjs           → ✅ YANGI: Prisma Client instansiyasi
+│   │
+│   └── middleware/
+│       ├── error.middleware.mjs    → markazlashgan xato boshqaruvi
+│       └── rateLimit.middleware.mjs ← ✅ YANGI: /auth/login uchun brute-force himoya
+│
+├── test/
+│   ├── auth.test.mjs               → ✅ YANGI
+│   ├── scenarios.test.mjs
+│   ├── progress.test.mjs           → ✅ YANGILANGAN (Prisma bilan)
+│   └── exams.test.mjs              → ✅ YANGI
+│
+└── public/
+    ├── engine.js                   → ⭐ YAGONA MANBA — frontend/mobile
+    │                                  shu yerdan to'g'ridan-to'g'ri oladi
+    ├── content/                     → ⭐ YAGONA MANBA — ssenariy JSON'lar
+    │                                  (yoki API orqali serve qilinadi,
+    │                                  static emas — quyida tushuntirilgan)
+    └── index.html                  → landing (ixtiyoriy, saqlanishi mumkin)
+
+    (❌ videos.html, player.html — kerak emas, ular eski video-yondashuv
+    qoldig'i, YHQ animatsion engine bilan almashtirilgan)
+```
+
+**Muhim qaror:** `content/` papkasi endi **faqat backend'da** yashaydi. Frontend/mobile uni static fayl sifatida emas, balki `GET /api/scenarios/:id` orqali oladi. `engine.js` esa `public/engine.js` orqali **bitta URL'dan** barcha platformalarga serve qilinadi (`sync_content.js`, `sync_engine.js` butunlay o'chiriladi).
+
+## 2. Prisma schema (yakuniy versiya)
+
+```prisma
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  password     String        // bcrypt hash
+  role         String        @default("user") // "user" | "admin"
+  createdAt    DateTime      @default(now())
+  answers      Answer[]
+  examAttempts ExamAttempt[]
+}
+
+model Answer {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  scenarioId String   // masalan "sc-0001"
+  optionId   String   // masalan "o1"
+  isCorrect  Boolean
+  answeredAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ExamAttempt {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  score     Int
+  total     Int
+  passed    Boolean
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+```
+
+## 3. Auth middleware (asosiy qism)
+
+```javascript
+// src/auth/auth.middleware.mjs
+import jwt from 'jsonwebtoken';
+
+export function requireAuth(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header?.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Token topilmadi' });
+  }
+  try {
+    const token = header.split(' ')[1];
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = payload.userId;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Token yaroqsiz yoki eskirgan' });
+  }
+}
+
+export function requireAdmin(req, res, next) {
+  // requireAuth'dan keyin ishlaydi, req.userRole tekshiradi
+  if (req.userRole !== 'admin') {
+    return res.status(403).json({ error: 'Ruxsat yo\'q' });
+  }
+  next();
+}
+```
+
+## 4. Yangilangan API endpointlar (to'liq ro'yxat)
+
+```http
+# AUTH
+POST   /api/auth/register       { email, password }
+POST   /api/auth/login          { email, password }         → { token }
+GET    /api/auth/me             (Bearer)                     → { id, email, role }
+
+# SSENARIYLAR (ochiq)
+GET    /api/scenarios
+GET    /api/scenarios?topic=signs
+GET    /api/scenarios/:id
+GET    /api/scenarios/:id/info
+GET    /api/scenarios/:id/frame?t=2.5&option=o2
+
+# DARSLIKLAR (ochiq)
+GET    /api/lessons
+GET    /api/lessons/:id
+
+# PROGRESS (Bearer SHART)
+GET    /api/progress                          → token'dagi userId'dan
+POST   /api/progress/answer  { scenarioId, optionId }
+
+# IMTIHON (Bearer SHART)
+GET    /api/exams/generate
+POST   /api/exams/submit  { answers: [...] }
+
+# ADMIN (Bearer + role=admin SHART)
+POST   /api/admin/scenarios
+DELETE /api/admin/scenarios/:id
+POST   /api/admin/lessons
+DELETE /api/admin/lessons/:id
+GET    /api/admin/validate
+GET    /api/admin/stats
+
+# STATIK
+GET    /engine.js                             → dart2js kompilyatsiya fayli
+```
+
+## 5. To'liq Prompt — Backend uchun
+
+```
+════════════════════════════════════════════════════════════════
+LOYIHA: AVTO (YHQ) — Backend qismi (Node.js + Express)
+════════════════════════════════════════════════════════════════
+
+MAVJUD HOLAT:
+- Express.js server, port 4000, CORS sozlangan
+- Ssenariy va darslik CRUD (content.mjs, lessons.mjs) — JSON fayl
+  asosida, path traversal himoyasi bor
+- Engine wrapper (@yhq/engine) — sceneInfo(), frame(), EngineError
+- DB — hozircha faqat JSON fayl (data/progress.json),
+  Mongo/Postgres ulanishi bor lekin CRUD yozilmagan
+- Auth tizimi — YO'Q (progress foydalanuvchi ID string bilan
+  himoyasiz boshqariladi)
+- Content va engine.js frontend/mobile'ga sync skriptlari orqali
+  nusxalanadi (sync_content.js, sync_engine.js)
+
+QILINISHI KERAK BO'LGAN O'ZGARISHLAR (ustuvorlik tartibida):
+
+1. PRISMA + POSTGRESQL O'RNATISH:
+   - prisma/schema.prisma yaratish: User, Answer, ExamAttempt modellari
+   - src/prisma-client.mjs — PrismaClient yagona instansiyasi
+   - db.mjs dagi eski JSON-fayl logikasini olib tashlash
+   - Migratsiya skripti: mavjud data/progress.json'dan Postgres'ga
+     ko'chirish (agar production ma'lumot bo'lsa)
+
+2. AUTH TIZIMINI QURISH:
+   - src/auth/ papkasi: auth.routes.mjs, auth.controller.mjs,
+     auth.service.mjs, auth.middleware.mjs
+   - Parolni bcrypt bilan hash qilish (saltRounds: 10)
+   - JWT token (jsonwebtoken kutubxonasi), muddati 7 kun
+   - requireAuth middleware — barcha /progress va /exams
+     endpointlariga qo'llash
+   - requireAdmin middleware — /admin endpointlariga qo'llash
+     (User.role === "admin" tekshiruvi)
+
+3. PROGRESS VA EXAMS'NI PRISMA'GA KO'CHIRISH:
+   - progress.service.mjs — endi req.userId (JWT'dan) orqali
+     Prisma Answer modeliga yozadi/o'qiydi
+   - exams.service.mjs — ExamAttempt modeliga yozadi
+   - Eski :userId URL parametri OLIB TASHLANADI (endi token'dan olinadi)
+
+4. CONTENT/ENGINE DUBLIKATSIYASINI TUGATISH:
+   - sync_content.js va sync_engine.js skriptlarini O'CHIRISH
+   - content/ papkasi FAQAT backend/server/public/content/ da qoladi
+   - public/engine.js — CORS va Cache-Control header bilan
+     to'g'ri sozlash (frontend/mobile shu yerdan olishi uchun)
+
+5. XAVFSIZLIK VA CHEKLOVLAR:
+   - helmet middleware qo'shish (HTTP header xavfsizligi)
+   - rateLimit middleware — /auth/login endpointiga
+     (5 daqiqada 5 urinish, brute-force himoyasi)
+   - .env orqali JWT_SECRET, DATABASE_URL boshqarish,
+     hech qachon kod ichida hardcode qilinmaydi
+
+TEXNIK CHEKLOVLAR (o'zgarishsiz saqlanadi):
+- Engine (@yhq/engine) logikasi O'ZGARTIRILMAYDI — faqat
+  scenarios.service.mjs uni chaqirish usuli saqlanadi
+- Ssenariy JSON formati (schema/scenario.schema.json) O'ZGARMAYDI
+- Barcha javoblar JSON formatida, xato holatlar aniq status kod
+  bilan qaytadi (400, 401, 403, 404, 422, 500)
+
+BAJARISH TARTIBI:
+  BOSQICH 1: prisma/schema.prisma + prisma-client.mjs
+  BOSQICH 2: auth/ papkasi to'liq (routes, controller, service, middleware)
+  BOSQICH 3: progress va exams servislarini Prisma'ga ko'chirish
+  BOSQICH 4: sync skriptlarini o'chirish, static serving sozlash
+  BOSQICH 5: helmet + rateLimit + testlar (auth.test.mjs, progress.test.mjs)
+
+QABUL QILISH MEZONLARI:
+☐ POST /api/auth/register va /login ishlaydi, JWT qaytaradi
+☐ Token'siz /api/progress so'rovi 401 qaytaradi
+☐ Noto'g'ri parol bilan 5 marta urinishdan keyin rateLimit ishlaydi
+☐ /api/progress/answer chaqirilganda Postgres'da Answer yozuvi paydo bo'ladi
+☐ /engine.js va /content/*.json to'g'ridan-to'g'ri backend'dan
+  ochiladi, hech qanday frontend papkasida nusxa yo'q
+☐ Barcha eski testlar (4 ta) + yangi auth testlari muvaffaqiyatli o'tadi
+
+Iltimos, BOSQICH 1 dan boshlab, prisma/schema.prisma va
+src/prisma-client.mjs fayllarini to'liq kod bilan yarating.
+════════════════════════════════════════════════════════════════
+```
+
+Shu promptga muvofiq **Prisma schema va client** kodini hoziroq to'liq yozib beraymi, yoki avval **auth.service.mjs** (JWT+bcrypt logikasi) dan boshlaylikmi?
 # Mashina Test — Node.js Backend (NestJS) — To'liq Struktura va Prompt
 
 > Faqat backend (API) qismi. Web (Next.js) va mobil (React Native/Expo) — ikkalasi ham shu bitta API'ga ulanadi, lekin ular alohida bosqichda quriladi.

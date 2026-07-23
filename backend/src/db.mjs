@@ -1,33 +1,18 @@
-// Database abstraction layer supporting MongoDB, PostgreSQL, and JSON fallback.
-import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
+// Database abstraction layer supporting PostgreSQL via Prisma and JSON fallback.
+import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const DATA_DIR = fileURLToPath(new URL("../data/", import.meta.url));
 const FILE = path.join(DATA_DIR, "progress.json");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
 
-// Cap stored answers per user so a single (now publicly reachable) client cannot
-// grow the file without bound. The correct/wrong counters are kept in full.
 const MAX_ANSWERS = 500;
 
-export let dbType = "json"; // 'mongodb' | 'postgres' | 'json'
+export let dbType = "json"; // 'postgres' | 'json'
 
 export async function initDatabase() {
-  const mongoUri = process.env.MONGO_URI;
   const postgresUrl = process.env.DATABASE_URL;
-
-  if (mongoUri) {
-    try {
-      // Dynamic import to allow running gracefully without mongoose installed
-      const mongoose = await import("mongoose");
-      await mongoose.connect(mongoUri);
-      dbType = "mongodb";
-      console.log("Database connected: MongoDB");
-      return;
-    } catch (err) {
-      console.warn("MongoDB connection attempt failed, falling back to local JSON store:", err.message);
-    }
-  }
 
   if (postgresUrl) {
     try {
@@ -42,7 +27,7 @@ export async function initDatabase() {
     }
   }
 
-  console.log("Database mode: Local atomic JSON store (data/progress.json)");
+  console.log("Database mode: Local atomic JSON store (data/progress.json & data/users.json)");
   dbType = "json";
 }
 
@@ -54,9 +39,6 @@ function readAllJson() {
   }
 }
 
-// Atomic write: serialize once to a unique temp file, then rename over the
-// target. rename() is atomic on the same filesystem, so a crash mid-write can
-// never leave a half-written progress.json (and no stray .tmp survives).
 function writeAllJson(db) {
   mkdirSync(DATA_DIR, { recursive: true });
   const tmp = `${FILE}.${process.pid}.tmp`;
@@ -64,10 +46,22 @@ function writeAllJson(db) {
   renameSync(tmp, FILE);
 }
 
-// Serialize read-modify-write mutations. Without this, two concurrent requests
-// both read the old record and the second write clobbers the first (lost
-// update). Chaining every mutation on a single promise makes them run one at a
-// time; a rejected mutation must not break the chain for the next caller.
+function readUsersJson() {
+  try {
+    if (!existsSync(USERS_FILE)) return [];
+    return JSON.parse(readFileSync(USERS_FILE, "utf8"));
+  } catch {
+    return [];
+  }
+}
+
+function writeUsersJson(users) {
+  mkdirSync(DATA_DIR, { recursive: true });
+  const tmp = `${USERS_FILE}.${process.pid}.tmp`;
+  writeFileSync(tmp, JSON.stringify(users, null, 2));
+  renameSync(tmp, USERS_FILE);
+}
+
 let writeChain = Promise.resolve();
 function enqueue(mutator) {
   const run = writeChain.then(mutator);
@@ -112,5 +106,34 @@ export function saveExamResult(userId, examResult) {
     db[userId] = p;
     writeAllJson(db);
     return record;
+  });
+}
+
+/** JSON User Fallback Store */
+export function findJsonUser({ phone, email }) {
+  const users = readUsersJson();
+  return users.find((u) => (phone && u.phone === phone) || (email && u.email === email)) || null;
+}
+
+export function findJsonUserById(id) {
+  const users = readUsersJson();
+  return users.find((u) => u.id === id) || null;
+}
+
+export function createJsonUser(userData) {
+  return enqueue(() => {
+    const users = readUsersJson();
+    const newUser = {
+      id: `user-${Date.now()}`,
+      phone: userData.phone || null,
+      email: userData.email || null,
+      password: userData.password,
+      name: userData.name || null,
+      role: userData.role || 'USER',
+      createdAt: new Date().toISOString(),
+    };
+    users.push(newUser);
+    writeUsersJson(users);
+    return newUser;
   });
 }

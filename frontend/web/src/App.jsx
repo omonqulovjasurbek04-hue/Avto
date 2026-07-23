@@ -1,15 +1,20 @@
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { LessonsPage } from './pages/LessonsPage';
 import { PracticePage } from './pages/PracticePage';
 import { ExamPage } from './pages/ExamPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { AdminPage } from './pages/AdminPage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function AppShell() {
   const [activeTab, setActiveTab] = useState('home');
   const { lang, setLang } = useApp();
+  const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <div className="app-container">
@@ -37,7 +42,7 @@ function AppShell() {
               { id: 'practice', label: '📚 Mashqlar' },
               { id: 'exam', label: '📝 Imtihon' },
               { id: 'analytics', label: '📊 Statistika' },
-              { id: 'admin', label: '⚙️ Admin Panel' },
+              { id: 'admin', label: '⚙️ Admin' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -49,16 +54,41 @@ function AppShell() {
             ))}
           </nav>
 
-          <div className="lang-switcher">
-            {['uz', 'ru', 'en'].map((l) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="lang-switcher">
+              {['uz', 'ru', 'en'].map((l) => (
+                <button
+                  key={l}
+                  className={`lang-btn ${lang === l ? 'active' : ''}`}
+                  onClick={() => setLang(l)}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {isAuthenticated ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#3b82f6' }}>
+                  👤 {user?.name || user?.phone || user?.email || 'Foydalanuvchi'}
+                </span>
+                <button
+                  className="btn-icon-sm danger"
+                  onClick={() => { logout(); setActiveTab('home'); }}
+                  title="Chiqish"
+                >
+                  🚪
+                </button>
+              </div>
+            ) : (
               <button
-                key={l}
-                className={`lang-btn ${lang === l ? 'active' : ''}`}
-                onClick={() => setLang(l)}
+                className="btn-secondary"
+                style={{ padding: '6px 14px', fontSize: 13 }}
+                onClick={() => setActiveTab('login')}
               >
-                {l.toUpperCase()}
+                🔑 Kirish
               </button>
-            ))}
+            )}
           </div>
         </div>
       </header>
@@ -66,10 +96,32 @@ function AppShell() {
       <main className="main-content">
         {activeTab === 'home' && <HomePage onNavigate={setActiveTab} lang={lang} />}
         {activeTab === 'lessons' && <LessonsPage onNavigate={setActiveTab} lang={lang} />}
-        {activeTab === 'practice' && <PracticePage lang={lang} />}
-        {activeTab === 'exam' && <ExamPage lang={lang} />}
-        {activeTab === 'analytics' && <AnalyticsPage />}
-        {activeTab === 'admin' && <AdminPage />}
+        {activeTab === 'login' && <LoginPage onNavigate={setActiveTab} />}
+        {activeTab === 'register' && <RegisterPage onNavigate={setActiveTab} />}
+
+        {activeTab === 'practice' && (
+          <ProtectedRoute onNavigate={setActiveTab}>
+            <PracticePage lang={lang} />
+          </ProtectedRoute>
+        )}
+
+        {activeTab === 'exam' && (
+          <ProtectedRoute onNavigate={setActiveTab}>
+            <ExamPage lang={lang} />
+          </ProtectedRoute>
+        )}
+
+        {activeTab === 'analytics' && (
+          <ProtectedRoute onNavigate={setActiveTab}>
+            <AnalyticsPage />
+          </ProtectedRoute>
+        )}
+
+        {activeTab === 'admin' && (
+          <ProtectedRoute onNavigate={setActiveTab}>
+            <AdminPage />
+          </ProtectedRoute>
+        )}
       </main>
 
       <footer className="app-footer">
@@ -89,7 +141,9 @@ function AppShell() {
 export default function App() {
   return (
     <AppProvider>
-      <AppShell />
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
     </AppProvider>
   );
 }

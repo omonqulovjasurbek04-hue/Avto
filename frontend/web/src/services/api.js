@@ -1,72 +1,35 @@
-const BASE = '/api';
+import { authApi } from '../api/auth.api';
+import { scenariosApi } from '../api/scenarios.api';
+import { lessonsApi } from '../api/lessons.api';
+import { progressApi } from '../api/progress.api';
+import { examsApi } from '../api/exams.api';
+import { client } from '../api/client';
 
-async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.error || `HTTP ${res.status}`);
-  }
-  return res.json();
-}
+export { authApi, scenariosApi, lessonsApi, progressApi, examsApi, client };
 
 export const api = {
-  health: () => request('/health'),
-
-  scenarios: {
-    list: (params) => {
-      const q = new URLSearchParams(params).toString();
-      return request(`/scenarios${q ? '?' + q : ''}`);
-    },
-    get: (id) => request(`/scenarios/${id}`),
-    info: (id) => request(`/scenarios/${id}/info`),
-    frame: (id, t, option) => {
-      const q = new URLSearchParams({ t: String(t ?? 0), ...(option ? { option } : {}) });
-      return request(`/scenarios/${id}/frame?${q}`);
-    },
-  },
-
-  lessons: {
-    list: () => request('/lessons'),
-    get: (id) => request(`/lessons/${id}`),
-  },
-
-  progress: {
-    get: (userId) => request(`/progress/${userId}`),
-    answer: (userId, scenarioId, optionId) =>
-      request(`/progress/${userId}/answer`, {
-        method: 'POST',
-        body: JSON.stringify({ scenarioId, optionId }),
-      }),
-  },
-
-  exams: {
-    generate: () => request('/exams/generate'),
-    submit: (userId, answers, durationSeconds) =>
-      request(`/exams/${userId}/submit`, {
-        method: 'POST',
-        body: JSON.stringify({ answers, durationSeconds }),
-      }),
-  },
-
+  health: () => client('/api/health'),
+  scenarios: scenariosApi,
+  lessons: lessonsApi,
+  progress: progressApi,
+  exams: examsApi,
+  auth: authApi,
   admin: {
-    stats: () => request('/admin/stats'),
-    validate: () => request('/admin/validate'),
+    stats: () => client('/api/admin/stats'),
+    validate: () => client('/api/admin/validate'),
     saveScenario: (data) =>
-      request('/admin/scenarios', {
+      client('/api/admin/scenarios', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     deleteScenario: (id) =>
-      request(`/admin/scenarios/${id}`, { method: 'DELETE' }),
+      client(`/api/admin/scenarios/${id}`, { method: 'DELETE' }),
     saveLesson: (data) =>
-      request('/admin/lessons', {
+      client('/api/admin/lessons', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     deleteLesson: (id) =>
-      request(`/admin/lessons/${id}`, { method: 'DELETE' }),
+      client(`/api/admin/lessons/${id}`, { method: 'DELETE' }),
   },
 };

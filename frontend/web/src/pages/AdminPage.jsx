@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { api } from '../services/api';
 
 export function AdminPage() {
   const [adminTab, setAdminTab] = useState('scenarios'); // 'scenarios' | 'lessons' | 'validator' | 'stats'
@@ -19,9 +20,9 @@ export function AdminPage() {
   const loadAll = () => {
     setLoading(true);
     Promise.all([
-      fetch('/api/scenarios').then((res) => res.json()),
-      fetch('/api/lessons').then((res) => res.json()),
-      fetch('/api/admin/stats').then((res) => res.json()),
+      api.scenarios.list(),
+      api.lessons.list(),
+      api.admin.stats(),
     ])
       .then(([scData, lesData, stData]) => {
         setScenarios(scData);
@@ -40,24 +41,23 @@ export function AdminPage() {
   }, []);
 
   const runValidation = () => {
-    fetch('/api/admin/validate')
-      .then((res) => res.json())
+    api.admin.validate()
       .then((data) => setValReport(data))
       .catch((err) => console.error('Failed to run validator', err));
   };
 
   const handleDeleteScenario = (id) => {
     if (!window.confirm(`Haqiqatan ham ${id} ssenariysini o'chirmoqchimisiz?`)) return;
-    fetch(`/api/admin/scenarios/${id}`, { method: 'DELETE' })
-      .then((res) => res.json())
-      .then(() => loadAll());
+    api.admin.deleteScenario(id)
+      .then(() => loadAll())
+      .catch((err) => alert(`Xatolik: ${err.message}`));
   };
 
   const handleDeleteLesson = (id) => {
     if (!window.confirm(`Haqiqatan ham ${id} darsligini o'chirmoqchimisiz?`)) return;
-    fetch(`/api/admin/lessons/${id}`, { method: 'DELETE' })
-      .then((res) => res.json())
-      .then(() => loadAll());
+    api.admin.deleteLesson(id)
+      .then(() => loadAll())
+      .catch((err) => alert(`Xatolik: ${err.message}`));
   };
 
   const handleSaveScenario = (e) => {
@@ -103,15 +103,7 @@ export function AdminPage() {
       },
     };
 
-    fetch('/api/admin/scenarios', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(scenarioData),
-    })
-      .then((res) => {
-        if (!res.ok) return res.json().then((err) => { throw new Error(err.error || 'Failed to save'); });
-        return res.json();
-      })
+    api.admin.saveScenario(scenarioData)
       .then(() => {
         setShowScenarioModal(false);
         setEditingScenario(null);
@@ -140,17 +132,13 @@ export function AdminPage() {
       ].filter((s) => s.heading),
     };
 
-    fetch('/api/admin/lessons', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lessonData),
-    })
-      .then((res) => res.json())
+    api.admin.saveLesson(lessonData)
       .then(() => {
         setShowLessonModal(false);
         setEditingLesson(null);
         loadAll();
-      });
+      })
+      .catch((err) => alert(`Xatolik: ${err.message}`));
   };
 
   if (loading) {

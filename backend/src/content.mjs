@@ -7,11 +7,23 @@ import path from "node:path";
 
 const CONTENT_DIR = fileURLToPath(new URL("../../content/", import.meta.url));
 
+function safePath(id) {
+  if (!id || !/^[\w-]+$/.test(id)) return null;
+  const target = path.join(CONTENT_DIR, `${id}.json`);
+  const resolved = path.resolve(target);
+  const base = path.resolve(CONTENT_DIR);
+  if (!resolved.startsWith(base + path.sep) && resolved !== base) {
+    return null;
+  }
+  return resolved;
+}
+
 /** Raw scenario JSON *string* by id (what the engine wants). */
 export function rawScenario(id) {
-  if (!/^[\w-]+$/.test(id)) return null; // no path traversal
+  const file = safePath(id);
+  if (!file) return null;
   try {
-    return readFileSync(path.join(CONTENT_DIR, `${id}.json`), "utf8");
+    return readFileSync(file, "utf8");
   } catch {
     return null;
   }
@@ -53,15 +65,16 @@ export function saveScenario(scenarioData) {
     const count = existing.length + 1;
     scenarioData.id = `sc-${String(count).padStart(4, "0")}`;
   }
-  const file = path.join(CONTENT_DIR, `${scenarioData.id}.json`);
+  const file = safePath(scenarioData.id);
+  if (!file) throw new Error("Invalid scenario ID format");
   writeFileSync(file, JSON.stringify(scenarioData, null, 2));
   return scenarioData;
 }
 
 /** Delete scenario */
 export function deleteScenario(id) {
-  if (!/^[\w-]+$/.test(id)) return false;
-  const file = path.join(CONTENT_DIR, `${id}.json`);
+  const file = safePath(id);
+  if (!file) return false;
   if (existsSync(file)) {
     unlinkSync(file);
     return true;
