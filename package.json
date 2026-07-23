@@ -1,16 +1,14 @@
 {
   "name": "yhq-platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "JS monorepo (Express + React + Expo) built AROUND the deterministic Dart engine, which is reused as its compiled-to-JS bundle. The engine is never rewritten.",
+  "description": "AVTO (YHQ) monorepo: Node.js Express backend, Next.js + Tailwind frontend, React Native Expo mobile app.",
   "workspaces": [
-    "shared/*",
-    "backend/server",
-    "frontend/web",
-    "frontend/mobile"
+    "backend",
+    "frontend",
+    "mobile"
   ],
   "scripts": {
-    "sync": "node tools/sync_engine.js && node tools/sync_content.js",
     "dev:server": "npm run dev --workspace @yhq/server",
     "dev:web": "npm run dev --workspace @yhq/web",
     "start:mobile": "npm run start --workspace @yhq/mobile"

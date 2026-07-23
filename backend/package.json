@@ -1,26 +1,28 @@
 {
   "name": "@yhq/server",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Express REST API for YHQ driving education platform. Supports JSON file fallback, PostgreSQL via Prisma, and JWT auth.",
+  "description": "Express REST API for AVTO (YHQ) driving education platform. PostgreSQL via Prisma, JWT auth, Zod validation.",
   "type": "module",
   "main": "src/index.mjs",
   "scripts": {
     "start": "node src/index.mjs",
     "dev": "node --watch src/index.mjs",
     "test": "node --test",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
-    "db:migrate": "prisma migrate dev"
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:migrate": "npx prisma migrate dev",
+    "db:studio": "npx prisma studio"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "@prisma/client": "^6.5.0",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
+    "express-rate-limit": "^7.5.0",
+    "zod": "^3.24.0"
   },
-  "optionalDependencies": {
-    "@prisma/client": "^6.5.0",
+  "devDependencies": {
     "prisma": "^6.5.0"
   }
 }

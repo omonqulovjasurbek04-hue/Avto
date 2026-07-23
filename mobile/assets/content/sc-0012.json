@@ -1,0 +1,125 @@
+{
+  "id": "sc-0012",
+  "schema_version": 1,
+  "question_id": "q-0012",
+  "topic": "priority_and_intersections",
+  "scene": {
+    "type": "crossroads_4way",
+    "roads": [
+      {
+        "dir": "N",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "equal"
+      },
+      {
+        "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "equal"
+      },
+      {
+        "dir": "E",
+        "lanes_in": 2,
+        "lanes_out": 2,
+        "priority": "equal"
+      },
+      {
+        "dir": "W",
+        "lanes_in": 2,
+        "lanes_out": 2,
+        "priority": "equal"
+      }
+    ],
+    "tram_track": {
+      "along": "EW"
+    },
+    "markings": [
+      {
+        "type": "crosswalk",
+        "at": "S"
+      }
+    ],
+    "lights": [
+      {
+        "at": "all",
+        "state": "off"
+      }
+    ],
+    "conditions": {
+      "time": "day",
+      "weather": "clear"
+    }
+  },
+  "actors": [
+    {
+      "id": "ego",
+      "kind": "car",
+      "role": "player",
+      "from": "S",
+      "to": "W",
+      "lane_out": 1,
+      "color": "red"
+    },
+    {
+      "id": "a1",
+      "kind": "tram",
+      "from": "E",
+      "to": "W"
+    }
+  ],
+  "question": {
+    "text": {
+      "uz": "Teng ahamiyatli chorrahada birinchi bo'lib kim o'tadi (Vaziyat 12)?",
+      "ru": "Кто проезжает первым на равнозначном перекрёстке?",
+      "en": "Who proceeds first at this equal-priority intersection?"
+    },
+    "options": [
+      {
+        "id": "o1",
+        "refers_to": "a1",
+        "label": {
+          "uz": "Tramvay",
+          "ru": "Трамвай",
+          "en": "The tram"
+        }
+      },
+      {
+        "id": "o2",
+        "refers_to": "ego",
+        "label": {
+          "uz": "Siz",
+          "ru": "Вы",
+          "en": "You"
+        }
+      },
+      {
+        "id": "D",
+        "label": {
+          "uz": "Signal berib o'tadi"
+        }
+      }
+    ],
+    "correct": "o1"
+  },
+  "resolution": {
+    "order": [
+      "a1",
+      "ego"
+    ],
+    "rule": {
+      "code": "13.11",
+      "text": {
+        "uz": "Teng ahamiyatli chorrahalarda relssiz transport vositasi tramvayga yo'l berishi shart.",
+        "ru": "На равнозначных перекрёстках безрельсовое транспортное средство обязано уступить дорогу трамваю.",
+        "en": "At an equal-priority intersection a non-rail vehicle must give way to a tram."
+      }
+    },
+    "wrong_outcomes": {
+      "o2": {
+        "type": "collision",
+        "with": "a1"
+      }
+    }
+  }
+}

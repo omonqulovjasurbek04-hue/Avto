@@ -1,50 +1,64 @@
-// YHQ platform server: REST API + static hosting of the engine bundle and the
-// mobile player page. Start: npm run dev --workspace @yhq/server
+// AVTO (YHQ) Platform Server
+// REST API + static hosting of the engine bundle.
+// Start: npm run dev --workspace @yhq/server
 import express from "express";
 import cors from "cors";
 import { fileURLToPath } from "node:url";
-import { api } from "./routes.mjs";
+import { env } from "./config/env.mjs";
+import { securityHeaders } from "./middleware/security-headers.mjs";
+import { errorHandler } from "./middleware/error-handler.mjs";
+import { generalLimiter } from "./middleware/rate-limit.mjs";
+import { authRoutes } from "./routes/auth.routes.mjs";
+import { scenarioRoutes } from "./routes/scenario.routes.mjs";
+import { lessonRoutes } from "./routes/lesson.routes.mjs";
+import { examRoutes } from "./routes/exam.routes.mjs";
+import { progressRoutes } from "./routes/progress.routes.mjs";
+import { adminRoutes } from "./routes/admin.routes.mjs";
 import { engine } from "./engine.mjs";
-import { initDatabase, dbType } from "./db.mjs";
 
-const PORT = Number(process.env.PORT ?? 4000);
-const HOST = process.env.HOST ?? (process.env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
 const PUBLIC_DIR = fileURLToPath(new URL("../public/", import.meta.url));
 
 const app = express();
 
-// Security headers
-app.use((_req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "SAMEORIGIN");
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  next();
+// ── Global middleware ────────────────────────────────────────
+app.use(securityHeaders);
+
+// Restrict CORS origins in production
+const corsOrigins = env.CORS_ORIGINS;
+app.use(
+  cors(
+    corsOrigins
+      ? { origin: corsOrigins.split(",").map((s) => s.trim()), credentials: true }
+      : { credentials: true },
+  ),
+);
+app.use(express.json({ limit: "256kb" }));
+app.use(generalLimiter);
+
+// ── API routes ───────────────────────────────────────────────
+app.use("/api/auth", authRoutes);
+app.use("/api/scenarios", scenarioRoutes);
+app.use("/api/lessons", lessonRoutes);
+app.use("/api/exams", examRoutes);
+app.use("/api/progress", progressRoutes);
+app.use("/api/admin", adminRoutes);
+
+// Health check
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, engine: engine?.version ?? "dev" });
 });
 
-// Restrict origins when CORS_ORIGINS is set (comma-separated). Default is open for local dev
-const corsOrigins = process.env.CORS_ORIGINS;
-app.use(cors(corsOrigins ? { origin: corsOrigins.split(",").map((s) => s.trim()) } : {}));
-app.use(express.json({ limit: "256kb" }));
-
-app.use("/api", api);
-
-// The base URL opens the engine-driven player
-app.get("/", (_req, res) => res.redirect("/player.html"));
-
-// Serves the engine bundle, pages, PWA manifest
+// ── Static files (engine bundle, player page) ────────────────
 app.use(express.static(PUBLIC_DIR));
 
-// Error handler (registered last)
-// eslint-disable-next-line no-unused-vars
-app.use((err, _req, res, _next) => {
-  const status = err.status || 500;
-  if (status >= 500) console.error(err);
-  res.status(status).json({ error: err.message || "internal error" });
-});
+// ── Error handler (must be last) ─────────────────────────────
+app.use(errorHandler);
 
-app.listen(PORT, HOST, async () => {
-  await initDatabase();
-  console.log(`YHQ server on http://${HOST}:${PORT}  (engine ${engine.version}, db: ${dbType})`);
-  console.log(`  REST:   http://${HOST}:${PORT}/api/health`);
-  console.log(`  player: http://${HOST}:${PORT}/player.html`);
+// ── Start server ─────────────────────────────────────────────
+const HOST = env.IS_PRODUCTION ? "0.0.0.0" : "127.0.0.1";
+
+app.listen(env.PORT, HOST, () => {
+  console.log(`AVTO (YHQ) server on http://${HOST}:${env.PORT}`);
+  console.log(`  REST:   http://${HOST}:${env.PORT}/api/health`);
+  console.log(`  Engine: v${engine?.version ?? "dev"}`);
 });

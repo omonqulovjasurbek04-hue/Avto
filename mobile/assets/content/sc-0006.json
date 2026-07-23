@@ -1,0 +1,140 @@
+{
+  "id": "sc-0006",
+  "schema_version": 1,
+  "question_id": "q-0006",
+  "topic": "priority_and_intersections",
+  "scene": {
+    "type": "crossroads_4way",
+    "roads": [
+      {
+        "dir": "N",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      },
+      {
+        "dir": "S",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "secondary"
+      },
+      {
+        "dir": "E",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      },
+      {
+        "dir": "W",
+        "lanes_in": 1,
+        "lanes_out": 1,
+        "priority": "main"
+      }
+    ],
+    "signs": [
+      {
+        "at": "S",
+        "code": "2.4"
+      },
+      {
+        "at": "E",
+        "code": "2.1"
+      },
+      {
+        "at": "W",
+        "code": "2.1"
+      }
+    ],
+    "markings": [
+      {
+        "type": "give_way_line",
+        "at": "S"
+      },
+      {
+        "type": "crosswalk",
+        "at": "N"
+      }
+    ],
+    "lights": [
+      {
+        "at": "all",
+        "state": "off"
+      }
+    ],
+    "conditions": {
+      "time": "day",
+      "weather": "clear"
+    }
+  },
+  "actors": [
+    {
+      "id": "ego",
+      "kind": "car",
+      "role": "player",
+      "from": "S",
+      "to": "N",
+      "color": "red"
+    },
+    {
+      "id": "a1",
+      "kind": "car",
+      "from": "E",
+      "to": "W",
+      "color": "blue"
+    }
+  ],
+  "question": {
+    "text": {
+      "uz": "Chorrahadan birinchi bo'lib kim o'tadi (Vaziyat 6)?",
+      "ru": "Кто проезжает перекрёсток первым?",
+      "en": "Who proceeds through the intersection first?"
+    },
+    "options": [
+      {
+        "id": "o1",
+        "refers_to": "a1",
+        "label": {
+          "uz": "Bosh yo'ldagi avtomobil",
+          "ru": "Автомобиль на главной дороге",
+          "en": "The car on the main road"
+        }
+      },
+      {
+        "id": "o2",
+        "refers_to": "ego",
+        "label": {
+          "uz": "Siz",
+          "ru": "Вы",
+          "en": "You"
+        }
+      },
+      {
+        "id": "D",
+        "label": {
+          "uz": "Signal berib o'tadi"
+        }
+      }
+    ],
+    "correct": "o1"
+  },
+  "resolution": {
+    "order": [
+      "a1",
+      "ego"
+    ],
+    "rule": {
+      "code": "13.9",
+      "text": {
+        "uz": "Ikkilamchi yo'ldan harakatlanayotgan haydovchi bosh yo'ldagi transport vositalariga yo'l berishi shart.",
+        "ru": "Водитель, движущийся по второстепенной дороге, обязан уступить дорогу транспортным средствам на главной дороге.",
+        "en": "A driver on a secondary road must give way to vehicles on the main road."
+      }
+    },
+    "wrong_outcomes": {
+      "o2": {
+        "type": "collision",
+        "with": "a1"
+      }
+    }
+  }
+}
