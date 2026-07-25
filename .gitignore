@@ -1,7 +1,6 @@
 # Node.js & Monorepo
 node_modules/
 */node_modules/
-package-lock.json
 
 # Next.js frontend
 frontend/.next/
@@ -18,7 +17,19 @@ mobile/dist/
 backend/.env
 backend/prisma/migrations/dev.db
 
+# Workspace lockfiles (root package-lock.json is the single source for npm workspaces)
+backend/package-lock.json
+frontend/package-lock.json
+mobile/package-lock.json
+
+# Video files (stored in object storage, not git)
+**/*.mp4
+**/*.webm
+**/*.mov
+
 # OS noise
 Thumbs.db
 .DS_Store
 *.log
+# Kimi project memory
+.kimi-memory/

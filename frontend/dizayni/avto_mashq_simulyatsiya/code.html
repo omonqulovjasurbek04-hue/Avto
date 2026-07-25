@@ -1,0 +1,438 @@
+<!DOCTYPE html><html class="dark" lang="uz"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AVTO Practice - Mashq Rejimi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#d8e2ff",
+                        "surface-tint": "#adc6ff",
+                        "surface-container-highest": "#2a3548",
+                        "on-surface-variant": "#c2c6d6",
+                        "secondary-container": "#03b5d3",
+                        "inverse-surface": "#d8e3fb",
+                        "primary-container": "#4d8eff",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "on-background": "#d8e3fb",
+                        "tertiary-container": "#a078ff",
+                        "surface-dim": "#081425",
+                        "error": "#ffb4ab",
+                        "on-tertiary-container": "#340080",
+                        "on-primary": "#002e6a",
+                        "secondary-fixed": "#acedff",
+                        "tertiary": "#d0bcff",
+                        "on-primary-fixed-variant": "#004395",
+                        "secondary": "#4cd7f6",
+                        "on-secondary": "#003640",
+                        "surface-container-high": "#1f2a3c",
+                        "outline": "#8c909f",
+                        "surface-container-low": "#111c2d",
+                        "inverse-primary": "#005ac2",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#23005c",
+                        "on-secondary-fixed": "#001f26",
+                        "inverse-on-surface": "#263143",
+                        "primary": "#adc6ff",
+                        "on-secondary-container": "#00424e",
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-variant": "#2a3548",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "on-primary-container": "#00285d",
+                        "on-tertiary": "#3c0091",
+                        "background": "#081425",
+                        "surface-bright": "#2f3a4c",
+                        "surface-container": "#152031",
+                        "tertiary-fixed": "#e9ddff",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "surface-container-lowest": "#040e1f",
+                        "outline-variant": "#424754",
+                        "surface": "#081425",
+                        "on-surface": "#d8e3fb",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-fixed": "#001a42"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "margin-desktop": "40px",
+                        "stack-lg": "32px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Outfit"],
+                        "headline-sm": ["Outfit"],
+                        "display-lg": ["Outfit"],
+                        "mono-timer": ["Outfit"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Outfit"],
+                        "label-caps": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "mono-timer": ["32px", {"lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(21, 28, 44, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hud-border {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), inset 0 0 10px rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(76, 215, 246, 0.3);
+        }
+
+        .hud-corner-br { position: absolute; bottom: -2px; right: -2px; width: 24px; height: 24px; border-bottom: 2px solid #4cd7f6; border-right: 2px solid #4cd7f6; }
+        .hud-corner-bl { position: absolute; bottom: -2px; left: -2px; width: 24px; height: 24px; border-bottom: 2px solid #4cd7f6; border-left: 2px solid #4cd7f6; }
+        .hud-corner-tr { position: absolute; top: -2px; right: -2px; width: 24px; height: 24px; border-top: 2px solid #4cd7f6; border-right: 2px solid #4cd7f6; }
+        .hud-corner-tl { position: absolute; top: -2px; left: -2px; width: 24px; height: 24px; border-top: 2px solid #4cd7f6; border-left: 2px solid #4cd7f6; }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 5px rgba(76, 215, 246, 0.6)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(76, 215, 246, 0.9)); }
+        }
+
+        .animate-pulse-glow {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .option-button:hover {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            transform: scale(1.01);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Global Animated Background -->
+<!-- STITCH_SHADER_START:ANIMATION_3 class="fixed inset-0 w-full h-full opacity-40 pointer-events-none z-0" -->
+<div class="fixed inset-0 w-full h-full opacity-40 pointer-events-none z-0" style="display:block;">
+<canvas id="shader-canvas-ANIMATION_3" style="display:block;width:100%;height:100%"></canvas>
+<script>
+(function() {
+  const canvas = document.getElementById('shader-canvas-ANIMATION_3');
+
+  // Sync the WebGL drawing-buffer size with the CSS-driven layout size.
+  // This fires on initial layout and whenever the element is resized.
+  function syncSize() {
+    const w = canvas.clientWidth  || 1280;
+    const h = canvas.clientHeight || 720;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width  = w;
+      canvas.height = h;
+    }
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(syncSize).observe(canvas);
+  }
+  syncSize();
+
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!gl) return;
+  const vs = `attribute vec2 a_position;
+varying vec2 v_texCoord;
+void main() {
+  v_texCoord = a_position * 0.5 + 0.5;
+  gl_Position = vec4(a_position, 0.0, 1.0);
+}`;
+  const fs = `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+void main() {
+    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+    
+    // Background deep navy
+    vec3 color = vec3(0.043, 0.059, 0.098); // #0b0f19
+    
+    // Ambient neon glow (moving slowly)
+    float flow = sin(uv.x * 3.0 + u_time * 0.5) * 0.5 + 0.5;
+    float flow2 = cos(uv.y * 2.0 - u_time * 0.3) * 0.5 + 0.5;
+    
+    vec3 accent1 = vec3(0.231, 0.51, 0.965); // #3b82f6
+    vec3 accent2 = vec3(0.024, 0.714, 0.831); // #06b6d4
+    
+    color = mix(color, accent1, flow * 0.05);
+    color = mix(color, accent2, flow2 * 0.05);
+    
+    // Moving tech grid / light streaks
+    float grid = fract(uv.y * 10.0 - u_time * 0.1);
+    if (grid < 0.01) color += accent1 * 0.1;
+    
+    gl_FragColor = vec4(color, 1.0);
+}`;
+  function cs(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, cs(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, cs(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const pos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(pos);
+  gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
+  const uTime = gl.getUniformLocation(prog, 'u_time');
+  const uRes = gl.getUniformLocation(prog, 'u_resolution');
+  const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+  // u_mouse is in pixel coordinates matching u_resolution (ShaderToy convention).
+  // Shaders that need normalized coords should use: u_mouse / u_resolution.
+  let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+  window.addEventListener('mousemove', (event) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width && rect.height) {
+      const nx = (event.clientX - rect.left) / rect.width;
+      const ny = 1.0 - (event.clientY - rect.top) / rect.height;
+      mouse.x = nx * canvas.width;
+      mouse.y = ny * canvas.height;
+    }
+  });
+
+  function render(t) {
+    if (typeof ResizeObserver === 'undefined') syncSize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    if (uTime) gl.uniform1f(uTime, t * 0.001);
+    if (uRes) gl.uniform2f(uRes, canvas.width, canvas.height);
+    if (uMouse) gl.uniform2f(uMouse, mouse.x, mouse.y);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+  }
+  render(0);
+})();
+</script>
+</div>
+<!-- STITCH_SHADER_END:ANIMATION_3 -->
+<!-- Navigation Shell -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-20 bg-surface-container/60 backdrop-blur-xl border-b border-white/10 shadow-[0_0_15px_rgba(173,198,255,0.1)]">
+<div class="flex items-center gap-stack-md">
+<span class="font-display-lg text-display-lg font-bold tracking-tighter text-primary">AVTO</span>
+</div>
+<nav class="hidden md:flex items-center gap-stack-lg">
+<a class="text-on-surface-variant font-medium hover:text-secondary transition-all duration-300" href="#">Home</a>
+<a class="text-on-surface-variant font-medium hover:text-secondary transition-all duration-300" href="#">Lessons</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 hover:text-secondary transition-all duration-300" href="#">Practice</a>
+<a class="text-on-surface-variant font-medium hover:text-secondary transition-all duration-300" href="#">Exam</a>
+<a class="text-on-surface-variant font-medium hover:text-secondary transition-all duration-300" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-stack-md">
+<button class="material-symbols-outlined text-primary hover:scale-105 active:scale-95 transition-all">account_circle</button>
+</div>
+</header>
+<main class="relative z-10 pt-32 pb-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto min-h-screen flex flex-col gap-stack-lg">
+<!-- Topic Filters -->
+<section class="flex flex-wrap gap-stack-md items-center animate-in fade-in slide-in-from-top duration-700">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-widest mr-stack-sm">Mavzu:</span>
+<button class="px-6 py-2 rounded-full glass-panel border-primary text-primary font-bold shadow-[0_0_10px_rgba(173,198,255,0.2)] hover:scale-105 transition-all duration-300">Barchasi</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-secondary hover:border-secondary/40 transition-all duration-300">Chorrahadan o'tish</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-secondary hover:border-secondary/40 transition-all duration-300">Imtiyoz belgilari</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-secondary hover:border-secondary/40 transition-all duration-300">Svetofor</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-secondary hover:border-secondary/40 transition-all duration-300">To'xtash va to'xtab turish</button>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Side: Scenario Player -->
+<div class="lg:col-span-8 flex flex-col gap-stack-lg">
+<!-- Main Scenario HUD area -->
+<div class="relative w-full aspect-video rounded-xl overflow-hidden glass-panel hud-border group">
+<div class="hud-corner-tl"></div>
+<div class="hud-corner-tr"></div>
+<div class="hud-corner-bl"></div>
+<div class="hud-corner-br"></div>
+<!-- Placeholder for 2D Animation Scenario -->
+<div class="w-full h-full bg-cover bg-center" data-alt="A clean, isometric 2D vector animation of a city intersection with a red car and a blue truck waiting at a traffic light. The style is modern, minimalist tech-art with glowing neon street lines and a high-performance digital interface aesthetic. Soft ambient blue and cyan lighting illuminates the scene under a dark night sky." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD956sODkXXb6Dx-uaJCeDfOA9i-Z9E0bUYul5inqExFciosWee7-R967eJrnsZBEO5x-25GB7VIoqPlb_APorELLUrrQUoUSWx9DbnleNubMmzxbWC9mixr6wl4KjqLfXiJreIU_mLLchAaZNuEVqIZY-tVkUpa_eroE_FnUGki_mLeOMuc_ts8j7gyj3mNDagE_gevoVfv18xHPXM676h-JvPStwCdo741XoTcFwb4sGwcmNkDqFRlxW-yWqTWjlO7z9TauitUqMZ')">
+<!-- HUD Overlays -->
+<div class="absolute inset-0 p-stack-md flex flex-col justify-between pointer-events-none">
+<div class="flex justify-between items-start">
+<div class="bg-surface-container/80 backdrop-blur px-4 py-2 rounded-lg border border-secondary/30 flex items-center gap-3 animate-pulse-glow">
+<span class="material-symbols-outlined text-secondary">speed</span>
+<span class="font-mono-timer text-headline-sm text-secondary">45 <small class="text-body-sm opacity-60">km/h</small></span>
+</div>
+<div class="flex gap-2">
+<div class="w-10 h-10 rounded glass-panel flex items-center justify-center text-secondary border-secondary/20">
+<span class="material-symbols-outlined">west</span>
+</div>
+<div class="w-10 h-10 rounded glass-panel flex items-center justify-center text-outline border-white/5">
+<span class="material-symbols-outlined">east</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex flex-col gap-1">
+<div class="flex gap-1 h-1 w-32 bg-white/10 rounded-full overflow-hidden">
+<div class="w-2/3 bg-gradient-to-r from-primary to-secondary"></div>
+</div>
+<span class="font-label-caps text-[10px] text-primary/60 uppercase">Dvigatel harorati</span>
+</div>
+<div class="font-mono-timer text-display-lg text-secondary/80 flex items-baseline gap-1">
+<span class="text-headline-md opacity-40">GEAR</span> 3
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Question Area -->
+<div class="flex flex-col gap-stack-md">
+<h2 class="font-headline-md text-headline-md text-on-surface leading-tight">
+                        Ushbu chorrahada qaysi transport vositasi birinchi bo'tishi kerak?
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+<button class="option-button p-stack-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-stack-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">A</span>
+<span class="font-body-md">Qizil rangli yengil avtomobil</span>
+</button>
+<button class="option-button p-stack-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-stack-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">B</span>
+<span class="font-body-md">Ko'k rangli yuk avtomobili</span>
+</button>
+<button class="option-button p-stack-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-stack-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">C</span>
+<span class="font-body-md">Tramvay (agar mavjud bo'lsa)</span>
+</button>
+<button class="option-button p-stack-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-stack-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">D</span>
+<span class="font-body-md">O'ng tomondan kelayotgan vosita</span>
+</button>
+</div>
+</div>
+<!-- Footer Navigation Controls -->
+<div class="flex justify-between items-center pt-stack-lg border-t border-outline-variant/30 mt-stack-md">
+<button class="flex items-center gap-2 px-8 py-3 rounded-lg border border-outline/30 text-outline hover:text-on-surface hover:border-on-surface transition-all active:scale-95">
+<span class="material-symbols-outlined">chevron_left</span>
+<span>Oldingi</span>
+</button>
+<div class="flex gap-2 items-center">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#adc6ff]"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<button class="flex items-center gap-2 px-8 py-3 rounded-lg bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container font-bold shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:scale-105 active:scale-95 transition-all">
+<span>Keyingi</span>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Right Side: Progress Panel -->
+<aside class="lg:col-span-4 flex flex-col gap-stack-lg sticky top-24">
+<!-- Progress Card -->
+<div class="glass-panel rounded-xl p-stack-lg flex flex-col gap-stack-md">
+<div class="flex justify-between items-end">
+<div>
+<h3 class="font-headline-sm text-headline-sm text-primary">Mashq holati</h3>
+<p class="text-body-sm text-outline">Bugungi maqsad: 50 ta</p>
+</div>
+<span class="font-mono-timer text-headline-md text-secondary">03/20</span>
+</div>
+<!-- Progress Bar Segmented -->
+<div class="grid grid-cols-10 gap-1 h-3">
+<div class="bg-secondary shadow-[0_0_10px_rgba(76,215,246,0.4)] rounded-sm"></div>
+<div class="bg-secondary shadow-[0_0_10px_rgba(76,215,246,0.4)] rounded-sm"></div>
+<div class="bg-primary/40 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+<div class="bg-white/5 rounded-sm"></div>
+</div>
+<div class="flex justify-between text-body-sm text-on-surface-variant pt-2 border-t border-white/5">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary"></span> To'g'ri: 2</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-error"></span> Xato: 0</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-outline"></span> Qoldi: 18</span>
+</div>
+</div>
+<!-- Info Box -->
+<div class="glass-panel rounded-xl p-stack-md border-l-4 border-secondary flex gap-stack-md">
+<span class="material-symbols-outlined text-secondary shrink-0">lightbulb</span>
+<div class="flex flex-col gap-1">
+<span class="font-bold text-secondary text-label-caps uppercase tracking-wider">Eslatma</span>
+<p class="text-body-sm text-on-surface-variant">Teng ahamiyatli bo'lmagan chorrahada asosiy yo'lda bo'lgan haydovchilar birinchi bo'lib o'tadilar.</p>
+</div>
+</div>
+<!-- Ad/Promo or Stats -->
+<div class="relative rounded-xl h-48 overflow-hidden group cursor-pointer">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110" data-alt="A futuristic night scene of a car dashboard with ultra-modern UI elements reflecting in the glass. The color palette is deep blues, vibrant cyans, and soft violets. Deep tech-minimalism, high focus on luxury automotive interfaces, sharp lighting, cinematic atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBI8nXsfXYB1iswUHJgpcLm80qumyTFLFvIcqrGxVhPHymQj8G0QskCPZYSTYkbjhyFmLtwiBiEPLa2hjxkJhhyt1B7PpBQ-F2dh5kKJNC0PRbCEIcr9UkpjXG897lfAa5ax6C7eG05hHUpFUDfPmtE9Pvy_eDOXcnTJvN1A5P3El8UeXd9WUtPLh9qJXks3qdbEMWVKrXktCBzXUOqlNVaSwNuSkbKAm-r7GfeD2OrQoaGaWUjQwYvzKc_lZw-8HzmIWC_VwO21mxs')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent flex flex-col justify-end p-stack-md">
+<span class="text-primary font-bold text-headline-sm">Premiumga o'ting</span>
+<p class="text-body-sm text-white/70">Barcha 1000+ videolarni ochish</p>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<footer class="w-full py-stack-lg bg-surface-dim border-t border-outline-variant/30">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop max-w-container-max mx-auto gap-stack-md">
+<span class="font-display-lg text-display-lg text-primary font-bold">AVTO</span>
+<div class="flex gap-stack-lg">
+<a class="font-label-caps text-label-caps text-outline hover:text-secondary-fixed-dim transition-colors duration-200" href="#">Privacy</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-secondary-fixed-dim transition-colors duration-200" href="#">Terms</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-secondary-fixed-dim transition-colors duration-200" href="#">Support</a>
+<a class="font-label-caps text-label-caps text-outline hover:text-secondary-fixed-dim transition-colors duration-200" href="#">System Status</a>
+</div>
+<p class="font-label-caps text-label-caps text-outline opacity-60">© 2024 AVTO YHQ. DRIVER_ED_PROTOCOL_v1.0</p>
+</div>
+</footer>
+<script>
+        // Micro-interactions for answer selection
+        document.querySelectorAll('.option-button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Reset others
+                document.querySelectorAll('.option-button').forEach(b => {
+                    b.classList.remove('bg-primary-container/30', 'border-primary', 'shadow-[0_0_15px_rgba(59,130,246,0.2)]');
+                    b.querySelector('span:first-child').classList.remove('bg-primary', 'text-on-primary');
+                });
+                
+                // Select this one
+                this.classList.add('bg-primary-container/30', 'border-primary', 'shadow-[0_0_15px_rgba(59,130,246,0.2)]');
+                this.querySelector('span:first-child').classList.add('bg-primary', 'text-on-primary');
+                
+                // Haptic-like effect
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 100);
+            });
+        });
+    </script>
+</body></html>

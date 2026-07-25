@@ -1,0 +1,372 @@
+<!DOCTYPE html><html class="dark" lang="uz"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AVTO YHQ - Exam Mobile</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#081425",
+                        "surface": "#081425",
+                        "on-surface-variant": "#c2c6d6",
+                        "primary": "#adc6ff",
+                        "on-primary-fixed": "#001a42",
+                        "surface-container-low": "#111c2d",
+                        "surface-dim": "#081425",
+                        "on-primary": "#002e6a",
+                        "surface-container": "#152031",
+                        "inverse-on-surface": "#263143",
+                        "tertiary-fixed": "#e9ddff",
+                        "surface-bright": "#2f3a4c",
+                        "on-error": "#690005",
+                        "outline": "#8c909f",
+                        "on-background": "#d8e3fb",
+                        "on-surface": "#d8e3fb",
+                        "primary-fixed-dim": "#adc6ff",
+                        "error": "#ffb4ab",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "primary-container": "#4d8eff",
+                        "inverse-surface": "#d8e3fb",
+                        "primary-fixed": "#d8e2ff",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#4cd7f6",
+                        "on-tertiary": "#3c0091",
+                        "on-secondary-fixed": "#001f26",
+                        "on-tertiary-fixed": "#23005c",
+                        "on-tertiary-container": "#340080",
+                        "tertiary-container": "#a078ff",
+                        "on-secondary-container": "#00424e",
+                        "on-primary-container": "#00285d",
+                        "tertiary": "#d0bcff",
+                        "surface-container-lowest": "#040e1f",
+                        "on-primary-fixed-variant": "#004395",
+                        "surface-variant": "#2a3548",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "surface-tint": "#adc6ff",
+                        "on-secondary": "#003640",
+                        "surface-container-high": "#1f2a3c",
+                        "surface-container-highest": "#2a3548",
+                        "outline-variant": "#424754",
+                        "inverse-primary": "#005ac2",
+                        "secondary-container": "#03b5d3",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "error-container": "#93000a",
+                        "secondary-fixed": "#acedff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "margin-desktop": "40px",
+                        "unit": "4px",
+                        "stack-lg": "32px",
+                        "margin-mobile": "16px",
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Outfit"],
+                        "mono-timer": ["Outfit"],
+                        "display-lg": ["Outfit"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "label-caps": ["Plus Jakarta Sans"],
+                        "headline-sm": ["Outfit"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Outfit"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "mono-timer": ["32px", { "lineHeight": "32px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Hide scrollbar for clean UI but allow scrolling */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* HUD Background Pattern */
+        .bg-hud-grid {
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* HUD Brackets */
+        .hud-bracket::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 24px; height: 24px;
+            border-top: 2px solid theme('colors.secondary');
+            border-left: 2px solid theme('colors.secondary');
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hud-bracket::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 24px; height: 24px;
+            border-bottom: 2px solid theme('colors.secondary');
+            border-right: 2px solid theme('colors.secondary');
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Timer Glow Animations */
+        @keyframes pulse-cyan {
+            0%, 100% { box-shadow: 0 0 15px rgba(76, 215, 246, 0.2); }
+            50% { box-shadow: 0 0 25px rgba(76, 215, 246, 0.5); }
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 180, 171, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(255, 180, 171, 0.8); }
+        }
+        
+        .timer-normal {
+            animation: pulse-cyan 3s infinite;
+        }
+        .timer-warning {
+            animation: pulse-red 1s infinite;
+            border-color: theme('colors.error') !important;
+            color: theme('colors.error') !important;
+        }
+        .timer-warning .material-symbols-outlined {
+            color: theme('colors.error') !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background h-screen flex flex-col overflow-hidden bg-hud-grid font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- Exam Top Header (Suppresses Global Nav for Focus Flow) -->
+<header class="flex-shrink-0 w-full px-margin-mobile py-4 flex justify-between items-center bg-surface-container/60 backdrop-blur-xl border-b border-white/5 z-50">
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high border border-outline-variant/30 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors duration-200">
+<span class="material-symbols-outlined">close</span>
+</button>
+<!-- Timer -->
+<div class="timer-normal flex items-center gap-2 px-6 py-2 rounded-full bg-surface-container-highest border border-secondary/30 transition-all duration-500" id="examTimer">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="font-mono-timer text-mono-timer text-secondary tracking-wider" id="timerText">02:05</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full bg-primary-container/20 border border-primary/30 text-primary hover:bg-primary hover:text-on-primary transition-colors duration-200 shadow-[0_0_10px_rgba(173,198,255,0.2)]">
+<span class="material-symbols-outlined">flag</span>
+</button>
+</header>
+<!-- Main Scrollable Content -->
+<main class="flex-1 overflow-y-auto hide-scrollbar flex flex-col pb-[120px]">
+<div class="max-w-md mx-auto w-full px-margin-mobile py-stack-md flex flex-col gap-stack-lg">
+<!-- Question Metadata -->
+<div class="flex justify-between items-center px-2">
+<div class="flex gap-2 items-center">
+<span class="px-3 py-1 rounded-full bg-secondary/10 text-secondary font-label-caps text-label-caps">Savol 12 / 20</span>
+</div>
+<div class="text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">local_police</span>
+<span>Yo'l belgilari</span>
+</div>
+</div>
+<!-- Canvas Area (HUD styled) -->
+<div class="relative w-full aspect-square rounded-lg bg-surface-container-lowest border border-outline-variant/20 overflow-hidden hud-bracket shadow-[0_0_30px_rgba(0,0,0,0.5)] flex items-center justify-center">
+<!-- Using placeholder with detailed prompt for intersection image -->
+<img class="w-full h-full object-cover opacity-90 transition-opacity duration-500 hover:opacity-100" data-alt="A highly detailed, hyper-realistic, overhead isometric view of a complex urban traffic intersection at night. The scene is illuminated by glowing neon streetlights, vibrant red and green traffic signals, and bright white car headlights casting dynamic shadows. Multiple vehicles are positioned at various stops, with clear, glowing white road markings indicating lanes. The visual style is modern, cinematic, and tech-focused, deeply embodying a 'Night City' aesthetic with deep blacks, cool cyans, and stark whites." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYDs5UeBGwoNqD_UGsqiSAEgatjQpZqJSe0n1gZn7wCqnKGzovzzHrpMigYInNaz9q4VO1h6oC1YzlOCBCgLUfN0Uz3BDymZwaVAdyxCu1OGG8rc1OT4XvHCcEqsxkRytboW1q0zHTGHjDG1XDgOQjGa7EchYVVKtavzEAMu50SwjS_3_dheBHzpchMvsM-sLEmVTOEoOdT51scZRuIKct9ysHTfvRdvdOmwX9ovfm2T8rWwCGhWzDM5fd9-XZeUiPlk3TGEHGwiIT">
+<!-- HUD Overlay elements -->
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-60"></div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+<div class="bg-surface/80 backdrop-blur-md px-3 py-1.5 rounded text-secondary font-mono-timer text-[14px] border border-secondary/20">
+                        CAM_04 // ACTIVE
+                    </div>
+<button class="w-8 h-8 rounded-full bg-surface/80 backdrop-blur-md flex items-center justify-center text-on-surface border border-outline-variant/30 hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">zoom_in</span>
+</button>
+</div>
+</div>
+<!-- Question Text -->
+<div class="px-2">
+<h2 class="font-headline-md text-headline-md text-on-surface tracking-tight">
+                    Suratda ko'rsatilgan vaziyatda qaysi transport vositasi birinchi bo'lib harakatlanish huquqiga ega?
+                </h2>
+</div>
+<!-- Options (HUD Inputs style) -->
+<div class="flex flex-col gap-stack-sm" id="optionsContainer">
+<label class="relative flex items-center p-4 rounded-xl bg-surface-container-low backdrop-blur-md border border-outline-variant/30 cursor-pointer transition-all duration-300 hover:border-secondary/50 hover:bg-surface-container group has-[:checked]:bg-surface-container has-[:checked]:border-secondary has-[:checked]:shadow-[0_0_15px_rgba(76,215,246,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-secondary/0 via-secondary/0 to-secondary/0 group-has-[:checked]:from-secondary/10 group-has-[:checked]:to-transparent transition-all duration-300"></div>
+<input class="sr-only" name="answer" type="radio" value="A">
+<div class="relative z-10 flex w-full gap-4 items-center">
+<div class="w-8 h-8 flex-shrink-0 rounded flex items-center justify-center border border-outline-variant/50 bg-surface text-on-surface-variant font-label-caps text-label-caps transition-colors duration-300 group-has-[:checked]:bg-secondary group-has-[:checked]:border-secondary group-has-[:checked]:text-on-secondary shadow-inner">
+                            A
+                        </div>
+<span class="font-body-md text-body-md text-on-surface-variant group-has-[:checked]:text-on-surface transition-colors duration-300">
+                            Ko'k avtomobil
+                        </span>
+</div>
+</label>
+<label class="relative flex items-center p-4 rounded-xl bg-surface-container-low backdrop-blur-md border border-outline-variant/30 cursor-pointer transition-all duration-300 hover:border-secondary/50 hover:bg-surface-container group has-[:checked]:bg-surface-container has-[:checked]:border-secondary has-[:checked]:shadow-[0_0_15px_rgba(76,215,246,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-secondary/0 via-secondary/0 to-secondary/0 group-has-[:checked]:from-secondary/10 group-has-[:checked]:to-transparent transition-all duration-300"></div>
+<input class="sr-only" name="answer" type="radio" value="B">
+<div class="relative z-10 flex w-full gap-4 items-center">
+<div class="w-8 h-8 flex-shrink-0 rounded flex items-center justify-center border border-outline-variant/50 bg-surface text-on-surface-variant font-label-caps text-label-caps transition-colors duration-300 group-has-[:checked]:bg-secondary group-has-[:checked]:border-secondary group-has-[:checked]:text-on-secondary shadow-inner">
+                            B
+                        </div>
+<span class="font-body-md text-body-md text-on-surface-variant group-has-[:checked]:text-on-surface transition-colors duration-300">
+                            Qizil avtomobil va tramvay bir vaqtda
+                        </span>
+</div>
+</label>
+<label class="relative flex items-center p-4 rounded-xl bg-surface-container-low backdrop-blur-md border border-outline-variant/30 cursor-pointer transition-all duration-300 hover:border-secondary/50 hover:bg-surface-container group has-[:checked]:bg-surface-container has-[:checked]:border-secondary has-[:checked]:shadow-[0_0_15px_rgba(76,215,246,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-secondary/0 via-secondary/0 to-secondary/0 group-has-[:checked]:from-secondary/10 group-has-[:checked]:to-transparent transition-all duration-300"></div>
+<input class="sr-only" name="answer" type="radio" value="C">
+<div class="relative z-10 flex w-full gap-4 items-center">
+<div class="w-8 h-8 flex-shrink-0 rounded flex items-center justify-center border border-outline-variant/50 bg-surface text-on-surface-variant font-label-caps text-label-caps transition-colors duration-300 group-has-[:checked]:bg-secondary group-has-[:checked]:border-secondary group-has-[:checked]:text-on-secondary shadow-inner">
+                            C
+                        </div>
+<span class="font-body-md text-body-md text-on-surface-variant group-has-[:checked]:text-on-surface transition-colors duration-300">
+                            Faqat tramvay
+                        </span>
+</div>
+</label>
+<label class="relative flex items-center p-4 rounded-xl bg-surface-container-low backdrop-blur-md border border-outline-variant/30 cursor-pointer transition-all duration-300 hover:border-secondary/50 hover:bg-surface-container group has-[:checked]:bg-surface-container has-[:checked]:border-secondary has-[:checked]:shadow-[0_0_15px_rgba(76,215,246,0.15)] overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-r from-secondary/0 via-secondary/0 to-secondary/0 group-has-[:checked]:from-secondary/10 group-has-[:checked]:to-transparent transition-all duration-300"></div>
+<input class="sr-only" name="answer" type="radio" value="D">
+<div class="relative z-10 flex w-full gap-4 items-center">
+<div class="w-8 h-8 flex-shrink-0 rounded flex items-center justify-center border border-outline-variant/50 bg-surface text-on-surface-variant font-label-caps text-label-caps transition-colors duration-300 group-has-[:checked]:bg-secondary group-has-[:checked]:border-secondary group-has-[:checked]:text-on-secondary shadow-inner">
+                            D
+                        </div>
+<span class="font-body-md text-body-md text-on-surface-variant group-has-[:checked]:text-on-surface transition-colors duration-300">
+                            Sariq avtomobil
+                        </span>
+</div>
+</label>
+</div>
+</div>
+</main>
+<!-- Bottom Question Navigation -->
+<div class="fixed bottom-0 left-0 w-full bg-surface-dim/90 backdrop-blur-2xl border-t border-white/5 pb-safe pt-4 px-0 z-40">
+<div class="px-margin-mobile flex justify-between items-center mb-3">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Navigatsiya</span>
+<button class="bg-gradient-to-r from-primary to-secondary text-on-primary font-body-sm text-body-sm font-bold px-4 py-1.5 rounded-full hover:scale-105 transition-transform shadow-[0_0_15px_rgba(77,142,255,0.3)]">
+                Keyingisi
+            </button>
+</div>
+<div class="w-full overflow-x-auto hide-scrollbar px-margin-mobile pb-6 flex gap-2 snap-x snap-mandatory">
+<!-- Generate 20 squares via JS or static HTML. Doing static to show distinct states -->
+<!-- Answered -->
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container border border-primary/40 text-primary font-mono-timer text-[16px] transition-colors relative">
+                1
+                <div class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary"></div>
+</button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container border border-primary/40 text-primary font-mono-timer text-[16px] transition-colors relative">
+                2
+                <div class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary"></div>
+</button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container border border-primary/40 text-primary font-mono-timer text-[16px] transition-colors relative">
+                3
+                <div class="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary"></div>
+</button>
+<!-- Active/Current -->
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-secondary text-on-secondary font-mono-timer text-[16px] shadow-[0_0_15px_rgba(76,215,246,0.4)] transform scale-110 mx-1">
+                12
+            </button>
+<!-- Unanswered -->
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                13
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                14
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                15
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                16
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                17
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                18
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                19
+            </button>
+<button class="snap-center w-11 h-11 flex-shrink-0 rounded-lg flex items-center justify-center bg-surface-container-low border border-outline-variant/30 text-outline font-mono-timer text-[16px] hover:border-outline-variant hover:text-on-surface-variant transition-colors">
+                20
+            </button>
+<!-- Spacer to allow scrolling past the last item comfortably -->
+<div class="w-4 flex-shrink-0"></div>
+</div>
+</div>
+<!-- Logic for Timer (Simulating transition to < 2 mins) -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const timerEl = document.getElementById('examTimer');
+            const timerText = document.getElementById('timerText');
+            
+            // Start at 2 minutes and 5 seconds to show the transition quickly
+            let totalSeconds = 125; 
+
+            const formatTime = (secs) => {
+                const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                const s = (secs % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+
+            const updateTimer = () => {
+                if (totalSeconds <= 0) {
+                    clearInterval(interval);
+                    timerText.innerText = "00:00";
+                    return;
+                }
+                
+                totalSeconds--;
+                timerText.innerText = formatTime(totalSeconds);
+
+                // If less than 2 minutes (120 seconds), trigger warning state
+                if (totalSeconds < 120 && !timerEl.classList.contains('timer-warning')) {
+                    timerEl.classList.remove('timer-normal');
+                    timerEl.classList.add('timer-warning');
+                }
+            };
+
+            const interval = setInterval(updateTimer, 1000);
+        });
+    </script>
+</body></html>

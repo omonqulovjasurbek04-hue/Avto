@@ -1,0 +1,10 @@
+name: engine_dart
+description: Deterministic scenario engine for the YHQ driving-education app. Pure Dart, no Flutter.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dev_dependencies:
+  test: ^1.25.0

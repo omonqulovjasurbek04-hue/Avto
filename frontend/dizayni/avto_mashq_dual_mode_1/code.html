@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="uz"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AVTO Practice - Mashq Rejimi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "secondary-fixed": "#e9ddff",
+                "surface-container-lowest": "#ffffff",
+                "on-surface": "#1d1b20",
+                "surface-dim": "#ded8e0",
+                "on-primary-container": "#e0d2ff",
+                "surface-bright": "#fdf7ff",
+                "surface-container-high": "#ece6ee",
+                "on-error": "#ffffff",
+                "primary-fixed": "#e9ddff",
+                "tertiary-fixed": "#ffdf93",
+                "on-secondary-fixed": "#1f1635",
+                "surface-container-low": "#f8f2fa",
+                "surface-container-highest": "#e6e0e9",
+                "primary": "#4f378a",
+                "on-tertiary-fixed": "#241a00",
+                "outline": "#7a7582",
+                "inverse-primary": "#cfbcff",
+                "on-secondary-fixed-variant": "#4b4263",
+                "on-surface-variant": "#494551",
+                "background": "#fdf7ff",
+                "tertiary": "#765b00",
+                "on-background": "#1d1b20",
+                "surface-variant": "#e6e0e9",
+                "tertiary-fixed-dim": "#e7c365",
+                "on-secondary-container": "#645a7d",
+                "error-container": "#ffdad6",
+                "secondary": "#63597c",
+                "error": "#ba1a1a",
+                "secondary-container": "#e1d4fd",
+                "surface": "#fdf7ff",
+                "on-secondary": "#ffffff",
+                "inverse-on-surface": "#f5eff7",
+                "on-tertiary-fixed-variant": "#594400",
+                "on-error-container": "#93000a",
+                "on-primary-fixed": "#22005d",
+                "surface-container": "#f2ecf4",
+                "primary-fixed-dim": "#cfbcff",
+                "inverse-surface": "#322f35",
+                "outline-variant": "#cbc4d2",
+                "on-tertiary-container": "#503d00",
+                "secondary-fixed-dim": "#cdc0e9",
+                "on-primary": "#ffffff",
+                "on-tertiary": "#ffffff",
+                "tertiary-container": "#c9a74d",
+                "primary-container": "#6750a4",
+                "surface-tint": "#6750a4",
+                "on-primary-fixed-variant": "#4f378a"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "container-max": "1280px",
+                "sm": "8px",
+                "base": "4px",
+                "lg": "24px",
+                "gutter": "24px",
+                "xl": "40px",
+                "xs": "4px",
+                "md": "16px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Outfit"
+                ],
+                "display-lg-mobile": [
+                        "Outfit"
+                ],
+                "body-md": [
+                        "Plus Jakarta Sans"
+                ],
+                "body-lg": [
+                        "Plus Jakarta Sans"
+                ],
+                "display-lg": [
+                        "Outfit"
+                ],
+                "label-caps": [
+                        "Outfit"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.1em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .glass-panel {
+            background: rgba(253, 247, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .dark .glass-panel {
+            background: rgba(50, 47, 53, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hud-border {
+            box-shadow: 0 0 20px rgba(79, 55, 138, 0.15), inset 0 0 10px rgba(79, 55, 138, 0.1);
+            border: 2px solid rgba(79, 55, 138, 0.3);
+        }
+        .dark .hud-border {
+            box-shadow: 0 0 20px rgba(207, 188, 255, 0.15), inset 0 0 10px rgba(207, 188, 255, 0.1);
+            border: 2px solid rgba(207, 188, 255, 0.3);
+        }
+
+        .hud-corner-br { position: absolute; bottom: -2px; right: -2px; width: 24px; height: 24px; border-bottom: 2px solid #4f378a; border-right: 2px solid #4f378a; }
+        .hud-corner-bl { position: absolute; bottom: -2px; left: -2px; width: 24px; height: 24px; border-bottom: 2px solid #4f378a; border-left: 2px solid #4f378a; }
+        .hud-corner-tr { position: absolute; top: -2px; right: -2px; width: 24px; height: 24px; border-top: 2px solid #4f378a; border-right: 2px solid #4f378a; }
+        .hud-corner-tl { position: absolute; top: -2px; left: -2px; width: 24px; height: 24px; border-top: 2px solid #4f378a; border-left: 2px solid #4f378a; }
+
+        .dark .hud-corner-br { border-color: #cfbcff; }
+        .dark .hud-corner-bl { border-color: #cfbcff; }
+        .dark .hud-corner-tr { border-color: #cfbcff; }
+        .dark .hud-corner-tl { border-color: #cfbcff; }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 5px rgba(79, 55, 138, 0.6)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(79, 55, 138, 0.9)); }
+        }
+        .dark .animate-pulse-glow {
+            animation: pulse-glow-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-glow-dark {
+            0%, 100% { opacity: 0.6; filter: drop-shadow(0 0 5px rgba(207, 188, 255, 0.6)); }
+            50% { opacity: 1; filter: drop-shadow(0 0 12px rgba(207, 188, 255, 0.9)); }
+        }
+
+        .animate-pulse-glow {
+            animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .option-button:hover {
+            box-shadow: 0 0 15px rgba(79, 55, 138, 0.4);
+            transform: scale(1.01);
+        }
+        .dark .option-button:hover {
+            box-shadow: 0 0 15px rgba(207, 188, 255, 0.4);
+        }
+    </style>
+<script>
+    function toggleTheme() {
+        if (document.documentElement.classList.contains('dark')) {
+            document.documentElement.classList.remove('dark');
+            localStorage.theme = 'light';
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.theme = 'dark';
+        }
+    }
+    
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+</script>
+</head>
+<body class="bg-background text-on-surface dark:bg-inverse-surface dark:text-inverse-on-surface font-body-md overflow-x-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- Global Animated Background -->
+
+<!-- Navigation Shell -->
+<header class="w-full sticky top-0 z-50 bg-surface/80 dark:bg-surface-container-low/80 backdrop-blur-lg border-b border-outline-variant/30 dark:border-white/10 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center px-lg py-sm max-w-container-max mx-auto h-20">
+<div class="flex items-center gap-md">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed-dim">AVTO</span>
+</div>
+<nav class="hidden md:flex items-center gap-lg">
+<a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-body-md text-body-md px-2 py-1 rounded-lg hover:bg-surface-container-high/50 dark:hover:bg-white/5 transition-all" href="#">Home</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-body-md text-body-md px-2 py-1 rounded-lg hover:bg-surface-container-high/50 dark:hover:bg-white/5 transition-all" href="#">Lessons</a>
+<a class="text-primary dark:text-tertiary-fixed-dim border-b-2 border-primary dark:border-tertiary-fixed-dim font-bold font-body-md text-body-md px-2 py-1" href="#">Practice</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-body-md text-body-md px-2 py-1 rounded-lg hover:bg-surface-container-high/50 dark:hover:bg-white/5 transition-all" href="#">Exam</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary dark:hover:text-primary-fixed-dim transition-colors font-body-md text-body-md px-2 py-1 rounded-lg hover:bg-surface-container-high/50 dark:hover:bg-white/5 transition-all" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-primary dark:text-inverse-primary hover:bg-surface-container-high/50 dark:hover:bg-white/5 rounded-lg p-2 transition-all active:scale-95 duration-200 cursor-pointer" onclick="toggleTheme()">dark_mode</button>
+<button class="material-symbols-outlined text-primary dark:text-inverse-primary hover:bg-surface-container-high/50 dark:hover:bg-white/5 rounded-lg p-2 transition-all active:scale-95 duration-200 cursor-pointer">account_circle</button>
+</div>
+</div>
+</header>
+<main class="relative z-10 pt-10 pb-xl px-md md:px-lg max-w-container-max mx-auto min-h-screen flex flex-col gap-xl">
+<!-- Topic Filters -->
+<section class="flex flex-wrap gap-md items-center animate-in fade-in slide-in-from-top duration-700">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-widest mr-sm">Mavzu:</span>
+<button class="px-6 py-2 rounded-full glass-panel border-primary text-primary dark:text-primary-fixed-dim font-bold shadow-[0_0_10px_rgba(79,55,138,0.2)] dark:shadow-[0_0_10px_rgba(207,188,255,0.2)] hover:scale-105 transition-all duration-300">Barchasi</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim hover:border-primary/40 transition-all duration-300">Chorrahadan o'tish</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim hover:border-primary/40 transition-all duration-300">Imtiyoz belgilari</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim hover:border-primary/40 transition-all duration-300">Svetofor</button>
+<button class="px-6 py-2 rounded-full glass-panel text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim hover:border-primary/40 transition-all duration-300">To'xtash va to'xtab turish</button>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Side: Scenario Player -->
+<div class="lg:col-span-8 flex flex-col gap-xl">
+<!-- Main Scenario HUD area -->
+<div class="relative w-full aspect-video rounded-xl overflow-hidden glass-panel hud-border group">
+<div class="hud-corner-tl"></div>
+<div class="hud-corner-tr"></div>
+<div class="hud-corner-bl"></div>
+<div class="hud-corner-br"></div>
+<!-- Placeholder for 2D Animation Scenario -->
+<div class="w-full h-full bg-cover bg-center" data-alt="A clean, isometric 2D vector animation of a city intersection with a red car and a blue truck waiting at a traffic light. The style is modern, minimalist tech-art with glowing neon street lines and a high-performance digital interface aesthetic. Soft ambient blue and cyan lighting illuminates the scene under a dark night sky." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD956sODkXXb6Dx-uaJCeDfOA9i-Z9E0bUYul5inqExFciosWee7-R967eJrnsZBEO5x-25GB7VIoqPlb_APorELLUrrQUoUSWx9DbnleNubMmzxbWC9mixr6wl4KjqLfXiJreIU_mLLchAaZNuEVqIZY-tVkUpa_eroE_FnUGki_mLeOMuc_ts8j7gyj3mNDagE_gevoVfv18xHPXM676h-JvPStwCdo741XoTcFwb4sGwcmNkDqFRlxW-yWqTWjlO7z9TauitUqMZ')">
+<!-- HUD Overlays -->
+<div class="absolute inset-0 p-md flex flex-col justify-between pointer-events-none">
+<div class="flex justify-between items-start">
+<div class="bg-surface/80 dark:bg-surface-container/80 backdrop-blur px-4 py-2 rounded-lg border border-primary/30 flex items-center gap-3 animate-pulse-glow">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary">speed</span>
+<span class="font-headline-md text-headline-sm text-primary dark:text-inverse-primary">45 <small class="text-body-md opacity-60">km/h</small></span>
+</div>
+<div class="flex gap-2">
+<div class="w-10 h-10 rounded glass-panel flex items-center justify-center text-primary dark:text-inverse-primary border-primary/20">
+<span class="material-symbols-outlined">west</span>
+</div>
+<div class="w-10 h-10 rounded glass-panel flex items-center justify-center text-outline border-black/5 dark:border-white/5">
+<span class="material-symbols-outlined">east</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-end">
+<div class="flex flex-col gap-1">
+<div class="flex gap-1 h-1 w-32 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+<div class="w-2/3 bg-gradient-to-r from-primary to-inverse-primary"></div>
+</div>
+<span class="font-label-caps text-[10px] text-primary/60 dark:text-inverse-primary/60 uppercase">Dvigatel harorati</span>
+</div>
+<div class="font-headline-md text-display-lg text-primary/80 dark:text-inverse-primary/80 flex items-baseline gap-1">
+<span class="text-headline-md opacity-40">GEAR</span> 3
+                                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Question Area -->
+<div class="flex flex-col gap-md">
+<h2 class="font-headline-md text-headline-md text-on-surface dark:text-inverse-on-surface leading-tight">
+                        Ushbu chorrahada qaysi transport vositasi birinchi bo'tishi kerak?
+                    </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<button class="option-button p-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-black/10 dark:border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">A</span>
+<span class="font-body-md">Qizil rangli yengil avtomobil</span>
+</button>
+<button class="option-button p-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-black/10 dark:border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">B</span>
+<span class="font-body-md">Ko'k rangli yuk avtomobili</span>
+</button>
+<button class="option-button p-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-black/10 dark:border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">C</span>
+<span class="font-body-md">Tramvay (agar mavjud bo'lsa)</span>
+</button>
+<button class="option-button p-md text-left glass-panel rounded-xl hover:bg-primary-container/20 hover:border-primary/50 transition-all duration-300 flex items-center gap-md group">
+<span class="w-10 h-10 rounded-lg bg-surface-container-high border border-black/10 dark:border-white/10 flex items-center justify-center font-bold text-primary group-hover:bg-primary group-hover:text-on-primary transition-all">D</span>
+<span class="font-body-md">O'ng tomondan kelayotgan vosita</span>
+</button>
+</div>
+</div>
+<!-- Footer Navigation Controls -->
+<div class="flex justify-between items-center pt-xl border-t border-outline-variant/30 mt-md">
+<button class="flex items-center gap-2 px-8 py-3 rounded-lg border border-outline/30 text-outline hover:text-on-surface dark:hover:text-inverse-on-surface hover:border-on-surface dark:hover:border-inverse-on-surface transition-all active:scale-95">
+<span class="material-symbols-outlined">chevron_left</span>
+<span>Oldingi</span>
+</button>
+<div class="flex gap-2 items-center">
+<span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_#6750a4]"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<button class="flex items-center gap-2 px-8 py-3 rounded-lg bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold shadow-[0_0_15px_rgba(103,80,164,0.3)] hover:scale-105 active:scale-95 transition-all">
+<span>Keyingi</span>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Right Side: Progress Panel -->
+<aside class="lg:col-span-4 flex flex-col gap-xl sticky top-24">
+<!-- Progress Card -->
+<div class="glass-panel rounded-xl p-xl flex flex-col gap-md">
+<div class="flex justify-between items-end">
+<div>
+<h3 class="font-headline-md text-headline-sm text-primary dark:text-inverse-primary">Mashq holati</h3>
+<p class="text-body-md text-outline">Bugungi maqsad: 50 ta</p>
+</div>
+<span class="font-headline-md text-headline-md text-primary dark:text-inverse-primary">03/20</span>
+</div>
+<!-- Progress Bar Segmented -->
+<div class="grid grid-cols-10 gap-1 h-3">
+<div class="bg-primary dark:bg-inverse-primary shadow-[0_0_10px_rgba(103,80,164,0.4)] dark:shadow-[0_0_10px_rgba(207,188,255,0.4)] rounded-sm"></div>
+<div class="bg-primary dark:bg-inverse-primary shadow-[0_0_10px_rgba(103,80,164,0.4)] dark:shadow-[0_0_10px_rgba(207,188,255,0.4)] rounded-sm"></div>
+<div class="bg-primary/40 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+<div class="bg-black/5 dark:bg-white/5 rounded-sm"></div>
+</div>
+<div class="flex justify-between text-body-md text-on-surface-variant pt-2 border-t border-black/5 dark:border-white/5">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary dark:bg-inverse-primary"></span> To'g'ri: 2</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-error"></span> Xato: 0</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-outline"></span> Qoldi: 18</span>
+</div>
+</div>
+<!-- Info Box -->
+<div class="glass-panel rounded-xl p-md border-l-4 border-primary dark:border-inverse-primary flex gap-md">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary shrink-0">lightbulb</span>
+<div class="flex flex-col gap-1">
+<span class="font-bold text-primary dark:text-inverse-primary text-label-caps uppercase tracking-wider">Eslatma</span>
+<p class="text-body-md text-on-surface-variant">Teng ahamiyatli bo'lmagan chorrahada asosiy yo'lda bo'lgan haydovchilar birinchi bo'lib o'tadilar.</p>
+</div>
+</div>
+<!-- Ad/Promo or Stats -->
+<div class="relative rounded-xl h-48 overflow-hidden group cursor-pointer">
+<div class="w-full h-full bg-cover bg-center transition-transform duration-700 group-hover:scale-110" data-alt="A futuristic night scene of a car dashboard with ultra-modern UI elements reflecting in the glass. The color palette is deep blues, vibrant cyans, and soft violets. Deep tech-minimalism, high focus on luxury automotive interfaces, sharp lighting, cinematic atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBI8nXsfXYB1iswUHJgpcLm80qumyTFLFvIcqrGxVhPHymQj8G0QskCPZYSTYkbjhyFmLtwiBiEPLa2hjxkJhhyt1B7PpBQ-F2dh5kKJNC0PRbCEIcr9UkpjXG897lfAa5ax6C7eG05hHUpFUDfPmtE9Pvy_eDOXcnTJvN1A5P3El8UeXd9WUtPLh9qJXks3qdbEMWVKrXktCBzXUOqlNVaSwNuSkbKAm-r7GfeD2OrQoaGaWUjQwYvzKc_lZw-8HzmIWC_VwO21mxs')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dim to-transparent flex flex-col justify-end p-md">
+<span class="text-primary dark:text-inverse-primary font-bold text-headline-sm">Premiumga o'ting</span>
+<p class="text-body-md text-white/70">Barcha 1000+ videolarni ochish</p>
+</div>
+</div>
+</aside>
+</div>
+</main>
+<footer class="w-full py-xl bg-surface-container-low dark:bg-surface-container-highest border-t border-outline-variant/20 dark:border-white/5">
+<div class="flex flex-col md:flex-row justify-between items-center px-lg max-w-container-max mx-auto gap-md">
+<span class="font-headline-md text-headline-md font-black text-primary dark:text-primary-fixed-dim">AVTO</span>
+<div class="flex gap-lg">
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all duration-200" href="#">Privacy</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all duration-200" href="#">Terms</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant dark:text-on-surface-variant/70 hover:text-primary dark:hover:text-primary-fixed-dim underline transition-all duration-200" href="#">Support</a>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-on-surface-variant">© 2024 AVTO Driving Education. All rights reserved.</p>
+</div>
+</footer>
+<script>
+        // Micro-interactions for answer selection
+        document.querySelectorAll('.option-button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Reset others
+                document.querySelectorAll('.option-button').forEach(b => {
+                    b.classList.remove('bg-primary-container/30', 'border-primary', 'shadow-[0_0_15px_rgba(79,55,138,0.2)]', 'dark:shadow-[0_0_15px_rgba(207,188,255,0.2)]');
+                    b.querySelector('span:first-child').classList.remove('bg-primary', 'text-on-primary');
+                });
+                
+                // Select this one
+                this.classList.add('bg-primary-container/30', 'border-primary', 'shadow-[0_0_15px_rgba(79,55,138,0.2)]', 'dark:shadow-[0_0_15px_rgba(207,188,255,0.2)]');
+                this.querySelector('span:first-child').classList.add('bg-primary', 'text-on-primary');
+                
+                // Haptic-like effect
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 100);
+            });
+        });
+    </script>
+</body></html>

@@ -5,6 +5,9 @@
   "description": "Express REST API for AVTO (YHQ) driving education platform. PostgreSQL via Prisma, JWT auth, Zod validation.",
   "type": "module",
   "main": "src/index.mjs",
+  "prisma": {
+    "seed": "node prisma/seed.mjs"
+  },
   "scripts": {
     "start": "node src/index.mjs",
     "dev": "node --watch src/index.mjs",
@@ -12,6 +15,7 @@
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
     "db:migrate": "npx prisma migrate dev",
+    "db:seed": "node prisma/seed.mjs",
     "db:studio": "npx prisma studio"
   },
   "dependencies": {
@@ -20,6 +24,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
+    "multer": "^2.2.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

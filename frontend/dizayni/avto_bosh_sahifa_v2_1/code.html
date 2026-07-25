@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AVTO — Bosh Sahifa (v2)</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-highest": "#2a3548",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed-dim": "#adc6ff",
+                        "on-tertiary-container": "#340080",
+                        "surface": "#081425",
+                        "surface-bright": "#2f3a4c",
+                        "primary": "#adc6ff",
+                        "primary-container": "#4d8eff",
+                        "inverse-surface": "#d8e3fb",
+                        "outline-variant": "#424754",
+                        "on-tertiary": "#3c0091",
+                        "on-secondary-fixed-variant": "#004e5c",
+                        "on-background": "#d8e3fb",
+                        "on-primary-fixed-variant": "#004395",
+                        "error": "#ffb4ab",
+                        "secondary": "#4cd7f6",
+                        "tertiary-fixed-dim": "#d0bcff",
+                        "on-error": "#690005",
+                        "surface-container": "#152031",
+                        "surface-container-lowest": "#040e1f",
+                        "surface-container-low": "#111c2d",
+                        "outline": "#8c909f",
+                        "on-primary-container": "#00285d",
+                        "on-surface-variant": "#c2c6d6",
+                        "tertiary": "#d0bcff",
+                        "inverse-primary": "#005ac2",
+                        "tertiary-fixed": "#e9ddff",
+                        "primary-fixed": "#d8e2ff",
+                        "secondary-container": "#03b5d3",
+                        "on-secondary-fixed": "#001f26",
+                        "on-tertiary-fixed": "#23005c",
+                        "surface-container-high": "#1f2a3c",
+                        "secondary-fixed-dim": "#4cd7f6",
+                        "background": "#081425",
+                        "surface-dim": "#081425",
+                        "tertiary-container": "#a078ff",
+                        "on-tertiary-fixed-variant": "#5516be",
+                        "on-secondary-container": "#00424e",
+                        "on-secondary": "#003640",
+                        "surface-tint": "#adc6ff",
+                        "inverse-on-surface": "#263143",
+                        "on-primary-fixed": "#001a42",
+                        "secondary-fixed": "#acedff",
+                        "on-primary": "#002e6a",
+                        "on-surface": "#d8e3fb",
+                        "surface-variant": "#2a3548",
+                        "error-container": "#93000a"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "md": "1.5rem",
+                        "lg": "2.5rem",
+                        "xs": "0.5rem",
+                        "base": "4px",
+                        "xl": "4rem",
+                        "container-max": "1280px",
+                        "gutter": "24px",
+                        "sm": "1rem"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Outfit"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Outfit"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Outfit"],
+                        "display-lg": ["Outfit"],
+                        "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "1.2", fontWeight: "600" }],
+                        "label-md": ["14px", { lineHeight: "1.4", letterSpacing: "0.01em", fontWeight: "600" }],
+                        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "1.2", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "1.6", fontWeight: "400" }],
+                        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-sm": ["12px", { lineHeight: "1.4", fontWeight: "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.surface');
+            color: theme('colors.on-surface');
+            overflow-x: hidden;
+        }
+
+        /* 3D Transform Classes */
+        .preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .translate-z-20 {
+            transform: translateZ(20px);
+        }
+        .translate-z-40 {
+            transform: translateZ(40px);
+        }
+        
+        /* Smooth transition for transform */
+        .tilt-card {
+            transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+            will-change: transform;
+        }
+
+        /* Neon Glows */
+        .glow-primary {
+            box-shadow: 0 0 30px rgba(173, 198, 255, 0.15);
+        }
+        .glow-primary-intense {
+            box-shadow: 0 0 40px rgba(173, 198, 255, 0.3);
+        }
+
+        /* Parallax Background */
+        .parallax-bg {
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(77, 142, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(3, 181, 211, 0.1) 0%, transparent 50%);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Scroll Animation utility classes */
+        .scroll-anim-hidden {
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+        }
+        .scroll-anim-visible {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        /* Button inner glow */
+        .btn-inner-glow {
+            box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md">
+<!-- TopNavBar -->
+<nav class="bg-surface/80 dark:bg-surface/80 backdrop-blur-xl docked full-width top-0 sticky bg-surface-container/10 border-b border-outline-variant/20 shadow-[0_20px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(173,198,255,0.1)] z-50">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-container-max mx-auto z-50">
+<!-- Brand -->
+<a class="font-headline-md text-headline-md font-bold tracking-tighter text-primary dark:text-primary-fixed-dim hover:scale-105 transition-transform" href="#">
+                AVTO YHQ
+            </a>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-8">
+<!-- Active Link -->
+<a class="font-label-md text-label-md text-primary dark:text-primary-fixed-dim border-b-2 border-primary relative after:absolute after:bottom-[-2px] after:left-0 after:w-full after:h-[2px] after:bg-primary after:shadow-[0_0_8px_#adc6ff] hover:scale-105 transition-transform" href="#">
+                    Home
+                </a>
+<!-- Inactive Links -->
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant transition-all duration-300 hover:text-primary dark:hover:text-primary-fixed-dim hover:scale-105 transition-transform" href="#">
+                    Lessons
+                </a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant transition-all duration-300 hover:text-primary dark:hover:text-primary-fixed-dim hover:scale-105 transition-transform" href="#">
+                    Practice
+                </a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant transition-all duration-300 hover:text-primary dark:hover:text-primary-fixed-dim hover:scale-105 transition-transform" href="#">
+                    Exam
+                </a>
+<a class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant transition-all duration-300 hover:text-primary dark:hover:text-primary-fixed-dim hover:scale-105 transition-transform" href="#">
+                    Analytics
+                </a>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button aria-label="language" class="text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim hover:scale-105 transition-transform active:scale-95 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">language</span>
+</button>
+<button aria-label="dark_mode" class="text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim hover:scale-105 transition-transform hover:rotate-180 duration-500 active:scale-95">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dark_mode</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative min-h-[819px] flex items-center justify-center overflow-hidden parallax-bg px-4 py-20">
+<!-- Background Decorative Image -->
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none flex justify-center items-center">
+<img class="w-[800px] h-[800px] object-cover mix-blend-screen opacity-40" data-alt="A highly complex and abstract geometric digital art piece representing futuristic networks and nodes, floating in a dark, infinite void space. The visual style utilizes extremely thin, razor-sharp cyan and deep blue lines intersecting dynamically. The lighting is intensely focused on the nodes, emitting a soft digital glow against the pure black background, evoking a sense of hyper-advanced artificial intelligence and modern data flow." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAWNrHTw4aWhuPMIvfuvNGXiKpEkEc7T4V7PgZPIEAEiCQ4lcOVvVdOoPD6kKHCOXBdpFNp7kw_DN8Jki3eLsyFUKix8jKlKk8PoTReCZi4nbtuZ_jTQzmOWJgTk4C5Ly63ypz3GFNLpCVirOPGlVorQ_K9X42tNmIR-JtughTu9G31ap1Cx_TZkgqpPIxkfn40bU6hTeAAlefWCzTtfQoVVeS9_dkmcBPKLMpRQVXyydEf4EMObxQ1Eb1PAcGP2ouxhVVJh6PAFH3c"/>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto flex flex-col items-center text-center space-y-8">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high/50 border border-outline-variant/30 backdrop-blur-md mb-4 glow-primary">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-secondary">AVTO v2.0 Operational</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-on-surface max-w-4xl tracking-tighter">
+                    Master the Road with <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Intelligent Learning</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
+                    Experience the next generation of driver education. Our Edutainment system combines gamified progression with rigorous real-world analytics to guarantee your success.
+                </p>
+<div class="flex flex-col sm:flex-row gap-6 mt-8">
+<button class="px-8 py-4 bg-primary text-on-primary rounded-xl font-label-md text-label-md font-bold btn-inner-glow glow-primary hover:glow-primary-intense hover:scale-[1.02] active:scale-98 transition-all duration-200 preserve-3d group">
+<span class="flex items-center gap-2 group-hover:translate-z-20 transition-transform">
+                            Start Journey
+                            <span class="material-symbols-outlined text-xl">arrow_forward</span>
+</span>
+</button>
+<button class="px-8 py-4 bg-transparent border border-outline-variant text-primary rounded-xl font-label-md text-label-md font-bold hover:bg-primary/10 hover:scale-[1.02] active:scale-98 transition-all duration-200">
+                        View Curriculum
+                    </button>
+</div>
+</div>
+</section>
+<!-- Stats Section (Depth-in Scroll Animation) -->
+<section class="py-20 bg-surface-container-lowest relative z-20">
+<div class="max-w-container-max mx-auto px-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Stat Card 1 -->
+<div class="stat-card scroll-anim-hidden bg-surface-container/50 backdrop-blur-lg border border-outline-variant/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+<span class="font-display-lg text-display-lg text-primary mb-2">98%</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Pass Rate</span>
+</div>
+<!-- Stat Card 2 -->
+<div class="stat-card scroll-anim-hidden bg-surface-container/50 backdrop-blur-lg border border-outline-variant/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center delay-100">
+<span class="font-display-lg text-display-lg text-secondary mb-2">50k+</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Active Learners</span>
+</div>
+<!-- Stat Card 3 -->
+<div class="stat-card scroll-anim-hidden bg-surface-container/50 backdrop-blur-lg border border-outline-variant/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center delay-200">
+<span class="font-display-lg text-display-lg text-tertiary mb-2">120</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Interactive Modules</span>
+</div>
+<!-- Stat Card 4 -->
+<div class="stat-card scroll-anim-hidden bg-surface-container/50 backdrop-blur-lg border border-outline-variant/20 rounded-2xl p-6 flex flex-col items-center justify-center text-center delay-300">
+<span class="font-display-lg text-display-lg text-primary mb-2">24/7</span>
+<span class="font-label-md text-label-md text-on-surface-variant">AI Assistance</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Features Section (Bento Grid with 3D Tilt) -->
+<section class="py-24 px-8 max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Core Ecosystem</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Tools designed to accelerate your understanding of traffic laws and road safety through immersive experiences.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-6 auto-rows-[280px]">
+<!-- Feature Card 1 (Large) -->
+<div class="tilt-card preserve-3d col-span-1 md:col-span-6 lg:col-span-8 bg-surface-container-high/40 backdrop-blur-xl border border-outline-variant/20 rounded-3xl p-8 relative overflow-hidden group hover:glow-primary cursor-pointer flex flex-col justify-end">
+<!-- Graphic/Animation placeholder inside card -->
+<div class="absolute top-0 right-0 w-2/3 h-full opacity-30 group-hover:translate-z-20 transition-transform duration-500 pointer-events-none">
+<img class="w-full h-full object-cover rounded-tr-3xl" data-alt="A futuristic, glowing holographic projection of a complex urban intersection and road system floating above a dark metallic surface. The hologram is rendered in brilliant cyan and deep purple neon lines, showing tiny light trails simulating traffic flow. The aesthetic is strictly cyberpunk yet clean and educational, set against a pitch-black background with subtle ambient light reflections." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYwS9RR0toG984yS_JHXMDHtR3pXKDN6mpllFzhTKXLi1OdpsoozwAsyLR5gOLWGvcgmLFFR86A0zLb2C4i8Fv1JtGUDbgiNo4spw9EOdtpA5vBszacu08YHYC4kTcaiemWaLWQa_GfdbbUfSbqWWctY6T4UtQMsG3SRrjXorzr4P4A8cPLmgJibKjI7kS6dM0QdRz8bSRC3H2WcznLYkB6LSuZGY_zt0FTyjKRigoFHGWwah5Ndhth-_V5LS0xVdmxd0JxsLwezGg"/>
+</div>
+<div class="relative z-10 w-full md:w-2/3 preserve-3d">
+<span class="material-symbols-outlined text-4xl text-primary mb-4 group-hover:translate-z-40 transition-transform duration-300 block" style="font-variation-settings: 'FILL' 1;">view_in_ar</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:translate-z-20 transition-transform duration-300">3D Scenario Simulation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant group-hover:translate-z-20 transition-transform duration-300">Navigate complex intersections and hazardous conditions in a risk-free, highly realistic virtual environment.</p>
+</div>
+</div>
+<!-- Feature Card 2 -->
+<div class="tilt-card preserve-3d col-span-1 md:col-span-6 lg:col-span-4 bg-gradient-to-br from-surface-container-high to-surface-container-low backdrop-blur-xl border border-outline-variant/20 rounded-3xl p-8 relative group hover:glow-primary cursor-pointer flex flex-col">
+<div class="flex-grow preserve-3d">
+<div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-6 group-hover:translate-z-40 transition-transform duration-300">
+<span class="material-symbols-outlined text-2xl text-primary" style="font-variation-settings: 'FILL' 1;">analytics</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:translate-z-20 transition-transform duration-300">Predictive Analytics</h3>
+<p class="font-body-md text-body-md text-on-surface-variant group-hover:translate-z-20 transition-transform duration-300">AI-driven insights identify your weak spots before exam day.</p>
+</div>
+</div>
+<!-- Feature Card 3 -->
+<div class="tilt-card preserve-3d col-span-1 md:col-span-4 lg:col-span-4 bg-surface-container-high/40 backdrop-blur-xl border border-outline-variant/20 rounded-3xl p-8 relative group hover:glow-primary cursor-pointer flex flex-col justify-between">
+<div class="preserve-3d">
+<span class="material-symbols-outlined text-3xl text-secondary mb-4 group-hover:translate-z-40 transition-transform duration-300 block" style="font-variation-settings: 'FILL' 1;">quiz</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:translate-z-20 transition-transform duration-300">Adaptive Quizzes</h3>
+<p class="font-body-md text-body-md text-on-surface-variant group-hover:translate-z-20 transition-transform duration-300">Questions that scale in difficulty based on your real-time performance.</p>
+</div>
+</div>
+<!-- Feature Card 4 -->
+<div class="tilt-card preserve-3d col-span-1 md:col-span-4 lg:col-span-4 bg-surface-container-high/40 backdrop-blur-xl border border-outline-variant/20 rounded-3xl p-8 relative group hover:glow-primary cursor-pointer flex flex-col justify-between">
+<div class="preserve-3d">
+<span class="material-symbols-outlined text-3xl text-tertiary mb-4 group-hover:translate-z-40 transition-transform duration-300 block" style="font-variation-settings: 'FILL' 1;">book_4</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:translate-z-20 transition-transform duration-300">Live Glossary</h3>
+<p class="font-body-md text-body-md text-on-surface-variant group-hover:translate-z-20 transition-transform duration-300">Instant definitions and visual examples of every road sign.</p>
+</div>
+</div>
+<!-- Feature Card 5 -->
+<div class="tilt-card preserve-3d col-span-1 md:col-span-4 lg:col-span-4 bg-surface-container-high/40 backdrop-blur-xl border border-outline-variant/20 rounded-3xl p-8 relative group hover:glow-primary cursor-pointer flex flex-col justify-between">
+<div class="preserve-3d">
+<span class="material-symbols-outlined text-3xl text-primary mb-4 group-hover:translate-z-40 transition-transform duration-300 block" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 group-hover:translate-z-20 transition-transform duration-300">Gamified Tracking</h3>
+<p class="font-body-md text-body-md text-on-surface-variant group-hover:translate-z-20 transition-transform duration-300">Earn badges and unlock new scenarios as you master chapters.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest full-width bottom-0 border-t border-outline-variant/10 no-shadow">
+<div class="w-full py-12 px-8 flex flex-col md:flex-row justify-between items-center gap-4 max-w-container-max mx-auto">
+<!-- Brand & Copyright -->
+<div class="flex flex-col items-center md:items-start gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">AVTO YHQ</span>
+<p class="text-on-surface-variant font-body-md text-body-md">
+                    © 2024 AVTO YHQ Edutainment System. Status: Operational
+                </p>
+</div>
+<!-- Links -->
+<div class="flex flex-wrap justify-center gap-6">
+<a class="font-label-sm text-label-sm text-on-surface-variant opacity-60 hover:text-primary hover:opacity-100 transition-opacity transition-colors duration-200" href="#">
+                    Privacy Policy
+                </a>
+<a class="font-label-sm text-label-sm text-on-surface-variant opacity-60 hover:text-primary hover:opacity-100 transition-opacity transition-colors duration-200" href="#">
+                    Terms of Service
+                </a>
+<a class="font-label-sm text-label-sm text-on-surface-variant opacity-60 hover:text-primary hover:opacity-100 transition-opacity transition-colors duration-200" href="#">
+                    Help Center
+                </a>
+<a class="font-label-sm text-label-sm text-on-surface-variant opacity-60 hover:text-primary hover:opacity-100 transition-opacity transition-colors duration-200" href="#">
+                    API Status
+                </a>
+</div>
+</div>
+</footer>
+<!-- Interactive Scripts -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. 3D Tilt Effect for Feature Cards
+            const tiltCards = document.querySelectorAll('.tilt-card');
+            
+            tiltCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left; // x position within the element
+                    const y = e.clientY - rect.top;  // y position within the element
+                    
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    
+                    // Rotate X/Y between -8 and 8 degrees
+                    const rotateX = ((y - centerY) / centerY) * -8;
+                    const rotateY = ((x - centerX) / centerX) * 8;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+                });
+            });
+
+            // 2. Scroll Animation for Stat Cards (Intersection Observer)
+            const statCards = document.querySelectorAll('.stat-card');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+            
+            const statObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Add visible class, remove hidden
+                        entry.target.classList.remove('scroll-anim-hidden');
+                        entry.target.classList.add('scroll-anim-visible');
+                        // Unobserve after animating in once
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+            
+            statCards.forEach(card => {
+                statObserver.observe(card);
+            });
+        });
+    </script>
+</body></html>

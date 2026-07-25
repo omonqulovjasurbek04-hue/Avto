@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="light" lang="uz"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AVTO - Kirish</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "secondary-fixed": "#e9ddff",
+                "surface-container-lowest": "#ffffff",
+                "on-surface": "#1d1b20",
+                "surface-dim": "#ded8e0",
+                "on-primary-container": "#e0d2ff",
+                "surface-bright": "#fdf7ff",
+                "surface-container-high": "#ece6ee",
+                "on-error": "#ffffff",
+                "primary-fixed": "#e9ddff",
+                "tertiary-fixed": "#ffdf93",
+                "on-secondary-fixed": "#1f1635",
+                "surface-container-low": "#f8f2fa",
+                "surface-container-highest": "#e6e0e9",
+                "primary": "#4f378a",
+                "on-tertiary-fixed": "#241a00",
+                "outline": "#7a7582",
+                "inverse-primary": "#cfbcff",
+                "on-secondary-fixed-variant": "#4b4263",
+                "on-surface-variant": "#494551",
+                "background": "#fdf7ff",
+                "tertiary": "#765b00",
+                "on-background": "#1d1b20",
+                "surface-variant": "#e6e0e9",
+                "tertiary-fixed-dim": "#e7c365",
+                "on-secondary-container": "#645a7d",
+                "error-container": "#ffdad6",
+                "secondary": "#63597c",
+                "error": "#ba1a1a",
+                "secondary-container": "#e1d4fd",
+                "surface": "#fdf7ff",
+                "on-secondary": "#ffffff",
+                "inverse-on-surface": "#f5eff7",
+                "on-tertiary-fixed-variant": "#594400",
+                "on-error-container": "#93000a",
+                "on-primary-fixed": "#22005d",
+                "surface-container": "#f2ecf4",
+                "primary-fixed-dim": "#cfbcff",
+                "inverse-surface": "#322f35",
+                "outline-variant": "#cbc4d2",
+                "on-tertiary-container": "#503d00",
+                "secondary-fixed-dim": "#cdc0e9",
+                "on-primary": "#ffffff",
+                "on-tertiary": "#ffffff",
+                "tertiary-container": "#c9a74d",
+                "primary-container": "#6750a4",
+                "surface-tint": "#6750a4",
+                "on-primary-fixed-variant": "#4f378a"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "container-max": "1280px",
+                "sm": "8px",
+                "base": "4px",
+                "lg": "24px",
+                "gutter": "24px",
+                "xl": "40px",
+                "xs": "4px",
+                "md": "16px"
+        },
+        "fontFamily": {
+                "headline-md": [
+                        "Outfit"
+                ],
+                "display-lg-mobile": [
+                        "Outfit"
+                ],
+                "body-md": [
+                        "Plus Jakarta Sans"
+                ],
+                "body-lg": [
+                        "Plus Jakarta Sans"
+                ],
+                "display-lg": [
+                        "Outfit"
+                ],
+                "label-caps": [
+                        "Outfit"
+                ]
+        },
+        "fontSize": {
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "display-lg-mobile": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "display-lg": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "label-caps": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.1em",
+                                "fontWeight": "700"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Night City Specific Styles */
+        .glass-panel {
+            background-color: var(--color-surface);
+            border: 1px solid var(--color-outline-variant);
+        }
+        
+        html.dark .glass-panel {
+            background-color: rgba(21, 28, 44, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hud-input {
+            background-color: var(--color-surface-container);
+            border: none;
+            border-bottom: 1px solid var(--color-outline-variant);
+            transition: all 0.3s ease;
+        }
+        
+        html.dark .hud-input {
+            background-color: rgba(11, 15, 25, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .hud-input:focus {
+            border-bottom-color: var(--color-primary); /* Primary */
+            box-shadow: 0 1px 15px -5px var(--color-primary-container);
+            outline: none;
+        }
+        
+        .tech-btn {
+            background: var(--color-primary);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            color: var(--color-on-primary);
+        }
+        
+        html.dark .tech-btn {
+            background: linear-gradient(135deg, #adc6ff 0%, #4cd7f6 100%);
+            color: #001a42;
+        }
+        
+        .tech-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--color-primary-container);
+        }
+        
+        .tech-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-20deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        .ambient-blur {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 50%, rgba(253, 247, 255, 0.8) 0%, #fdf7ff 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        html.dark .ambient-blur {
+            background: radial-gradient(circle at 50% 50%, rgba(8, 20, 37, 0.2) 0%, #081425 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex items-center justify-center relative overflow-hidden font-body-lg font-body-lg">
+<!-- Background Shader -->
+<!-- Ambient Vignette overlay for depth -->
+<div class="ambient-blur"></div>
+<!-- Main Content Container -->
+<main class="relative z-10 w-full px-md md:px-xl flex justify-center">
+<!-- Login Card -->
+<div class="glass-panel bg-surface dark:bg-transparent w-full max-w-md rounded-xl p-[32px] flex flex-col gap-lg shadow-lg dark:shadow-[0_0_40px_rgba(0,0,0,0.5)]">
+<!-- Header -->
+<div class="flex flex-col items-center gap-sm text-center">
+<div class="font-display-lg text-display-lg font-bold tracking-tighter text-primary">AVTO</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Tizimga kirish</p>
+</div>
+<!-- Form -->
+<form action="#" class="flex flex-col gap-gutter" method="POST">
+<!-- Email Field -->
+<div class="flex flex-col gap-base">
+<label class="font-label-caps text-label-caps text-outline" for="email">Elektron pochta yoki Foydalanuvchi nomi</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">person</span>
+<input class="hud-input w-full pl-10 pr-4 py-3 rounded-t-lg text-on-surface placeholder:text-outline-variant font-body-md text-body-md" id="email" name="email" placeholder="user@example.com" required="" type="text"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-base">
+<div class="flex justify-between items-center">
+<label class="font-label-caps text-label-caps text-outline" for="password">Parol</label>
+<a class="font-label-caps text-label-caps text-primary hover:text-primary-container transition-colors" href="#">Parolni unutdingizmi?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">lock</span>
+<input class="hud-input w-full pl-10 pr-10 py-3 rounded-t-lg text-on-surface placeholder:text-outline-variant font-body-md text-body-md" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant hover:text-on-surface transition-colors" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" id="visibility-icon">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-md mt-base">
+<button class="tech-btn w-full py-3 rounded-lg font-headline-md text-headline-md flex items-center justify-center gap-2" type="submit">
+<span>Kirish</span>
+<span class="material-symbols-outlined filled">arrow_forward</span>
+</button>
+<div class="text-center">
+<span class="font-body-md text-body-md text-on-surface-variant">Hisobingiz yo'qmi?</span>
+<a class="font-body-md text-body-md text-primary font-medium hover:text-primary-container transition-colors ml-1" href="#">Ro'yxatdan o'tish</a>
+</div>
+</div>
+</form>
+<!-- Decorative Corners (HUD Style) -->
+<div class="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-primary/30 rounded-tl-xl m-2 pointer-events-none dark:border-secondary/30"></div>
+<div class="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-primary/30 rounded-tr-xl m-2 pointer-events-none dark:border-secondary/30"></div>
+<div class="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-primary/30 rounded-bl-xl m-2 pointer-events-none dark:border-secondary/30"></div>
+<div class="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-primary/30 rounded-br-xl m-2 pointer-events-none dark:border-secondary/30"></div>
+</div>
+</main>
+<script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const icon = document.getElementById('visibility-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                passwordInput.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        }
+    </script>
+</body></html>

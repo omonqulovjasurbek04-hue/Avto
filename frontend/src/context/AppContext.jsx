@@ -1,21 +1,34 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-const AppContext = createContext();
+const LANG_KEY = 'yhq_lang';
+const DEFAULT_LANG = 'uz';
+
+const AppContext = createContext({ lang: DEFAULT_LANG, setLang: () => {}, ready: false });
 
 export function AppProvider({ children }) {
-  const [lang, setLang] = useState('uz');
+  const [lang, setLangState] = useState(DEFAULT_LANG);
+  const [ready, setReady] = useState(false);
 
-  return (
-    <AppContext.Provider value={{ lang, setLang }}>
-      {children}
-    </AppContext.Provider>
-  );
+  useEffect(() => {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (saved) setLangState(saved);
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
+
+  const setLang = useCallback((l) => {
+    setLangState(l);
+    localStorage.setItem(LANG_KEY, l);
+  }, []);
+
+  return <AppContext.Provider value={{ lang, setLang, ready }}>{children}</AppContext.Provider>;
 }
 
 export function useApp() {
-  const context = useContext(AppContext);
-  if (!context) throw new Error('useApp must be used within an AppProvider');
-  return context;
+  return useContext(AppContext);
 }

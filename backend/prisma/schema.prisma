@@ -1,11 +1,3 @@
-// AVTO (YHQ) — PostgreSQL Database Schema
-// Prisma ORM orqali boshqariladi.
-//
-// Migratsiya buyruqlari:
-//   npx prisma migrate dev --name init    (development)
-//   npx prisma migrate deploy             (production)
-//   npx prisma generate                   (client qayta generatsiya)
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,7 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── Foydalanuvchi ────────────────────────────────────────────
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique @db.VarChar(255)
@@ -27,14 +23,12 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  answers      Answer[]
-  examAttempts ExamAttempt[]
-  sessions     Session[]
+  sessions      Session[]
+  testSessions  TestSession[]
 
   @@map("users")
 }
 
-// ─── Sessiya (JWT tokenlarni kuzatish) ────────────────────────
 model Session {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
@@ -48,40 +42,92 @@ model Session {
   @@map("sessions")
 }
 
-// ─── Javob (foydalanuvchining har bir javobi) ─────────────────
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  questions     Question[]
+  testSessions  TestSession[]
+
+  @@map("categories")
+}
+
+model Question {
+  id         String   @id @default(uuid())
+  categoryId String   @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  text       Json
+  imageUrl   String?  @map("image_url")
+  rawData    Json?    @map("raw_data")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  answers           Answer[]
+  testSessionAnswers TestSessionAnswer[]
+
+  @@index([categoryId])
+  @@map("questions")
+}
+
 model Answer {
   id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scenarioId String   @map("scenario_id") @db.VarChar(20)
-  optionId   String   @map("option_id") @db.VarChar(10)
+  questionId String   @map("question_id")
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       Json
   isCorrect  Boolean  @map("is_correct")
-  outcome    String?  @db.VarChar(30)
-  answeredAt DateTime @default(now()) @map("answered_at")
+  videoId    String?  @map("video_id")
+  video      Video?   @relation(fields: [videoId], references: [id])
+  createdAt  DateTime @default(now()) @map("created_at")
 
-  @@index([userId])
-  @@index([userId, scenarioId])
+  @@index([questionId])
   @@map("answers")
 }
 
-// ─── Imtihon urinishi ─────────────────────────────────────────
-model ExamAttempt {
-  id              String   @id @default(uuid())
-  userId          String   @map("user_id")
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  score           Int
-  total           Int
-  passed          Boolean
-  durationSeconds Int      @default(0) @map("duration_seconds")
-  details         Json     @default("[]")
-  createdAt       DateTime @default(now()) @map("created_at")
+model Video {
+  id          String   @id @default(uuid())
+  type        String   @db.VarChar(10)
+  url         String   @db.VarChar(500)
+  duration    Int      @default(0)
+  thumbnailUrl String? @map("thumbnail_url") @db.VarChar(500)
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  @@index([userId])
-  @@map("exam_attempts")
+  answers Answer[]
+
+  @@map("videos")
 }
 
-// ─── Rollar ───────────────────────────────────────────────────
-enum Role {
-  USER
-  ADMIN
+model TestSession {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String    @map("category_id")
+  category   Category  @relation(fields: [categoryId], references: [id])
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  score      Int?
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  answers TestSessionAnswer[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@map("test_sessions")
+}
+
+model TestSessionAnswer {
+  id         String      @id @default(uuid())
+  sessionId  String      @map("session_id")
+  session    TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId String      @map("question_id")
+  question   Question    @relation(fields: [questionId], references: [id])
+  answerId   String      @map("answer_id")
+  isCorrect  Boolean     @map("is_correct")
+  videoId    String?     @map("video_id")
+  answeredAt DateTime    @default(now()) @map("answered_at")
+
+  @@index([sessionId])
+  @@map("test_session_answers")
 }

@@ -5,13 +5,13 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 
 export const metadata = {
-  title: 'AVTO QOIDALAR — Yo\'l Harakati Qoidalari 2D Simulyatsiyasi',
-  description: 'Jonli 2D animatsiyali chorraha simulyatori bilan YHQ va haydovchilik imtihoniga tayyorgarlik platformasi.',
+  title: 'AVTO QOIDALAR — Yo\'l Harakati Qoidalari Video Ta\'lim',
+  description: 'Video savollar bilan YHQ va haydovchilik imtihoniga tayyorgarlik platformasi.',
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="uz" className="dark">
+    <html className="dark">
       <body className="bg-bg-darkest text-slate-100 min-h-screen flex flex-col antialiased">
         <AppProvider>
           <AuthProvider>

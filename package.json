@@ -5,13 +5,11 @@
   "description": "AVTO (YHQ) monorepo: Node.js Express backend, Next.js + Tailwind frontend, React Native Expo mobile app.",
   "workspaces": [
     "backend",
-    "frontend",
-    "mobile"
+    "frontend"
   ],
   "scripts": {
     "dev:server": "npm run dev --workspace @yhq/server",
-    "dev:web": "npm run dev --workspace @yhq/web",
-    "start:mobile": "npm run start --workspace @yhq/mobile"
+    "dev:web": "npm run dev --workspace @yhq/web"
   },
   "engines": {
     "node": ">=20"

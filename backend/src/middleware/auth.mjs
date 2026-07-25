@@ -1,7 +1,7 @@
 // Authentication middleware.
 // Extracts JWT from Authorization header, verifies it, and attaches user to req.
 // Also checks session validity in the database.
-import { verifyToken } from "../utils/jwt.mjs";
+import { verifyToken } from "../lib/jwt.mjs";
 import { prisma } from "../config/database.mjs";
 
 /**
@@ -43,6 +43,37 @@ export function authenticate(req, res, next) {
     .catch(() => {
       return res.status(500).json({ error: "Authentication check failed" });
     });
+}
+
+/**
+ * Optional authentication — extracts user if token present, doesn't reject if not.
+ */
+export function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return next();
+  }
+
+  const token = authHeader.slice(7);
+  let payload;
+  try {
+    payload = verifyToken(token);
+  } catch {
+    return next();
+  }
+
+  prisma.session
+    .findFirst({
+      where: { userId: payload.id, token, expiresAt: { gt: new Date() } },
+    })
+    .then((session) => {
+      if (session) {
+        req.user = { id: payload.id, email: payload.email, role: payload.role };
+        req.token = token;
+      }
+      next();
+    })
+    .catch(() => next());
 }
 
 /**

@@ -1,149 +1,229 @@
-// Admin routes (all require admin role).
-// POST   /api/admin/scenarios     — Ssenariy yaratish/yangilash
-// DELETE /api/admin/scenarios/:id — Ssenariy o'chirish
-// POST   /api/admin/lessons       — Darslik yaratish/yangilash
-// DELETE /api/admin/lessons/:id   — Darslik o'chirish
-// GET    /api/admin/validate      — Barcha contentni tekshirish
-// GET    /api/admin/stats         — Tizim statistikasi
-// GET    /api/admin/users         — Foydalanuvchilar ro'yxati
 import { Router } from "express";
+import { z } from "zod";
 import { authenticate, requireAdmin } from "../middleware/auth.mjs";
 import { adminLimiter } from "../middleware/rate-limit.mjs";
-import * as scenarioService from "../services/scenario.service.mjs";
-import * as lessonService from "../services/lesson.service.mjs";
-import { sceneInfo, engine } from "../engine.mjs";
+import { validate } from "../middleware/validate.mjs";
 import { prisma } from "../config/database.mjs";
+import * as lessonService from "../services/lesson.service.mjs";
 
 export const adminRoutes = Router();
-
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
-// All admin routes require authentication + admin role + rate limiting
 adminRoutes.use(authenticate, requireAdmin, adminLimiter);
-
-// ── Scenario CRUD ────────────────────────────────────────────
-
-adminRoutes.post("/scenarios", (req, res) => {
-  try {
-    const data = req.body ?? {};
-    if (!data.question || !data.question.text || !data.question.text.uz) {
-      return res.status(400).json({ error: "Savol matni (Uzbek) kiritilishi shart" });
-    }
-    const saved = scenarioService.saveScenario(data);
-    res.json({ ok: true, scenario: saved });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-adminRoutes.delete("/scenarios/:id", (req, res) => {
-  const ok = scenarioService.deleteScenario(req.params.id);
-  if (!ok) return res.status(404).json({ error: "Ssenariy topilmadi" });
-  res.json({ ok: true });
-});
-
-// ── Lesson CRUD ──────────────────────────────────────────────
-
-adminRoutes.post("/lessons", (req, res) => {
-  try {
-    const data = req.body ?? {};
-    if (!data.title || !data.description) {
-      return res.status(400).json({ error: "Darslik sarlavhasi va tavsifi kiritilishi shart" });
-    }
-    const saved = lessonService.saveLesson(data);
-    res.json({ ok: true, lesson: saved });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-adminRoutes.delete("/lessons/:id", (req, res) => {
-  const ok = lessonService.deleteLesson(req.params.id);
-  if (!ok) return res.status(404).json({ error: "Darslik topilmadi" });
-  res.json({ ok: true });
-});
-
-// ── Content Validation ───────────────────────────────────────
-
-adminRoutes.get("/validate", (_req, res) => {
-  const scenarios = scenarioService.listScenarios();
-  const results = [];
-  let validCount = 0;
-  let warningCount = 0;
-
-  for (const item of scenarios) {
-    const raw = scenarioService.getRawScenario(item.id);
-    if (!raw) {
-      results.push({ id: item.id, valid: false, errors: ["Fayl topilmadi"] });
-      continue;
-    }
-    try {
-      const info = sceneInfo(raw);
-      const warnings = info.warnings || [];
-      const hasErrors = !info.options || Object.keys(info.options).length === 0;
-      if (warnings.length > 0) warningCount += 1;
-      if (!hasErrors) validCount += 1;
-      results.push({
-        id: item.id,
-        valid: !hasErrors,
-        warnings,
-        optionCount: Object.keys(info.options || {}).length,
-        duration: info.duration,
-      });
-    } catch (err) {
-      results.push({ id: item.id, valid: false, errors: [err.message] });
-    }
-  }
-
-  res.json({
-    total: scenarios.length,
-    valid: validCount,
-    warnings: warningCount,
-    scenarios: results,
-    engineVersion: engine.version,
-  });
-});
-
-// ── System Stats ─────────────────────────────────────────────
 
 adminRoutes.get(
   "/stats",
   wrap(async (_req, res) => {
-    const [scenarioCount, lessonCount, userCount, answerCount, examCount] = await Promise.all([
-      scenarioService.listScenarios().length,
-      lessonService.listLessons().length,
-      prisma.user.count(),
+    const [categories, questions, answers, videos, testSessions, users] = await Promise.all([
+      prisma.category.count(),
+      prisma.question.count(),
       prisma.answer.count(),
-      prisma.examAttempt.count(),
+      prisma.video.count(),
+      prisma.testSession.count(),
+      prisma.user.count(),
     ]);
-
-    res.json({
-      scenariosCount: scenarioCount,
-      lessonsCount: lessonCount,
-      usersCount: userCount,
-      answersCount: answerCount,
-      examsCount: examCount,
-      engineVersion: engine.version,
-      dbMode: "postgresql",
-    });
+    res.json({ categories, questions, answers, videos, testSessions, users });
   }),
 );
 
-// ── Users List ───────────────────────────────────────────────
+adminRoutes.get(
+  "/questions",
+  wrap(async (_req, res) => {
+    const questions = await prisma.question.findMany({
+      include: { category: true, answers: true },
+      orderBy: { createdAt: "desc" },
+    });
+    res.json(questions);
+  }),
+);
+
+// Question yaratish (answers bilan birga)
+const createQuestionSchema = z.object({
+  categoryId: z.string().uuid(),
+  text: z.union([z.string(), z.object({}).passthrough()]),
+  imageUrl: z.string().optional(),
+  answers: z.array(z.object({
+    text: z.union([z.string(), z.object({}).passthrough()]),
+    isCorrect: z.boolean(),
+    videoId: z.string().uuid().optional(),
+  })).min(2, "Kamida 2 ta javob kiritilishi shart"),
+});
+
+adminRoutes.post(
+  "/questions",
+  validate({ body: createQuestionSchema }),
+  wrap(async (req, res) => {
+    const { categoryId, text, imageUrl, answers } = req.body;
+
+    const category = await prisma.category.findUnique({ where: { id: categoryId } });
+    if (!category) return res.status(404).json({ error: "Kategoriya topilmadi" });
+
+    const correctCount = answers.filter((a) => a.isCorrect).length;
+    if (correctCount !== 1) return res.status(400).json({ error: "Aynan 1 ta to'g'ri javob bo'lishi kerak" });
+
+    const question = await prisma.question.create({
+      data: {
+        categoryId,
+        text: typeof text === "string" ? { uz: text, en: text } : text,
+        imageUrl: imageUrl || null,
+        answers: {
+          create: answers.map((a) => ({
+            text: typeof a.text === "string" ? { uz: a.text, en: a.text } : a.text,
+            isCorrect: a.isCorrect,
+            videoId: a.videoId || null,
+          })),
+        },
+      },
+      include: { answers: true, category: true },
+    });
+
+    res.status(201).json(question);
+  }),
+);
+
+adminRoutes.patch(
+  "/questions/:id",
+  wrap(async (req, res) => {
+    const data = req.body;
+    try {
+      const question = await prisma.question.update({
+        where: { id: req.params.id },
+        data: {
+          ...(data.text && { text: typeof data.text === "string" ? { uz: data.text, en: data.text } : data.text }),
+          ...(data.categoryId && { categoryId: data.categoryId }),
+          ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl }),
+        },
+      });
+      res.json(question);
+    } catch {
+      res.status(404).json({ error: "Savol topilmadi" });
+    }
+  }),
+);
+
+adminRoutes.delete(
+  "/questions/:id",
+  wrap(async (req, res) => {
+    try {
+      await prisma.question.delete({ where: { id: req.params.id } });
+      res.json({ ok: true });
+    } catch {
+      res.status(404).json({ error: "Savol topilmadi" });
+    }
+  }),
+);
+
+// Answer CRUD
+adminRoutes.patch(
+  "/answers/:id",
+  wrap(async (req, res) => {
+    const data = req.body;
+    try {
+      const answer = await prisma.answer.update({
+        where: { id: req.params.id },
+        data: {
+          ...(data.text && { text: typeof data.text === "string" ? { uz: data.text, en: data.text } : data.text }),
+          ...(data.isCorrect !== undefined && { isCorrect: data.isCorrect }),
+          ...(data.videoId !== undefined && { videoId: data.videoId }),
+        },
+      });
+      res.json(answer);
+    } catch {
+      res.status(404).json({ error: "Javob topilmadi" });
+    }
+  }),
+);
+
+adminRoutes.delete(
+  "/answers/:id",
+  wrap(async (req, res) => {
+    try {
+      await prisma.answer.delete({ where: { id: req.params.id } });
+      res.json({ ok: true });
+    } catch {
+      res.status(404).json({ error: "Javob topilmadi" });
+    }
+  }),
+);
+
+// Lesson CRUD
+adminRoutes.get(
+  "/lessons",
+  wrap(async (_req, res) => {
+    const lessons = lessonService.listLessons();
+    res.json(lessons);
+  }),
+);
+
+adminRoutes.post(
+  "/lessons",
+  wrap(async (req, res) => {
+    const lesson = lessonService.saveLesson(req.body);
+    res.json(lesson);
+  }),
+);
+
+adminRoutes.delete(
+  "/lessons/:id",
+  wrap(async (req, res) => {
+    const ok = lessonService.deleteLesson(req.params.id);
+    if (!ok) return res.status(404).json({ error: "Darslik topilmadi" });
+    res.json({ ok: true });
+  }),
+);
+
+// Category CRUD
+adminRoutes.post(
+  "/categories",
+  wrap(async (req, res) => {
+    const data = req.body;
+    if (!data.name || !data.slug) return res.status(400).json({ error: "name va slug kiritilishi shart" });
+    const cat = await prisma.category.create({
+      data: { name: typeof data.name === "string" ? { uz: data.name, en: data.name } : data.name, slug: data.slug },
+    });
+    res.json(cat);
+  }),
+);
+
+adminRoutes.delete(
+  "/categories/:id",
+  wrap(async (req, res) => {
+    try {
+      await prisma.category.delete({ where: { id: req.params.id } });
+      res.json({ ok: true });
+    } catch {
+      res.status(404).json({ error: "Kategoriya topilmadi" });
+    }
+  }),
+);
+
+adminRoutes.post(
+  "/videos/upload",
+  wrap(async (req, res) => {
+    const data = req.body;
+    if (!data.url || !data.type) {
+      return res.status(400).json({ error: "url va type kiritilishi shart" });
+    }
+    const video = await prisma.video.create({
+      data: { url: data.url, type: data.type, duration: data.duration || 0, thumbnailUrl: data.thumbnailUrl },
+    });
+    res.json(video);
+  }),
+);
+
+adminRoutes.get(
+  "/videos",
+  wrap(async (_req, res) => {
+    const videos = await prisma.video.findMany({ orderBy: { createdAt: "desc" } });
+    res.json(videos);
+  }),
+);
 
 adminRoutes.get(
   "/users",
   wrap(async (_req, res) => {
     const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        locale: true,
-        createdAt: true,
-        _count: { select: { answers: true, examAttempts: true } },
-      },
+      select: { id: true, email: true, name: true, role: true, createdAt: true },
       orderBy: { createdAt: "desc" },
       take: 100,
     });

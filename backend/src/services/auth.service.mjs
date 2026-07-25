@@ -2,8 +2,8 @@
 // Handles registration, login, logout, password change, and profile retrieval.
 // All password operations use bcrypt. Tokens are JWTs with database-backed sessions.
 import { prisma } from "../config/database.mjs";
-import { hashPassword, comparePassword } from "../utils/password.mjs";
-import { signToken } from "../utils/jwt.mjs";
+import { hashPassword, comparePassword } from "../lib/password.mjs";
+import { signToken } from "../lib/jwt.mjs";
 import { env } from "../config/env.mjs";
 
 /**
@@ -181,3 +181,4 @@ export async function cleanExpiredSessions() {
   });
   return result.count;
 }
+

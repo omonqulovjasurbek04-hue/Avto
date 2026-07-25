@@ -1,75 +1,58 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { api } from '../api';
 
-export function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }) {
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    api.listCategories().then(setCategories).catch(() => {});
+  }, []);
+
+  const startExam = async (cat) => {
+    try {
+      const session = await api.startTest(cat.id);
+      navigation.navigate('Exam', { sessionId: session.id, categoryId: session.categoryId });
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.heroCard}>
-        <Text style={styles.heroTitle}>Yo'l Harakati Qoidalari (YHQ)</Text>
-        <Text style={styles.heroSub}>Interaktiv 2D animatsiyalar bilan chorraha va imtiyoz qoidalarini tez o'rganing.</Text>
-
-        <TouchableOpacity
-          style={styles.heroButton}
-          onPress={() => navigation.navigate('Exam')}
-        >
-          <Text style={styles.heroButtonText}>🚀 Imtihon Boshlash (20 Savol)</Text>
+      <View style={styles.hero}>
+        <Text style={styles.heroTitle}>Yo'l Harakati Qoidalari</Text>
+        <Text style={styles.heroSub}>Video savollar bilan YHQ ni o'rganing</Text>
+        <TouchableOpacity style={styles.heroBtn} onPress={() => navigation.navigate('Practice')}>
+          <Text style={styles.heroBtnText}>Mashq qilish</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>O'quv Bo'limlari</Text>
-
-      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Practice')}>
-        <Text style={styles.cardIcon}>🚦</Text>
-        <View style={styles.cardTextContainer}>
-          <Text style={styles.cardTitle}>Interaktiv Mashqlar</Text>
-          <Text style={styles.cardSub}>Har bir ssenariyni animatsiyada o'ynatish va qoidani tushunish</Text>
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('Stats')}>
-        <Text style={styles.cardIcon}>📊</Text>
-        <View style={styles.cardTextContainer}>
-          <Text style={styles.cardTitle}>Statistika & Natijalar</Text>
-          <Text style={styles.cardSub}>O'zlashtirish va xatolar ustida ishlash</Text>
-        </View>
-      </TouchableOpacity>
+      <Text style={styles.sectionTitle}>Imtihon kategoriyalari</Text>
+      {categories.map((cat) => (
+        <TouchableOpacity key={cat.id} style={styles.card} onPress={() => startExam(cat)}>
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle}>{cat.name?.uz || cat.slug}</Text>
+            <Text style={styles.cardSub}>{cat._count?.questions || 0} ta savol</Text>
+          </View>
+          <Text style={styles.arrow}>{'\u203A'}</Text>
+        </TouchableOpacity>
+      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0b0f19', padding: 16 },
-  heroCard: {
-    backgroundColor: '#151c2c',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#26334d',
-    marginBottom: 24,
-  },
-  heroTitle: { fontSize: 20, fontWeight: '700', color: '#ffffff', marginBottom: 8 },
-  heroSub: { fontSize: 13, color: '#94a3b8', lineHeight: 18, marginBottom: 16 },
-  heroButton: {
-    backgroundColor: '#3b82f6',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  heroButtonText: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
+  hero: { backgroundColor: '#151c2c', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#26334d', marginBottom: 24, alignItems: 'center' },
+  heroTitle: { fontSize: 20, fontWeight: '700', color: '#fff', marginBottom: 6 },
+  heroSub: { fontSize: 13, color: '#94a3b8', marginBottom: 16 },
+  heroBtn: { backgroundColor: '#3b82f6', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 10 },
+  heroBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#f8fafc', marginBottom: 12 },
-  card: {
-    backgroundColor: '#151c2c',
-    borderColor: '#26334d',
-    borderWidth: 1,
-    borderRadius: 14,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cardIcon: { fontSize: 28, marginRight: 14 },
-  cardTextContainer: { flex: 1 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: '#f8fafc', marginBottom: 2 },
-  cardSub: { fontSize: 12, color: '#94a3b8' },
+  card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#151c2c', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#26334d', marginBottom: 10 },
+  cardBody: { flex: 1 },
+  cardTitle: { fontSize: 15, fontWeight: '700', color: '#f8fafc' },
+  cardSub: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  arrow: { fontSize: 22, color: '#64748b', marginLeft: 8 },
 });

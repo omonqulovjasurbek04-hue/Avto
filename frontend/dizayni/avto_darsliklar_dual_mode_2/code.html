@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AVTO - Lessons</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#ecedf7",
+                    "on-primary-container": "#fefcff",
+                    "on-surface-variant": "#424754",
+                    "surface-container-low": "#f2f3fd",
+                    "tertiary-fixed": "#ffdcc6",
+                    "surface-variant": "#e1e2ec",
+                    "inverse-surface": "#2e3038",
+                    "tertiary-fixed-dim": "#ffb786",
+                    "tertiary": "#924700",
+                    "surface": "#f9f9ff",
+                    "on-error-container": "#93000a",
+                    "surface-dim": "#d8d9e3",
+                    "primary-fixed": "#d8e2ff",
+                    "inverse-on-surface": "#eff0fa",
+                    "error": "#ba1a1a",
+                    "surface-container-high": "#e6e7f2",
+                    "secondary-fixed": "#e9ddff",
+                    "on-error": "#ffffff",
+                    "primary-container": "#2170e4",
+                    "on-primary-fixed": "#001a42",
+                    "on-tertiary-container": "#fffbff",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#b75b00",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#0058be",
+                    "secondary-container": "#bba2fd",
+                    "inverse-primary": "#adc6ff",
+                    "secondary": "#6750a4",
+                    "on-background": "#191b23",
+                    "outline-variant": "#c2c6d6",
+                    "on-secondary-fixed": "#22005d",
+                    "surface-container-highest": "#e1e2ec",
+                    "secondary-fixed-dim": "#cfbcff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-tint": "#005ac2",
+                    "surface-bright": "#f9f9ff",
+                    "on-tertiary-fixed": "#311400",
+                    "on-surface": "#191b23",
+                    "on-primary-fixed-variant": "#004395",
+                    "background": "#f9f9ff",
+                    "on-tertiary-fixed-variant": "#723600",
+                    "on-secondary-fixed-variant": "#4f378a",
+                    "on-secondary": "#ffffff",
+                    "outline": "#727785",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-container": "#4b3486",
+                    "error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "xs": "4px",
+                    "gutter": "24px",
+                    "container-max": "1440px",
+                    "lg": "40px",
+                    "xl": "64px",
+                    "sm": "12px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Plus Jakarta Sans", "sans-serif"],
+                    "body-md": ["Plus Jakarta Sans", "sans-serif"],
+                    "h1": ["Outfit", "sans-serif"],
+                    "body-lg": ["Plus Jakarta Sans", "sans-serif"],
+                    "hud-data": ["Plus Jakarta Sans", "sans-serif"],
+                    "h3": ["Outfit", "sans-serif"],
+                    "h2": ["Outfit", "sans-serif"],
+                    "h1-mobile": ["Outfit", "sans-serif"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", { "lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                    "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                    "h1": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                    "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                    "hud-data": ["14px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                    "h3": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                    "h2": ["32px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                    "h1-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hud-shadow {
+            box-shadow: 0 8px 32px -8px rgba(103, 80, 164, 0.08);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(194, 198, 214, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-on-primary-container">
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-lg py-sm max-w-container-max mx-auto">
+<div class="flex items-center gap-sm">
+<span class="font-h2 text-h2 font-bold tracking-tighter text-primary">AVTO</span>
+</div>
+<nav class="hidden md:flex items-center gap-md">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Home</a>
+<a class="font-body-md text-body-md text-primary font-bold border-b-2 border-primary pb-1 hover:text-primary transition-colors duration-200" href="#">Lessons</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Practice</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Exam</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Analytics</a>
+</nav>
+<div class="flex items-center gap-sm">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors duration-200 rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined">light_mode</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden ml-2 cursor-pointer active:scale-95 transition-transform duration-150">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="A professional headshot of an individual using the AVTO platform, brightly lit against a neutral light grey background, conveying focus and learning." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIOZj89VK3ten3PoOrda-SpTNoj2l9U_CPJQ3b3-vQGYs3uCN63YF9rlXDuiTOvcMFw6YbavYdVTw-oP-oJW8GOb_dzcxPwhRS4GZPGn2a-Sos1wmryhDYBxLRUL48zMNTcbNJKnKq9owOml7tZVDVk-mo-SB2lrbHNtViSQMQP-kKfNu3w1LGlnNC9OSxOfIPZIO6aEB5YSAKa_NCCwELL-uW_YBT4t49dpSGYCkcLie9ZcYbhxCDexByd4pVskNe6Wi5-EXpXu1h"/>
+</div>
+</div>
+</div>
+</header>
+<main class="flex-grow pt-[100px] pb-xl px-4 md:px-lg max-w-container-max mx-auto w-full flex flex-col md:flex-row gap-lg">
+<aside class="w-full md:w-64 flex-shrink-0 flex flex-col gap-md">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-secondary">menu_book</span>
+<span class="font-label-caps text-label-caps text-secondary uppercase tracking-widest">Modules</span>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-3 p-3 rounded-lg bg-primary-container text-on-primary-container font-hud-data text-hud-data shadow-sm transition-all duration-200 group relative overflow-hidden" href="#">
+<div class="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">traffic</span>
+<span>Traffic Signals</span>
+<span class="material-symbols-outlined ml-auto text-on-primary-container/70 text-sm">chevron_right</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-hud-data text-hud-data transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">report</span>
+<span>Priority Signs</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-hud-data text-hud-data transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">speed</span>
+<span>Speed Limits</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-hud-data text-hud-data transition-colors duration-200 opacity-60 pointer-events-none" href="#">
+<span class="material-symbols-outlined">directions_car</span>
+<span>Maneuvers (Locked)</span>
+<span class="material-symbols-outlined ml-auto text-sm">lock</span>
+</a>
+</nav>
+<div class="mt-auto pt-md border-t border-outline-variant/30 hidden md:block">
+<div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/50 flex flex-col gap-3">
+<span class="font-label-caps text-label-caps text-secondary">Module Progress</span>
+<div class="w-full h-2 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary w-1/3 rounded-full"></div>
+</div>
+<span class="font-hud-data text-hud-data text-on-surface-variant text-right">33% Completed</span>
+</div>
+</div>
+</aside>
+<section class="flex-grow flex flex-col gap-lg min-w-0">
+<header class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-sm text-on-surface-variant font-label-caps text-label-caps opacity-70">
+<span>Lessons</span>
+<span class="material-symbols-outlined text-[16px]">navigate_next</span>
+<span class="text-primary">Traffic Signals</span>
+</div>
+<h1 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-on-surface">Traffic Signals &amp; Gestures</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-3xl mt-2">
+                    Master the foundational visual language of the road. Understand every phase of intersection control, from standard tri-color systems to manual traffic controller gestures.
+                </p>
+</header>
+<div class="relative w-full aspect-video rounded-xl overflow-hidden hud-shadow border border-outline-variant/40 bg-inverse-surface group cursor-pointer">
+<div class="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-90" data-alt="A highly detailed, ultra-realistic driving simulator perspective inside a modern vehicle. The dashboard features crisp digital readouts in a light-themed interface. Through the windshield, a complex urban intersection is visible on a bright, sunny day, with a prominent traffic light displaying a vivid green signal. The overall aesthetic is clean, educational, and high-tech." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDU00ohZH3pi6pCH93wriCG9NjR3SZBoOVSLUoSZGXQdQpbe3gsAoeNZWrLQmN6knoIFAXkBBoOzdJ72Lc7TbEZF6fZYTB04zlsoq_u6ON1ksGua3UeTeDe_suxc0bW9fGYBluZz-h_j8dyat46OYrTtOwTTqy-ZAElhLx1U8KZvpVDZRsQO54p9UiysUsrCroJlcKGpjpI1RQ0cRqS3XGUUW7RVgarPj7kYWKKf2-Q4U0_BtFhBgrSRdXqdH-KHMkD6DPkWTWvxYA_')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-20 h-20 rounded-full glass-panel flex items-center justify-center text-primary transform transition-transform duration-300 group-hover:scale-110 shadow-lg">
+<span class="material-symbols-outlined text-[40px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 w-full p-4 flex justify-between items-end">
+<div class="flex items-center gap-3">
+<span class="px-2 py-1 rounded bg-black/50 backdrop-blur-md text-white font-hud-data text-[12px] uppercase tracking-wider border border-white/20">Module 1.1</span>
+<span class="text-white font-body-md font-semibold">Intersection Protocol</span>
+</div>
+<span class="px-2 py-1 rounded bg-black/50 backdrop-blur-md text-white font-hud-data text-[12px] tracking-wider border border-white/20">14:22</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-md">
+<div class="lg:col-span-2 flex flex-col gap-md">
+<h3 class="font-h3 text-h3 text-on-surface border-b border-outline-variant/30 pb-2">Key Concepts</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex gap-3 items-start">
+<span class="material-symbols-outlined text-primary mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div>
+<h4 class="font-hud-data text-hud-data text-on-surface mb-1">Standard Sequence</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Red, Red &amp; Yellow, Green, Flashing Green, Yellow. Understand the transition timings and legal obligations for each phase.</p>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex gap-3 items-start">
+<span class="material-symbols-outlined text-primary mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div>
+<h4 class="font-hud-data text-hud-data text-on-surface mb-1">Directional Arrows</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Green arrows indicate protected turns. Proceed only in the direction indicated when illuminated.</p>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex gap-3 items-start">
+<span class="material-symbols-outlined text-primary mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div>
+<h4 class="font-hud-data text-hud-data text-on-surface mb-1">Flashing Signals</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Flashing red requires a complete stop. Flashing yellow indicates caution; proceed with reduced speed.</p>
+</div>
+</div>
+<div class="p-4 rounded-xl bg-surface-container border border-outline-variant/20 flex gap-3 items-start">
+<span class="material-symbols-outlined text-primary mt-0.5" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<div>
+<h4 class="font-hud-data text-hud-data text-on-surface mb-1">Pedestrian Phases</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">Always yield to pedestrians in crosswalks, regardless of parallel vehicle signal status during turns.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-1 flex flex-col gap-md">
+<div class="bg-error-container p-md rounded-xl border border-error/20 hud-shadow flex flex-col gap-3 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-[100px] text-on-error-container">warning</span>
+</div>
+<div class="flex items-center gap-2 text-on-error-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">gavel</span>
+<span class="font-label-caps text-label-caps uppercase tracking-widest">Critical Rule</span>
+</div>
+<h4 class="font-h3 text-[20px] leading-tight text-on-error-container font-semibold">Controller Authority</h4>
+<p class="font-body-md text-sm text-on-error-container/90">
+                            Manual instructions and gestures provided by authorized traffic controllers (police officers) <strong>strictly supercede</strong> all electronic traffic signals and static road signs.
+                        </p>
+</div>
+<div class="bg-secondary-container p-md rounded-xl border border-secondary/20 flex flex-col items-center justify-center gap-4 text-center mt-auto">
+<span class="material-symbols-outlined text-[32px] text-on-secondary-container">sports_esports</span>
+<div>
+<h4 class="font-hud-data text-hud-data text-on-secondary-container mb-1">Ready to Practice?</h4>
+<p class="text-xs text-on-secondary-container/80 mb-3">Test your signal recognition in the simulator.</p>
+</div>
+<button class="w-full py-2 px-4 bg-secondary text-white rounded-lg font-hud-data text-hud-data hover:bg-secondary/90 transition-colors shadow-sm">
+                            Launch Scenario
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="w-full mt-auto border-t border-outline-variant/20 bg-surface-container-low">
+<div class="flex flex-col md:flex-row justify-between items-center px-lg py-md gap-md max-w-container-max mx-auto">
+<span class="font-h3 text-h3 text-on-surface">AVTO</span>
+<div class="flex items-center gap-md">
+<a class="font-label-caps text-label-caps text-on-surface-variant/60 hover:text-primary transition-all opacity-80 hover:opacity-100" href="#">Privacy</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/60 hover:text-primary transition-all opacity-80 hover:opacity-100" href="#">Terms</a>
+<a class="font-label-caps text-label-caps text-on-surface-variant/60 hover:text-primary transition-all opacity-80 hover:opacity-100" href="#">Support</a>
+</div>
+<span class="font-label-caps text-label-caps text-secondary opacity-80 hover:opacity-100">© 2024 AVTO Platform. All systems operational.</span>
+</div>
+</footer>
+</body></html>

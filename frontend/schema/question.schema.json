@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://yhq.uz/schema/question.schema.json",
+  "title": "Question",
+  "description": "A question bank entry. Roughly 60% of the bank is non-spatial (documents, first aid, vehicle condition) and has no scene; those live here alone. Spatial questions carry the same fields and additionally point at a scenario, which owns the animation.",
+  "$ref": "#/$defs/QuestionBankEntry",
+
+  "$defs": {
+    "QuestionBankEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema_version", "topic", "text", "options", "correct", "rule"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^q-[0-9]{4,}$" },
+        "schema_version": { "type": "integer", "const": 1 },
+        "topic": { "$ref": "scenario.schema.json#/$defs/Topic" },
+        "text": { "$ref": "scenario.schema.json#/$defs/LocalizedText" },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/PlainOption" }
+        },
+        "correct": { "type": "string" },
+        "rule": { "$ref": "scenario.schema.json#/$defs/Rule" },
+        "scenario_id": {
+          "type": "string",
+          "pattern": "^sc-[0-9]{4,}$",
+          "description": "Present only for spatial questions. The named scenario owns the scene, actors and resolution; its embedded `question` block is authoritative for wording, and this entry is the index record."
+        },
+        "media": {
+          "$ref": "#/$defs/Media",
+          "description": "Static illustration for non-spatial questions that need one. Never video - see principle 5."
+        },
+        "free_tier": {
+          "type": "boolean",
+          "default": false,
+          "description": "Available before purchase. The free tier is capped at 25 questions."
+        }
+      }
+    },
+
+    "PlainOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^o[0-9]{1,2}$" },
+        "label": { "$ref": "scenario.schema.json#/$defs/LocalizedText" }
+      }
+    },
+
+    "Media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "asset"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/MediaKind" },
+        "asset": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._/-]*\\.(png|webp|svg)$",
+          "description": "Path relative to the media root. A file name, not prose."
+        }
+      }
+    },
+
+    "MediaKind": { "type": "string", "enum": ["image", "diagram"] }
+  }
+}

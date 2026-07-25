@@ -7,14 +7,18 @@ export default function LessonsPage() {
   const [lessons, setLessons] = useState([]);
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     api.listLessons()
       .then((data) => {
-        setLessons(data);
-        if (data.length > 0) setSelectedLesson(data[0]);
+        const list = Array.isArray(data) ? data : (data?.lessons || []);
+        setLessons(list);
+        if (list.length > 0) setSelectedLesson(list[0]);
       })
-      .catch((err) => console.error('Error fetching lessons:', err))
+      .catch((err) => {
+        setError(err?.message || 'Darslarni yuklashda xatolik');
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -22,6 +26,19 @@ export default function LessonsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 animate-fade-in max-w-3xl mx-auto">
+        <div className="border-b border-slate-800 pb-4">
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-gradient">📖 YHQ Nazariy Darsliklar</h1>
+        </div>
+        <div className="p-6 rounded-2xl glass-card text-center">
+          <p className="text-red-400 text-sm">{error}</p>
+        </div>
       </div>
     );
   }
