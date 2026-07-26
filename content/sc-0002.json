@@ -1,0 +1,37 @@
+{
+  "id": "sc-0002",
+  "schema_version": 1,
+  "question_id": "q-0002",
+  "topic": "priority_and_intersections",
+  "scene": {
+    "type": "crossroads_4way",
+    "roads": [
+      { "dir": "N", "lanes_in": 1, "lanes_out": 1, "priority": "equal" },
+      { "dir": "S", "lanes_in": 1, "lanes_out": 1, "priority": "equal" },
+      { "dir": "E", "lanes_in": 1, "lanes_out": 1, "priority": "equal" },
+      { "dir": "W", "lanes_in": 1, "lanes_out": 1, "priority": "equal" }
+    ]
+  },
+  "actors": [
+    { "id": "car_n", "kind": "car", "role": "player", "from": "N", "to": "E" },
+    { "id": "car_s", "kind": "car", "role": "traffic", "from": "S", "to": "N" }
+  ],
+  "question": {
+    "text": { "uz": "Teng chorrahada kim birinchi o'tish huquqiga ega?", "ru": "Кто имеет преимущество на равнозначном перекрестке?", "en": "Who has the right of way at an equal intersection?" },
+    "options": [
+      { "id": "o1", "refers_to": "car_n", "label": { "uz": "Chapga burilayotgan mashina", "ru": "Автомобиль поворачивающий налево", "en": "Car turning left" } },
+      { "id": "o2", "refers_to": "car_s", "label": { "uz": "To'g'ri ketayotgan mashina", "ru": "Автомобиль едущий прямо", "en": "Car going straight" } }
+    ],
+    "correct": "o2"
+  },
+  "resolution": {
+    "order": ["car_s", "car_n"],
+    "rule": {
+      "code": "13.11",
+      "text": { "uz": "Teng chorrahalarda, tramvaydan tashqari, to'siq o'ngdan bo'lgan transport vositasiga yo'l berish kerak.", "ru": "На перекрестке равнозначных дорог водитель должен уступить дорогу транспортным средствам, приближающимся справа.", "en": "At an equal intersection, a driver must yield to vehicles approaching from the right." }
+    },
+    "wrong_outcomes": {
+      "o1": { "type": "priority_violation" }
+    }
+  }
+}

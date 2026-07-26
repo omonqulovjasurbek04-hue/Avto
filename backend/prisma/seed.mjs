@@ -3,11 +3,19 @@ import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
-const CONTENT_DIR = fileURLToPath(new URL("../content/", import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const CONTENT_DIR = path.resolve(__dirname, "../../content"); // Use canonical content from root
 const prisma = new PrismaClient();
 
 const TOPIC_MAP = {
-  priority_and_intersections: { name: { uz: "Chorraha va ustunlik", ru: "Перекрестки и приоритет", en: "Intersections & Priority" }, slug: "intersections-priority" },
+  priority_and_intersections: { 
+    name: "Chorraha va ustunlik", 
+    slug: "intersections-priority" 
+  },
+  general: { 
+    name: "Umumiy savollar", 
+    slug: "general" 
+  },
 };
 
 async function main() {
@@ -23,7 +31,7 @@ async function main() {
     const topic = data.topic || "general";
 
     if (!cats[topic]) {
-      const info = TOPIC_MAP[topic] || { name: { uz: topic, en: topic }, slug: topic };
+      const info = TOPIC_MAP[topic] || { name: topic, slug: topic };
       cats[topic] = await prisma.category.upsert({
         where: { slug: info.slug },
         update: { name: info.name },
@@ -31,25 +39,26 @@ async function main() {
       });
     }
 
-    // text Json formatida: { uz: "...", ru: "...", en: "..." }
+    // SQLite uchun JSON string sifatida saqlanadi
     const questionText = typeof data.question.text === 'string'
-      ? { uz: data.question.text, en: data.question.text }
-      : data.question.text;
+      ? JSON.stringify({ uz: data.question.text, en: data.question.text })
+      : JSON.stringify(data.question.text);
 
     const question = await prisma.question.create({
       data: {
         categoryId: cats[topic].id,
         text: questionText,
-        rawData: data,
+        rawData: JSON.stringify(data),
       },
     });
 
     for (const opt of data.question.options) {
       const isCorrect = opt.id === data.question.correct;
-      // opt.label Json formatida bo'lishi mumkin
+      // SQLite uchun JSON string sifatida saqlanadi
       const answerText = typeof opt.label === 'string'
-        ? { uz: opt.label, en: opt.label }
-        : opt.label;
+        ? JSON.stringify({ uz: opt.label, en: opt.label })
+        : JSON.stringify(opt.label);
+        
       await prisma.answer.create({
         data: {
           questionId: question.id,

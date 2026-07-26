@@ -47,7 +47,7 @@ export const api = {
 
   uploadVideo: async (formData) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('yhq_token') : null;
-    const res = await fetch(`${API_BASE}/admin/videos/upload`, {
+    const res = await fetch(`${API_BASE}/videos/upload`, {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,

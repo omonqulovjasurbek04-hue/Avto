@@ -5,8 +5,14 @@ import { Header } from '../components/layout/Header';
 import { Footer } from '../components/layout/Footer';
 
 export const metadata = {
-  title: 'AVTO QOIDALAR — Yo\'l Harakati Qoidalari Video Ta\'lim',
-  description: 'Video savollar bilan YHQ va haydovchilik imtihoniga tayyorgarlik platformasi.',
+  title: 'AVTO QOIDALAR — Yo\'l Harakati Qoidalari Interaktiv Ta\'lim',
+  description: 'Interaktiv animatsiyalar bilan YHQ va haydovchilik imtihoniga tayyorgarlik platformasi.',
+  icons: { icon: '/favicon.svg' },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }) {

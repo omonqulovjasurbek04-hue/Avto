@@ -2,13 +2,14 @@
 // trajectory.js — Bézier curve generation and arc-length param
 // ============================================================
 
-import { CENTRE, vec2 } from './core.js';
+import { CENTRE, vec2, OPPOSITE } from './core.js';
 
 export function buildTrajectory(entry, exit, fromDir, toDir) {
-  const isStraight = fromDir === toDir;
+  const isOpposite = OPPOSITE[fromDir] === toDir;
   const isRight = isRightTurn(fromDir, toDir);
   const isLeft = isLeftTurn(fromDir, toDir);
   const isUTurn = fromDir === toDir;
+  const isStraight = isOpposite && !isUTurn;
 
   let curve;
   if (isUTurn) {

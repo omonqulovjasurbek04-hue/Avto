@@ -1,8 +1,16 @@
 const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://10.0.2.2:4000/api';
 
+function getToken() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem('yhq_token');
+    }
+  } catch {}
+  return null;
+}
+
 function getAuthHeaders() {
-  // Use AsyncStorage in production; for MVP localStorage fallback
-  const token = typeof window !== 'undefined' ? window.localStorage?.getItem('yhq_token') : null;
+  const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

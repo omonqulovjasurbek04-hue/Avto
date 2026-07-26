@@ -27,9 +27,13 @@ mobile/package-lock.json
 **/*.webm
 **/*.mov
 
-# OS noise
+# OS noise & log files
 Thumbs.db
 .DS_Store
 *.log
+dev_*.txt
+jwt_secret.txt
+*.tmp
+
 # Kimi project memory
 .kimi-memory/

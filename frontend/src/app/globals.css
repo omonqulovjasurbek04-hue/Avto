@@ -7,6 +7,18 @@
 :root {
   --font-outfit: 'Outfit', sans-serif;
   --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  
+  /* Material Design v2 CSS Custom Properties */
+  --bg-main: #0b0f19;
+  --bg-surface: #151c2c;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --primary-accent: #3b82f6;
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --glass-bg: rgba(30, 41, 59, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.1);
 }
 
 body {
@@ -20,7 +32,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-outfit);
 }
 
-/* Glassmorphism utility */
+/* ========== GLASSMORPHISM ========== */
 .glass-panel {
   background: rgba(21, 28, 44, 0.75);
   backdrop-filter: blur(16px);
@@ -39,35 +51,143 @@ h1, h2, h3, h4, h5, h6 {
   border-color: rgba(59, 130, 246, 0.3);
 }
 
-/* Gradient text */
+/* ========== 3D TRANSFORMS ========== */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.translate-z-20 {
+  transform: translateZ(20px);
+}
+
+.translate-z-40 {
+  transform: translateZ(40px);
+}
+
+/* Tilt Card Effect */
+.tilt-card {
+  transition: transform 0.3s ease-out, box-shadow 0.3s ease;
+  will-change: transform;
+  perspective: 1000px;
+}
+
+.tilt-card:hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  transform: rotateX(2deg) rotateY(-2deg) scale(1.02);
+}
+
+/* ========== GRADIENT & GLOW EFFECTS ========== */
 .text-gradient {
   background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .text-gradient-purple {
   background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Micro-animations */
+.glow-primary {
+  box-shadow: 0 0 30px rgba(173, 198, 255, 0.15);
+}
+
+.glow-primary-intense {
+  box-shadow: 0 0 40px rgba(173, 198, 255, 0.3);
+}
+
+.shadow-glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.backdrop-blur-20 {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.btn-inner-glow {
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* ========== PARALLAX BACKGROUND ========== */
+.parallax-bg {
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(77, 142, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(3, 181, 211, 0.1) 0%, transparent 50%);
+  background-size: cover;
+  background-position: center;
+}
+
+/* ========== SCROLL ANIMATIONS ========== */
+.scroll-anim-hidden {
+  opacity: 0;
+  transform: scale(0.95) translateY(20px);
+}
+
+.scroll-anim-visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========== KEYFRAME ANIMATIONS ========== */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
 
 @keyframes pulseGlow {
-  0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
-  50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+  0%, 100% { 
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); 
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); 
+  }
 }
 
+@keyframes tiltEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes depthIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ========== ANIMATION CLASSES ========== */
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
@@ -79,6 +199,66 @@ h1, h2, h3, h4, h5, h6 {
 .pulse-glow {
   animation: pulseGlow 2s infinite;
 }
+
+.animate-tilt-enter {
+  animation: tiltEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* ========== INTERACTIVE STATES ========== */
+.btn-default {
+  @apply bg-primary-accent text-white rounded-full px-8 py-4 font-bold text-base;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-default:hover {
+  @apply scale-105;
+  box-shadow: 0 0 30px rgba(173, 198, 255, 0.3);
+}
+
+.btn-default:active {
+  @apply scale-95;
+}
+
+.input-focus {
+  @apply border-b-2 border-primary-accent transition-all duration-200;
+}
+
+.floating-label {
+  @apply transform -translate-y-5 scale-85 transition-all duration-200;
+}
+
+/* ========== CUSTOM SCROLLBAR ========== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(21, 28, 44, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {

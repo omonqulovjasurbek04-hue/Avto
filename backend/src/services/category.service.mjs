@@ -16,15 +16,23 @@ export async function getCategoryQuestions(categoryId) {
     where: { categoryId },
     include: {
       answers: {
-        select: { id: true, text: true },
+        select: { id: true, text: true }, // isCorrect HECH QACHON qaytarilmaydi
         orderBy: { createdAt: "asc" },
       },
     },
     orderBy: { createdAt: "asc" },
   });
-  // Secure: isCorrect va videoId BU YERDA qaytarilmaydi
-  // Faqat POST /api/practice/answer orqali tekshiriladi
-  return questions;
+  
+  // Parse text and rawData fields from JSON strings
+  return questions.map(q => ({
+    ...q,
+    text: q.text, // Keep as string, frontend will parse
+    answers: q.answers.map(a => ({
+      ...a,
+      text: a.text, // Keep as string, frontend will parse
+    })),
+    rawData: q.rawData, // Keep as string, frontend will parse
+  }));
 }
 
 export async function createCategory(data) {

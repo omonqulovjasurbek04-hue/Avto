@@ -121,16 +121,3 @@ const styles = StyleSheet.create({
   nextBtn: { backgroundColor: '#3b82f6', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 16 },
   nextBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0b0f19', padding: 16 },
-  title: { fontSize: 18, fontWeight: '700', color: '#f8fafc', marginBottom: 16 },
-  back: { color: '#3b82f6', fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  card: { backgroundColor: '#151c2c', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#26334d', marginBottom: 10 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: '#f8fafc' },
-  cardSub: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
-  questionCard: { backgroundColor: '#151c2c', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#26334d' },
-  questionText: { fontSize: 16, fontWeight: '700', color: '#f8fafc', marginBottom: 16, lineHeight: 22 },
-  nextBtn: { backgroundColor: '#3b82f6', borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 16 },
-  nextBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-});

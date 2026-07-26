@@ -1,0 +1,42 @@
+{
+  "id": "sc-0003",
+  "schema_version": 1,
+  "question_id": "q-0003",
+  "topic": "signs",
+  "scene": {
+    "type": "crossroads_4way",
+    "roads": [
+      { "dir": "N", "lanes_in": 1, "lanes_out": 1, "priority": "secondary" },
+      { "dir": "E", "lanes_in": 1, "lanes_out": 1, "priority": "main" },
+      { "dir": "W", "lanes_in": 1, "lanes_out": 1, "priority": "main" }
+    ],
+    "signs": [
+      { "at": "N", "code": "2.5" }
+    ],
+    "markings": [
+      { "type": "stop_line", "at": "N" }
+    ]
+  },
+  "actors": [
+    { "id": "car_n", "kind": "car", "role": "player", "from": "N", "to": "E" },
+    { "id": "car_w", "kind": "car", "role": "traffic", "from": "W", "to": "E" }
+  ],
+  "question": {
+    "text": { "uz": "STOP belgisi oldida nima qilish kerak?", "ru": "Что нужно сделать перед знаком СТОП?", "en": "What should you do before a STOP sign?" },
+    "options": [
+      { "id": "o1", "refers_to": "car_n", "label": { "uz": "To'xtamasdan o'tish", "ru": "Проехать без остановки", "en": "Go without stopping" } },
+      { "id": "o2", "refers_to": "car_w", "label": { "uz": "Asosiy yo'ldagilarga yo'l berish", "ru": "Уступить дорогу на главной", "en": "Yield to main road traffic" } }
+    ],
+    "correct": "o2"
+  },
+  "resolution": {
+    "order": ["car_w", "car_n"],
+    "rule": {
+      "code": "2.5",
+      "text": { "uz": "STOP belgisi oldida to'liq to'xtab, asosiy yo'ldagi transport vositalariga yo'l berish kerak.", "ru": "Перед знаком СТОП необходимо остановиться и уступить дорогу транспортным средствам на главной дороге.", "en": "Stop completely before the STOP sign and yield to vehicles on the main road." }
+    },
+    "wrong_outcomes": {
+      "o1": { "type": "sign_violation" }
+    }
+  }
+}

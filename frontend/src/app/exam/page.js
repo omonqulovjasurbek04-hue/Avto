@@ -15,12 +15,16 @@ export default function ExamPage() {
   const [starting, setStarting] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     setCatLoading(true);
     api.listCategories().then((data) => {
-      setCategories(data || []);
+      if (!cancelled) setCategories(data || []);
     }).catch((err) => {
-      setCatError(err?.message || 'Kategoriyalarni yuklashda xatolik');
-    }).finally(() => setCatLoading(false));
+      if (!cancelled) setCatError(err?.message || 'Kategoriyalarni yuklashda xatolik');
+    }).finally(() => {
+      if (!cancelled) setCatLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
   const handleStart = async (cat) => {

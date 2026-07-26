@@ -23,32 +23,36 @@ export default function ResultPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
     let retries = 0;
     const maxRetries = 5;
 
     async function fetchSession() {
       try {
         const history = await api.getTestHistory();
+        if (cancelled) return;
         const s = history.find((h) => h.id === sessionId);
         if (s) { setSession(s); setLoading(false); return; }
         if (retries < maxRetries) {
           retries++;
           setTimeout(fetchSession, 600);
         } else {
-          setError('Natijalarni yuklashda xatolik.');
-          setLoading(false);
+          if (!cancelled) setError('Natijalarni yuklashda xatolik.');
+          if (!cancelled) setLoading(false);
         }
       } catch (err) {
+        if (cancelled) return;
         if (retries < maxRetries) {
           retries++;
           setTimeout(fetchSession, 600);
         } else {
-          setError(err?.message || 'Natijalarni yuklashda xatolik');
-          setLoading(false);
+          if (!cancelled) setError(err?.message || 'Natijalarni yuklashda xatolik');
+          if (!cancelled) setLoading(false);
         }
       }
     }
     fetchSession();
+    return () => { cancelled = true; };
   }, [sessionId]);
 
   const score = safeNum(session?.score ?? searchParams.get('score'), 0);

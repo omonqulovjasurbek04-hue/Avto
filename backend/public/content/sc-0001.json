@@ -1,0 +1,43 @@
+{
+  "id": "sc-0001",
+  "schema_version": 1,
+  "question_id": "q-0001",
+  "topic": "priority_and_intersections",
+  "scene": {
+    "type": "crossroads_4way",
+    "roads": [
+      { "dir": "N", "lanes_in": 1, "lanes_out": 1, "priority": "secondary" },
+      { "dir": "S", "lanes_in": 1, "lanes_out": 1, "priority": "secondary" },
+      { "dir": "E", "lanes_in": 1, "lanes_out": 1, "priority": "main" },
+      { "dir": "W", "lanes_in": 1, "lanes_out": 1, "priority": "main" }
+    ],
+    "signs": [
+      { "at": "N", "code": "2.4" },
+      { "at": "S", "code": "2.4" }
+    ]
+  },
+  "actors": [
+    { "id": "car_n", "kind": "car", "role": "player", "from": "N", "to": "S" },
+    { "id": "car_e", "kind": "car", "role": "traffic", "from": "E", "to": "W" }
+  ],
+  "question": {
+    "text": { "uz": "Ushbu chorrahada kim birinchi o'tish huquqiga ega?", "ru": "Кто имеет преимущество на этом перекрестке?", "en": "Who has the right of way at this intersection?" },
+    "options": [
+      { "id": "o1", "refers_to": "car_n", "label": { "uz": "Shimoldan kelayotgan mashina", "ru": "Автомобиль с севера", "en": "Car from the north" } },
+      { "id": "o2", "refers_to": "car_e", "label": { "uz": "Sharqdan kelayotgan mashina", "ru": "Автомобиль с востока", "en": "Car from the east" } },
+      { "id": "o3", "label": { "uz": "Ikkalasi bir vaqtda", "ru": "Оба одновременно", "en": "Both at the same time" } }
+    ],
+    "correct": "o2"
+  },
+  "resolution": {
+    "order": ["car_e", "car_n"],
+    "rule": {
+      "code": "13.9",
+      "text": { "uz": "Teng bo'lmagan yo'llarning chorrahasida, yon yo'ldan kelayotgan transport vositasi asosiy yo'ldagi transport vositasiga yo'l berishi kerak.", "ru": "На перекрестке неравнозначных дорог водитель, находящийся на второстепенной дороге, должен уступить дорогу транспортным средствам, приближающимся по главной.", "en": "At an intersection of unequal roads, a driver on a secondary road must yield to vehicles on the main road." }
+    },
+    "wrong_outcomes": {
+      "o1": { "type": "priority_violation" },
+      "o3": { "type": "unnecessary_wait" }
+    }
+  }
+}

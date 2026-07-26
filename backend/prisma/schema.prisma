@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 enum Role {
@@ -14,14 +14,14 @@ enum Role {
 
 model User {
   id           String   @id @default(uuid())
-  email        String   @unique @db.VarChar(255)
-  phone        String?  @unique @db.VarChar(20)
-  passwordHash String   @map("password_hash")
-  name         String?  @db.VarChar(100)
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  name         String?
   role         Role     @default(USER)
-  locale       String   @default("uz") @db.VarChar(5)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  locale       String   @default("uz")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   sessions      Session[]
   testSessions  TestSession[]
@@ -31,11 +31,11 @@ model User {
 
 model Session {
   id        String   @id @default(uuid())
-  userId    String   @map("user_id")
+  userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique @db.VarChar(512)
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([expiresAt])
@@ -44,10 +44,10 @@ model Session {
 
 model Category {
   id        String   @id @default(uuid())
-  name      String   @db.VarChar(100)
-  slug      String   @unique @db.VarChar(100)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   questions     Question[]
   testSessions  TestSession[]
@@ -57,13 +57,13 @@ model Category {
 
 model Question {
   id         String   @id @default(uuid())
-  categoryId String   @map("category_id")
+  categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  text       Json
-  imageUrl   String?  @map("image_url")
-  rawData    Json?    @map("raw_data")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  text       String   // JSON as string for SQLite
+  imageUrl   String?
+  rawData    String?  // JSON as string for SQLite
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   answers           Answer[]
   testSessionAnswers TestSessionAnswer[]
@@ -74,13 +74,13 @@ model Question {
 
 model Answer {
   id         String   @id @default(uuid())
-  questionId String   @map("question_id")
+  questionId String
   question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  text       Json
-  isCorrect  Boolean  @map("is_correct")
-  videoId    String?  @map("video_id")
+  text       String   // JSON as string for SQLite
+  isCorrect  Boolean
+  videoId    String?
   video      Video?   @relation(fields: [videoId], references: [id])
-  createdAt  DateTime @default(now()) @map("created_at")
+  createdAt  DateTime @default(now())
 
   @@index([questionId])
   @@map("answers")
@@ -88,11 +88,11 @@ model Answer {
 
 model Video {
   id          String   @id @default(uuid())
-  type        String   @db.VarChar(10)
-  url         String   @db.VarChar(500)
+  type        String
+  url         String
   duration    Int      @default(0)
-  thumbnailUrl String? @map("thumbnail_url") @db.VarChar(500)
-  createdAt   DateTime @default(now()) @map("created_at")
+  thumbnailUrl String?
+  createdAt   DateTime @default(now())
 
   answers Answer[]
 
@@ -101,14 +101,14 @@ model Video {
 
 model TestSession {
   id         String    @id @default(uuid())
-  userId     String    @map("user_id")
+  userId     String
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  categoryId String    @map("category_id")
+  categoryId String
   category   Category  @relation(fields: [categoryId], references: [id])
-  startedAt  DateTime  @default(now()) @map("started_at")
-  finishedAt DateTime? @map("finished_at")
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
   score      Int?
-  createdAt  DateTime  @default(now()) @map("created_at")
+  createdAt  DateTime  @default(now())
 
   answers TestSessionAnswer[]
 
@@ -119,14 +119,14 @@ model TestSession {
 
 model TestSessionAnswer {
   id         String      @id @default(uuid())
-  sessionId  String      @map("session_id")
+  sessionId  String
   session    TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  questionId String      @map("question_id")
+  questionId String
   question   Question    @relation(fields: [questionId], references: [id])
-  answerId   String      @map("answer_id")
-  isCorrect  Boolean     @map("is_correct")
-  videoId    String?     @map("video_id")
-  answeredAt DateTime    @default(now()) @map("answered_at")
+  answerId   String
+  isCorrect  Boolean
+  videoId    String?
+  answeredAt DateTime    @default(now())
 
   @@index([sessionId])
   @@map("test_session_answers")

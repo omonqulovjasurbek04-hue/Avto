@@ -5,6 +5,7 @@ import { env } from "./config/env.mjs";
 import { securityHeaders } from "./middleware/security-headers.mjs";
 import { errorHandler } from "./middleware/error-handler.mjs";
 import { generalLimiter } from "./middleware/rate-limit.mjs";
+import { scenarioRoutes } from "./routes/scenario.routes.mjs";
 import { authRoutes } from "./routes/auth.routes.mjs";
 import { categoryRoutes } from "./routes/category.routes.mjs";
 import { practiceRoutes } from "./routes/practice.routes.mjs";
@@ -30,6 +31,7 @@ app.use(express.json({ limit: "256kb" }));
 app.use(generalLimiter);
 
 app.use("/api/auth", authRoutes);
+app.use("/api/scenarios", scenarioRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/practice", practiceRoutes);
 app.use("/api/tests", testRoutes);

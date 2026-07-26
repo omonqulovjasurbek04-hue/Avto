@@ -56,9 +56,11 @@ function build() {
   const DIR_VECTORS = {
     N: { x: 0, y: -1 }, S: { x: 0, y: 1 },
     E: { x: 1, y: 0 }, W: { x: -1, y: 0 },
+    NE: { x: 0.7071, y: -0.7071 }, NW: { x: -0.7071, y: -0.7071 },
+    SE: { x: 0.7071, y: 0.7071 }, SW: { x: -0.7071, y: 0.7071 },
   };
 
-  const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E' };
+  const OPPOSITE = { N: 'S', S: 'N', E: 'W', W: 'E', NE: 'SW', NW: 'SE', SE: 'NW', SW: 'NE' };
 
   // ---- OBB ----
   class OBB {
@@ -124,11 +126,47 @@ function build() {
 
   // ---- Trajectory generation ----
   function buildTrajectory(entry, exit, fromDir, toDir) {
-    const pts = toDir === fromDir
-      ? [entry, vec2(CENTRE.x, CENTRE.y), exit]
-      : [entry, vec2(CENTRE.x, CENTRE.y), exit];
+    let pts;
+    if (fromDir === toDir) {
+      const d = DIR_VECTORS[fromDir];
+      const perp = vec2(-d.y, d.x);
+      pts = [entry, vec2(CENTRE.x + perp.x * 30, CENTRE.y + perp.y * 30), vec2(CENTRE.x - perp.x * 30, CENTRE.y - perp.y * 30), exit];
+    } else if (isRightTurn(fromDir, toDir)) {
+      const perp = turnPerp(fromDir, 'right');
+      pts = [entry, vec2(CENTRE.x + perp.x * 40, CENTRE.y + perp.y * 40), exit];
+    } else if (isLeftTurn(fromDir, toDir)) {
+      const perp1 = turnPerp(fromDir, 'left');
+      const perp2 = turnPerp(toDir, 'right');
+      pts = [entry, vec2(CENTRE.x + perp1.x * 60, CENTRE.y + perp1.y * 60), vec2(CENTRE.x + perp2.x * 60, CENTRE.y + perp2.y * 60), exit];
+    } else {
+      pts = [entry, exit];
+    }
     const totalLen = arcLen(pts, 50);
     return { points: pts, totalLength: totalLen };
+  }
+
+  function isRightTurn(from, to) {
+    const order = ['N', 'E', 'S', 'W'];
+    const fi = order.indexOf(from), ti = order.indexOf(to);
+    if (fi === -1 || ti === -1) return false;
+    return (ti - fi + 4) % 4 === 1;
+  }
+
+  function isLeftTurn(from, to) {
+    const order = ['N', 'E', 'S', 'W'];
+    const fi = order.indexOf(from), ti = order.indexOf(to);
+    if (fi === -1 || ti === -1) return false;
+    return (ti - fi + 4) % 4 === 3;
+  }
+
+  function turnPerp(dir, side) {
+    const map = {
+      N: { left: vec2(-1, 0), right: vec2(1, 0) },
+      S: { left: vec2(1, 0), right: vec2(-1, 0) },
+      E: { left: vec2(0, -1), right: vec2(0, 1) },
+      W: { left: vec2(0, 1), right: vec2(0, -1) },
+    };
+    return map[dir]?.[side] || vec2(0, 0);
   }
 
   function arcLen(pts, n) {
@@ -151,7 +189,16 @@ function build() {
 
   function sampleTrajectory(traj, dist) {
     const t = Math.max(0, Math.min(1, dist / traj.totalLength));
-    return { position: evalPt(traj.points, t), progress: t };
+    const position = evalPt(traj.points, t);
+    const tangent = tangentAt(traj.points, t);
+    return { position, tangent, progress: t };
+  }
+
+  function tangentAt(pts, t, eps) {
+    eps = eps || 0.001;
+    const t1 = Math.max(0, t - eps), t2 = Math.min(1, t + eps);
+    const p1 = evalPt(pts, t1), p2 = evalPt(pts, t2);
+    return p2.sub(p1).norm();
   }
 
   // ---- Simulation ----
@@ -185,8 +232,10 @@ function build() {
         for (let j = i + 1; j < active.length && !collision; j++) {
           const si = sampleTrajectory(active[i].traj, active[i].dist);
           const sj = sampleTrajectory(active[j].traj, active[j].dist);
-          const oi = OBB.fromVehicle(si.position, vec2(1, 0), actors[active[i].id]?.kind === 'tram' ? TRAM_LENGTH : VEHICLE_LENGTH, VEHICLE_WIDTH);
-          const oj = OBB.fromVehicle(sj.position, vec2(1, 0), actors[active[j].id]?.kind === 'tram' ? TRAM_LENGTH : VEHICLE_LENGTH, VEHICLE_WIDTH);
+          const headingI = si.tangent || vec2(1, 0);
+          const headingJ = sj.tangent || vec2(1, 0);
+          const oi = OBB.fromVehicle(si.position, headingI, actors[active[i].id]?.kind === 'tram' ? TRAM_LENGTH : VEHICLE_LENGTH, VEHICLE_WIDTH);
+          const oj = OBB.fromVehicle(sj.position, headingJ, actors[active[j].id]?.kind === 'tram' ? TRAM_LENGTH : VEHICLE_LENGTH, VEHICLE_WIDTH);
           if (oi.overlaps(oj)) collision = { tick, actorA: active[i].id, actorB: active[j].id };
         }
       }
