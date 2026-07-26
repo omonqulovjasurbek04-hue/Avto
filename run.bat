@@ -124,9 +124,9 @@ cls
 echo ====================================================================
 echo  [ISHGA TUSHIRISH] Mobile Expo loyihasi ishga tushirilmoqda...
 echo ====================================================================
-cd mobile
+cd frontend\mobile
 call npx expo start
-cd ..
+cd ..\..
 pause
 goto menu
 
@@ -142,7 +142,7 @@ echo 2. Frontend web ishga tushmoqda...
 start "AVTO Frontend Web (3000)" cmd /k "cd frontend && npm run dev"
 
 echo 3. Mobile Expo ishga tushmoqda...
-start "AVTO Mobile Expo" cmd /k "cd mobile && npx expo start"
+start "AVTO Mobile Expo" cmd /k "cd frontend\mobile && npx expo start"
 
 echo.
 echo [OK] Barcha qismlar ishga tushirildi! Loyihalar oynasini yopmang.

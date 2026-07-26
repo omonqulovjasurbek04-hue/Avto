@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const CONTENT_DIR = process.argv[2] || path.join(ROOT, "content");
-const SCHEMA_PATH = path.join(ROOT, "frontend", "schema", "scenario.schema.json");
+const SCHEMA_PATH = path.join(ROOT, "schema", "scenario.schema.json");
 
 const SCENE_TYPES = ["crossroads_4way", "t_junction", "y_junction", "roundabout", "straight_road", "overtaking", "pedestrian_crossing", "railway_crossing", "narrow_road", "parking_stopping", "residential_yard", "tunnel"];
 const VALID_DIRS = ["N", "S", "E", "W", "NE", "NW", "SE", "SW"];

@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
-const SCHEMA_DIR = path.join(ROOT, "frontend", "schema");
+const SCHEMA_DIR = path.join(ROOT, "schema");
 
 function generateTS(schemaPath) {
   const schema = JSON.parse(readFileSync(schemaPath, "utf8"));

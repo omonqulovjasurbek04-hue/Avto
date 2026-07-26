@@ -1,0 +1,6 @@
+{
+  "name": "AVTO YHQ - Haydovchilik Mahorati",
+  "description": "2D va 3D simulyatsiyalar, darsliklar, test mashqlari hamda smart imtihon tizimi orqali YHQ (Yo'l Harakati Qoidalari) ni o'rganish platformasi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

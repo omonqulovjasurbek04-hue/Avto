@@ -1,33 +1,49 @@
 {
-  "name": "@yhq/server",
-  "version": "0.2.0",
+  "name": "@yhq/backend",
+  "version": "0.3.0",
   "private": true,
-  "description": "Express REST API for AVTO (YHQ) driving education platform. PostgreSQL via Prisma, JWT auth, Zod validation.",
-  "type": "module",
-  "main": "src/index.mjs",
-  "prisma": {
-    "seed": "node prisma/seed.mjs"
-  },
   "scripts": {
-    "start": "node src/index.mjs",
-    "dev": "node --watch src/index.mjs",
-    "test": "node --test",
+    "build": "nest build",
+    "dev": "nest build --watch --preserveWatchOutput",
+    "start": "node dist/src/main",
+    "start:prod": "node dist/src/main",
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
     "db:migrate": "npx prisma migrate dev",
-    "db:seed": "node prisma/seed.mjs",
+    "db:seed": "npx ts-node prisma/seed.ts",
     "db:studio": "npx prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^6.5.0",
-    "bcrypt": "^5.1.1",
-    "cors": "^2.8.5",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.5.0",
-    "multer": "^2.2.0",
-    "zod": "^3.24.0"
+    "@nestjs/common": "^11.1.0",
+    "@nestjs/core": "^11.1.0",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.0",
+    "@nestjs/platform-express": "^11.1.0",
+    "@nestjs/throttler": "^6.5.0",
+    "@prisma/adapter-better-sqlite3": "^7.9.0",
+    "@prisma/client": "^7.0.0",
+    "argon2": "^0.41.0",
+    "better-sqlite3": "^13.0.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "uuid": "^11.0.0"
   },
   "devDependencies": {
-    "prisma": "^6.5.0"
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.1.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/uuid": "^10.0.0",
+    "jest": "^29.7.0",
+    "prisma": "^7.0.0",
+    "ts-jest": "^29.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
   }
 }

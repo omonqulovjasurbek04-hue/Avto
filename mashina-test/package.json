@@ -1,0 +1,17 @@
+{
+  "name": "mashina-test",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mashina Test — video-based driving test (Uzbekistan)",
+  "workspaces": ["backend", "web", "mobile"],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace backend",
+    "dev:web": "npm run dev --workspace web",
+    "build:backend": "npm run build --workspace backend",
+    "db:generate": "npm run db:generate --workspace backend",
+    "db:migrate": "npm run db:migrate --workspace backend",
+    "db:seed": "npm run db:seed --workspace backend",
+    "db:studio": "npm run db:studio --workspace backend"
+  },
+  "engines": { "node": ">=20" }
+}

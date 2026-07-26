@@ -1,17 +1,23 @@
 {
   "name": "yhq-platform",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "AVTO (YHQ) monorepo: Node.js Express backend, Next.js + Tailwind frontend, React Native Expo mobile app.",
+  "description": "AVTO (YHQ) monorepo: NestJS backend, Next.js + Tailwind web, React Native Expo mobile.",
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "frontend/mobile",
+    "shared"
   ],
   "scripts": {
-    "dev:server": "npm run dev --workspace @yhq/server",
-    "dev:web": "npm run dev --workspace @yhq/web"
+    "dev:server": "npm run dev --workspace @yhq/backend",
+    "dev:web": "npm run dev --workspace @yhq/web",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:web\""
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
   }
 }
