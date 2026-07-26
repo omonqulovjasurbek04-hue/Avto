@@ -1,404 +1,374 @@
-# MASHINA TEST — Build Prompt
-### Video-asosidagi haydovchilik testi (Node.js + Next.js + Expo)
+# Mashina Test — Loyiha bo'yicha To'liq Qo'llanma (Dasturchi uchun)
 
-> Ushbu hujjat avvalgi muhokamadagi rejani **3 joyda tuzatadi** (sabablari bilan) va qolganini to'liq, ishga tushirishga tayyor holatga keltiradi.
+> Bu — loyihaning YAKUNIY, yagona hujjati: nima uchun, nima, qanday va qaysi tartibda qurilishi kerakligi — barchasi tushuntirilgan holda, bitta joyda.
+
+## Mundarija
+1. [Loyiha nima va nega shunday qurilgan](#1)
+2. [Texnologik stack](#2)
+3. [Monorepo strukturasi](#3)
+4. [Ma'lumotlar bazasi](#4)
+5. [API — to'liq va tuzatilgan ro'yxat](#5)
+6. [5+1 qoida — buzilmasligi kerak](#6)
+7. [Backend — modul-modul](#7)
+8. [Web — sahifa-sahifa](#8)
+9. [Mobile — ekran-ekran](#9)
+10. [Video qanday ishlaydi (Cloudflare)](#10)
+11. [0 dan ishga tushirish](#11)
+12. [Ishlab chiqish tartibi](#12)
+13. [YAGONA to'liq AI-prompt](#13)
+14. [Ochiq savollar](#14)
 
 ---
 
-## 0. Mahsulot
+<a id="1"></a>
+## 1. Loyiha nima va nega shunday qurilgan
 
-Foydalanuvchi ro'yxatdan o'tadi, kategoriya bo'yicha test topshiradi. Har savolga javob berilgach:
-- **To'g'ri javob** → "to'g'ri yurish" videosi + ✅
-- **Xato javob** → to'qnashuv/qoidabuzarlik videosi (kamida 10 sek) + ❌ + qisqa qoida izohi
+**Nima:** Foydalanuvchi ro'yxatdan o'tadi, test kategoriyasini (masalan "Yo'l belgilari") tanlaydi, savollarga birma-bir javob beradi. Har bir **javobga** — savolga emas — video bog'langan: to'g'ri javob berilsa, mashina to'g'ri yurishda davom etayotgan video ko'rsatiladi (loop rejimida, ✅), xato javob berilsa — kamida 10 soniyalik avariya videosi (bir marta, ❌).
 
-Boshlang'ich hajm: 50–100 savol, Web + Mobil, noldan qurish.
+**Nega bitta backend, ikkita frontend:** Web (kompyuter) va mobil (telefon) — ikkalasi ham bir xil ma'lumotga muhtoj. Agar har biri o'z mantig'ini alohida yozsa, ikkitasini alohida saqlash va sinxron tutish kerak bo'lardi. Shu sabab — **bitta** Backend (NestJS API) ma'lumotni saqlaydi va tekshiradi, ikkalasi ham shunga so'rov yuboradi.
+
+**Nega har bir javobga video, har bir savolga emas:** bitta "avariya" videosini bir nechta turli savolning xato javoblarida qayta ishlatish mumkin — bu 50-100 ta video o'rniga sezilarli kamroq video suratga olish/tayyorlashni talab qiladi.
+
+**Nega videoning o'zi bizning serverimizda emas:** video — og'ir fayl. Agar u bizning serverimizdan o'tsa, 100 kishi bir vaqtda test topshirganda server "tiqilib qoladi". Shu sabab video **Cloudflare Stream**da saqlanadi — bizning backend faqat "qayerdan olish kerak" (manzil) ma'lumotini beradi.
 
 ---
 
-## 1. Tech stack — yakuniy, va nega o'zgardi
+<a id="2"></a>
+## 2. Texnologik stack
 
-| Qatlam | Tanlov | Izoh |
+| Qatlam | Texnologiya | Nega aynan shu |
 |---|---|---|
-| Backend | **NestJS** (Node.js + TS) | Oldin "Express yoki NestJS" ochiq qolgan edi. NestJS'ni tanlayman: modul/controller/service/DTO tuzilishi, Guard'lar, class-validator — bularning barchasi Laravel'dagi controller/middleware/FormRequest tajribangizga eng yaqin fikrlash uslubi. Bare Express bu loyiha uchun ortiqcha "erkinlik", ya'ni ko'proq o'zboshimcha qaror qabul qilishga majbur qiladi. |
-| ORM | Prisma | O'zgarishsiz — TS bilan eng yaxshi integratsiya. |
-| **DB** | **PostgreSQL** (MySQL emas) | Oldingi tavsiya (MySQL) Laravel ekotizimidagi qulaylikka asoslangan edi. Laravel endi yo'q — bu argument ham yo'qoladi. Prisma'da Postgres "birinchi darajali" platforma, bepul hosting variantlari (Neon, Supabase, Railway) ko'p va sifatli. Shu sabab tuzataman: **Postgres**. |
-| Auth | JWT (access + refresh), NestJS'ning `@nestjs/passport` + `passport-jwt` | Refresh token DB'da saqlanadi — shu orqali "logout everywhere" / token bekor qilish imkoniyati bo'ladi. |
-| Video saqlash | Cloudflare R2 (S3-compatible) | Egress narxi yo'q — bu ko'p video, kam foydalanuvchi bosqichida muhim. |
-| **Mobil video** | **expo-video** (`expo-av` EMAS) | `expo-av` Expo SDK 52'da deprecated, SDK 55'da butunlay olib tashlangan. `expo-video`'da: (a) `VideoPlayer` (mantiq) + `VideoView` (UI) ajratilgan, (b) built-in **preload** API, (c) **persistent on-device cache** (standart 1GB, sozlanadi). Bu aynan bizga kerak bo'lgan narsa — pastda tushuntiraman. |
-| Web video | HTML5 `<video>` | Qo'shimcha kutubxona shart emas. |
-| Frontend | Next.js 14+ (App Router) + Tailwind | O'zgarishsiz. |
-| Monorepo | npm workspaces | Turborepo/Nx **hozircha shart emas** — 3 ta paket uchun ortiqcha murakkablik. Build vaqti muammo bo'lsa, keyin qo'shiladi. |
-| Queue (Redis/BullMQ) | **Keyinroq** | MVP'da fon vazifasi yo'q (video oldindan encode qilingan holda yuklanadi). Kerak bo'lganda — masalan server-side transcoding yoki eslatma email — qo'shiladi. Hozir qo'shish "ehtiyot narsa yig'ish" bo'lardi. |
+| Backend | NestJS 11 (TypeScript, Node 20+) | Laravel'ga eng yaqin fikrlash uslubi — module/controller/service/guard |
+| ORM | Prisma 7 | TypeScript bilan tabiiy integratsiya, SQL qo'lda yozilmaydi |
+| Baza | PostgreSQL 15+ | Node/Prisma ekotizimida eng ko'p qo'llab-quvvatlanadigan, kuchli baza |
+| Auth | JWT (access+refresh) + argon2id | Sanctum'ning Node.js ekvivalenti |
+| Web | Next.js 16 (App Router, Turbopack) + Tailwind | Sizda mavjud tajriba, tez UI qurish |
+| Mobil | React Native + Expo (Expo Router) | Web bilan bir xil til (React/TS) — mantiqning katta qismi umumiy |
+| Video | Cloudflare Stream | Yagona manba yuklab, avtomatik barcha formatga (HLS) o'giradi |
+| Monorepo | npm workspaces + Turborepo | Uchala qismni bitta buyruq bilan ishga tushirish, tip almashish |
+| Test | Jest | NestJS'ning standart tanlovi |
 
 ---
 
-## 2. Asosiy g'oya: video HAR SAVOLGA emas, HAR NATIJA TURIGA bog'lanadi
-
-Bu loyihaning butun tezligi va narxi shu bitta qarorga bog'liq.
-
-**Noto'g'ri model:** 50–100 savol = 50–100 (yoki 100–200, har ikkala javob uchun) noyob video. Har birini suratga olish/render qilish, saqlash, yuklash kerak.
-
-**To'g'ri model:** `Video` — alohida jadval. `AnswerOption.videoId` shunga ishora qiladi. Bir xil natija turidagi (masalan "chorrahada to'qnashuv") ko'plab savollar **bitta** video'ni ishlatadi.
-
-Boshlang'ich video hajmi shunday bo'lishi mumkin:
-
-| Kategoriya | Video soni |
-|---|---|
-| ✅ Muvaffaqiyatli (turli yo'l manzarasi) | 4–6 ta |
-| ❌ Chorraha/imtiyoz to'qnashuvi | 4–5 ta |
-| ❌ Piyoda bilan hodisa | 2–3 ta |
-| ❌ Tezlik/masofa | 2 ta |
-| ❌ To'xtash/turish qoidabuzarligi | 2 ta |
-| ❌ Belgi/chiziq buzilishi | 2–3 ta |
-| **Jami** | **~16–21 ta** |
-
-Ya'ni 50–100 ta **savol** uchun 50–100 ta emas, **~20 ta unikal video** kifoya qiladi. (Agar AVTO loyihasidagi 13 ta mavzu taksonomiyasini eslasangiz — xuddi shu bo'linish shu yerda ham to'g'ri keladi, uni qayta ishlatsa bo'ladi.)
-
-**Bunda tezlik bonusi ham bor:** video pool kichik bo'lgani uchun, foydalanuvchi birinchi 15–20 ta savolni yechib bo'lguncha, deyarli barcha mumkin bo'lgan videolar allaqachon qurilma keshida turadi. `expo-video`'ning persistent cache'i (va brauzerdagi HTTP cache) buni avtomatik qiladi — keyingi videolar tarmoqdan emas, disk'dan yuklanadi, ya'ni deyarli bir zumda ko'rinadi.
-
-**Preload qoidasi:** savol yuklanganda, shu savolning barcha variantlariga bog'langan videolarni fonda oldindan yuklashni boshlang (`expo-video`'da `preload`, web'da `<link rel="prefetch">` yoki fon `fetch`). Foydalanuvchi javobni tanlaganda video allaqachon tayyor bo'ladi — "yuklanmoqda" holati deyarli ko'rinmaydi.
-
-**"Kamida 10 sekund" — bu content talabi, kod talabi emas:** playback kodi videoni sun'iy sekinlashtirib yoki pauza qo'shib "10 soniyaga cho'zmasin". Bu — video suratga olinganda/tanlanganda rioya qilinadigan qoida, `durationSec` maydoni orqali faqat nazorat/ko'rsatish uchun saqlanadi.
-
----
-
-## 3. Monorepo struktura
+<a id="3"></a>
+## 3. Monorepo strukturasi
 
 ```
 mashina-test/
-├── package.json                  ← npm workspaces
-├── backend/
-│   ├── src/
-│   │   ├── auth/                 ← register, login, refresh, JWT strategy, guards
-│   │   ├── categories/
-│   │   ├── questions/
-│   │   ├── videos/                ← R2 presigned upload, video CRUD
-│   │   ├── sessions/               ← test topshirish logikasi (asosiy modul)
-│   │   ├── admin/
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma
-│   │   │   └── migrations/
-│   │   └── main.ts
-│   └── test/
-├── web/                           ← Next.js
-│   ├── app/
-│   │   ├── (auth)/login, register
-│   │   ├── categories/
-│   │   ├── test/[sessionId]/
-│   │   └── result/[sessionId]/
-│   ├── components/
-│   │   ├── ResultVideo.tsx        ← ⭐ asosiy komponent
-│   │   ├── AnswerButton.tsx
-│   │   └── ProgressBar.tsx
-│   └── lib/api.ts
-├── mobile/                        ← Expo
-│   ├── app/                       ← Expo Router, xuddi web bilan bir xil oqim
-│   ├── components/
-│   │   └── ResultVideo.tsx        ← expo-video bilan
-│   └── lib/api.ts
-└── shared/
-    └── types/                     ← Prisma'dan generatsiya qilingan yoki qo'lda yozilgan
-                                       umumiy TS interfeyslar (ixtiyoriy, Phase 5+)
+├── package.json        (workspaces: backend, web, mobile, shared)
+├── turbo.json
+├── backend/              → 7-bo'lim
+├── web/                   → 8-bo'lim
+├── mobile/                → 9-bo'lim
+└── shared/                → Question/Answer/TestSession kabi umumiy TS tiplar
 ```
 
-> Diqqat — AVTO loyihasidan farqi: u yerda mobil video **WebView** ichida ishlagan (chunki Dart engine JS'ga port qilingan edi). Bu yerda bunga hojat yo'q: `expo-video` — to'g'ridan-to'g'ri native komponent. WebView qatlami yo'q → kamroq murakkablik, tezroq, barqarorroq.
+**shared/ nima uchun kerak:** "Savol qanday ko'rinishda bo'lishi kerak" degan tavsif BITTA joyda yoziladi (`shared/types.ts`), backend, web, mobil — uchalasi ham shundan import qiladi. Shu tufayli, masalan, backend `durationSec` qaytarsa-yu, frontend `duration` kutsa — kabi nomuvofiqlik kompilyatsiya bosqichidayoq aniqlanadi.
 
 ---
 
-## 4. Prisma schema (to'liq)
+<a id="4"></a>
+## 4. Ma'lumotlar bazasi
 
 ```prisma
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-enum VideoOutcome {
-  SUCCESS
-  VIOLATION
-}
-
-enum Role {
-  USER
-  ADMIN
-}
+enum Role { USER ADMIN }
+enum VideoType { CORRECT WRONG }
 
 model User {
   id            String         @id @default(uuid())
   name          String
-  email         String         @unique
-  passwordHash  String
+  email         String?        @unique
+  phone         String?        @unique
+  password      String
   role          Role           @default(USER)
   createdAt     DateTime       @default(now())
-  sessions      TestSession[]
+  updatedAt     DateTime       @updatedAt
+  testSessions  TestSession[]
   refreshTokens RefreshToken[]
 }
-
 model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
-  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 }
-
 model Category {
-  id        String     @id @default(uuid())
-  name      String
-  slug      String     @unique
-  order     Int        @default(0)
-  questions Question[]
+  id           String        @id @default(uuid())
+  name         String
+  slug         String        @unique
+  order        Int           @default(0)
+  questions    Question[]
+  testSessions TestSession[]
 }
-
-model Video {
-  id          String         @id @default(uuid())
-  outcome     VideoOutcome
-  label       String         // masalan: "chorrahada to'qnashuv"
-  url         String
-  durationSec Int
-  answers     AnswerOption[]
-  createdAt   DateTime       @default(now())
-}
-
 model Question {
-  id         String          @id @default(uuid())
-  categoryId String
-  category   Category        @relation(fields: [categoryId], references: [id])
-  text       String
-  imageUrl   String?
-  order      Int             @default(0)
-  answers    AnswerOption[]
-  attempts   AttemptAnswer[]
+  id             String               @id @default(uuid())
+  categoryId     String
+  category       Category             @relation(fields: [categoryId], references: [id])
+  text           String
+  imageUrl       String?
+  order          Int                  @default(0)
+  answers        Answer[]
+  sessionAnswers TestSessionAnswer[]
+  createdAt      DateTime             @default(now())
+  @@index([categoryId])
 }
-
-model AnswerOption {
-  id         String          @id @default(uuid())
-  questionId String
-  question   Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  text       String
-  isCorrect  Boolean         @default(false)
-  videoId    String?
-  video      Video?          @relation(fields: [videoId], references: [id])
-  attempts   AttemptAnswer[]
-}
-
-model TestSession {
-  id           String          @id @default(uuid())
-  userId       String
-  user         User            @relation(fields: [userId], references: [id])
-  categoryId   String?
-  startedAt    DateTime        @default(now())
-  finishedAt   DateTime?
-  totalCount   Int             @default(0)
-  correctCount Int             @default(0)
-  answers      AttemptAnswer[]
-}
-
-model AttemptAnswer {
-  id             String       @id @default(uuid())
-  sessionId      String
-  session        TestSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+model Answer {
+  id             String              @id @default(uuid())
   questionId     String
-  question       Question     @relation(fields: [questionId], references: [id])
-  answerOptionId String
-  answerOption   AnswerOption @relation(fields: [answerOptionId], references: [id])
-  isCorrect      Boolean
-  answeredAt     DateTime     @default(now())
+  question       Question            @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text           String
+  isCorrect      Boolean             @default(false)
+  videoId        String?
+  video          Video?              @relation(fields: [videoId], references: [id])
+  sessionAnswers TestSessionAnswer[]
+  @@index([questionId])
+}
+model Video {
+  id           String    @id @default(uuid())
+  type         VideoType
+  title        String?
+  streamUid    String    @unique
+  playbackUrl  String
+  thumbnailUrl String?
+  durationSec  Int
+  status       String    @default("processing")
+  createdAt    DateTime  @default(now())
+  answers      Answer[]
+}
+model TestSession {
+  id         String               @id @default(uuid())
+  userId     String
+  user       User                 @relation(fields: [userId], references: [id])
+  categoryId String
+  category   Category             @relation(fields: [categoryId], references: [id])
+  startedAt  DateTime             @default(now())
+  finishedAt DateTime?
+  totalScore Int?
+  totalCount Int?
+  answers    TestSessionAnswer[]
+  @@index([userId])
+}
+model TestSessionAnswer {
+  id         String      @id @default(uuid())
+  sessionId  String
+  session    TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question    @relation(fields: [questionId], references: [id])
+  answerId   String
+  answer     Answer      @relation(fields: [answerId], references: [id])
+  isCorrect  Boolean
+  answeredAt DateTime    @default(now())
+  @@index([sessionId])
 }
 ```
 
-`AnswerOption.videoId` — shu bitta maydon 2-bo'limdagi butun optimallashtirishni ta'minlaydi: ko'plab javoblar bitta `Video` qatoriga ishora qiladi, hech qanday qo'shimcha logika kerak emas.
+**Konkret misol bilan:** Aziz ro'yxatdan o'tsa — `User`ga bitta qator qo'shiladi. "Yo'l belgilari" testini boshlasa — `TestSession`ga bitta qator. Har savolga javob bersa — `TestSessionAnswer`ga bittadan qator ("Aziz 3-savolga B variantini tanladi — to'g'ri edi"). Test tugagach `TestSession.totalScore` to'ldiriladi — shu orqali `/history` sahifasi ishlaydi.
 
 ---
 
-## 5. API endpointlar
+<a id="5"></a>
+## 5. API — to'liq va tuzatilgan ro'yxat
 
-```http
-POST   /api/auth/register        { name, email, password }
-POST   /api/auth/login           { email, password } → { accessToken, refreshToken, user }
-POST   /api/auth/refresh         { refreshToken } → { accessToken }
-POST   /api/auth/logout          (Bearer)
-GET    /api/auth/me              (Bearer)
+```
+# AUTH — public
+POST   /api/auth/register        {name, email|phone, password}
+POST   /api/auth/login           {email|phone, password} → {accessToken, refreshToken, user}
+POST   /api/auth/refresh         {refreshToken} → {accessToken, refreshToken}
+POST   /api/auth/logout    🔒
 
-GET    /api/categories
-GET    /api/categories/:slug/questions      # variant matni bor, video hali yo'q
+GET    /api/users/me       🔒
 
-POST   /api/sessions/start        (Bearer) { categoryId? } → { sessionId, firstQuestion }
-POST   /api/sessions/:id/answer   (Bearer) { questionId, answerOptionId }
-       → { isCorrect, video: { url, outcome, durationSec }, ruleNote? }
-POST   /api/sessions/:id/finish   (Bearer) → { total, correct, passed }
-GET    /api/sessions/history      (Bearer)
+# CATEGORIES
+GET    /api/categories                    — public
+POST/PATCH/DELETE /api/categories(/:id)   👑
 
-# Admin
-POST   /api/admin/videos/upload-url   → R2 uchun presigned URL (video to'g'ridan-to'g'ri
-                                          brauzerdan R2'ga yuklanadi, backend orqali oqmaydi)
-POST   /api/admin/videos              { outcome, label, url, durationSec }
-POST   /api/admin/categories
-POST   /api/admin/questions           { categoryId, text, answers: [{text, isCorrect, videoId}] }
+# QUESTIONS
+GET    /api/categories/:id/questions      — public (⚠️ isCorrect/video YO'Q — 6-bo'lim)
+GET    /api/admin/questions/:id           👑 — ⭐ TUZATISH: to'liq javob, isCorrect+video bilan
+                                              (admin tahrirlash sahifasi uchun zarur)
+POST/PATCH/DELETE /api/questions(/:id)    👑
+POST /api/questions/:id/answers, PATCH /api/answers/:id   👑
+
+# TESTS  🔒 (barchasi)
+POST   /api/tests/start              {categoryId} → {sessionId, question}
+POST   /api/tests/:sessionId/answer  {questionId, answerId}
+       → {isCorrect, video: {playbackUrl, durationSec, type}, nextQuestion?}
+POST   /api/tests/:sessionId/finish  → {score, total, percentage}
+GET    /api/tests/history, GET /api/tests/:sessionId
+
+# VIDEOS
+POST   /api/admin/videos/upload-url  👑 → {uploadUrl, videoId}
+POST   /api/videos/webhook              (Cloudflare imzosi bilan, JWT YO'Q)
+
+# ADMIN
+GET    /api/admin/stats              👑 → {totalUsers, totalQuestions, totalSessions, avgScore}
+```
+🔒 login kerak &nbsp;&nbsp; 👑 faqat ADMIN
+
+*Bu ro'yxat avvalgi fayllarga nisbatan bitta joyda tuzatilgan: `GET /api/admin/questions/:id` qo'shildi — sababi 7/8-bo'limda tushuntirilgan.*
+
+---
+
+<a id="6"></a>
+## 6. 5+1 qoida — buzilmasligi kerak
+
+1. **To'g'ri javobni oldindan yashirish** — public `/categories/:id/questions` javobida har bir variant faqat `{id, text}`. `isCorrect`/video FAQAT `POST /tests/:sessionId/answer`dan keyin, tanlangan bitta javob uchun qaytadi.
+2. **Video qayta ishlatiladi** — `videoId` `Answer`da, `Question`da emas.
+3. **Webhook imzo bilan** — `/videos/webhook` JWT emas, Cloudflare `Webhook-Signature` (HMAC) orqali tekshiriladi.
+4. **Parol/token xavfsizligi** — argon2id, refresh token bazada hash + har `refresh`da rotation.
+5. **Rate-limit** — login/register'ga `@nestjs/throttler`.
+6. **Bitta manba** — web/mobil hech qanday video/kontent faylini o'zida saqlamaydi, har doim API'dan so'raydi.
+
+---
+
+<a id="7"></a>
+## 7. Backend — modul-modul
+
+| Modul | Vazifasi |
+|---|---|
+| **Auth** | Ro'yxatdan o'tish, kirish, token yangilash/bekor qilish |
+| **Users** | `GET /users/me` — joriy foydalanuvchini aniqlash (frontend shu bilan admin/user farqlaydi) |
+| **Categories** | Bo'limlar CRUD |
+| **Questions** | Savol banki CRUD — ⚠️ public va admin javoblari FARQLI (5-bo'limga qarang) |
+| **Tests** ⭐ | Test boshlash → javob qabul qilish → yakunlash — loyihaning yuragi |
+| **Videos** | Cloudflare bilan bog'lanish: yuklash havolasi so'rash + tayyor bo'lgach webhook qabul qilish |
+| **Admin** | Umumiy statistikalar |
+
+---
+
+<a id="8"></a>
+## 8. Web — sahifa-sahifa (qisqacha; to'liq tafsilot alohida faylda)
+
+| Sahifa | Nima qiladi |
+|---|---|
+| `/login`, `/register` | Kirish/ro'yxatdan o'tish formalari |
+| `/categories` | Bo'lim tanlash → `POST /tests/start` |
+| `/test/[sessionId]` ⭐ | Savol → javob → video → keyingi savol/natija |
+| `/result/[sessionId]` | Yakuniy ball, breakdown |
+| `/history` | O'tgan urinishlar |
+| `/admin/*` | Kategoriya/savol/video CRUD, statistika (faqat ADMIN) |
+
+`/test/[sessionId]` oqimi: variant tanlanadi → tugmalar bloklanadi → API chaqiriladi → javob kelsa `VideoPlayer` ko'rsatiladi (to'g'ri: loop+✅; xato: bir marta, kamida 10s, `onEnded`'da keyingisiga o'tadi) → keyingi videoni fonda oldindan yuklab qo'yish (preload).
+
+---
+
+<a id="9"></a>
+## 9. Mobile — ekran-ekran (qisqacha)
+
+Login/register/categories/history/profile — **web bilan bir xil mantiq**, faqat: token `localStorage` o'rniga `expo-secure-store`da, video `expo-video`'da (**`expo-av` emas** — bu SDK 55'dan olib tashlangan). `test/[sessionId]` va `result/[sessionId]` — web bilan bir xil oqim.
+
+**Eslatma:** agar UI kodini ham web bilan ulashish istasangiz — `Expo Router + react-native-web` orqali BITTA `app/` papkadan ham web, ham mobil chiqarish mumkin (SEO ozroq yutqazadi, tezlik o'rnida vaqt yutiladi). Hozirgi reja — ikkalasini alohida yozish, chunki admin panel SEO/tezlik jihatidan sof Next.js'da yaxshiroq ishlaydi.
+
+---
+
+<a id="10"></a>
+## 10. Video qanday ishlaydi
+
+**Yuklash:** admin fayl tanlaydi → backend Cloudflare'dan bir martalik yuklash manzili so'raydi → fayl **to'g'ridan-to'g'ri** Cloudflare'ga yuklanadi (backend orqali EMAS) → Cloudflare avtomatik barcha formatga (HLS, turli sifat) o'giradi → tayyor bo'lgach backend'ga webhook keladi → baza yangilanadi.
+
+**Ko'rsatish:** foydalanuvchi javob beradi → backend bazadan videoning manzilini topadi → shu manzilni qaytaradi → ilova videoni **to'g'ridan-to'g'ri Cloudflare CDN'idan** ko'rsatadi. Backend bu jarayonda faylni hech qachon "qo'lidan o'tkazmaydi" — faqat manzil beradi. Shu tufayli minglab foydalanuvchi bir vaqtda video ko'rsa ham server bosim sezmaydi.
+
+---
+
+<a id="11"></a>
+## 11. 0 dan ishga tushirish
+
+```bash
+mkdir mashina-test && cd mashina-test && git init && npm init -y
+
+npx @nestjs/cli new backend --package-manager npm --strict --skip-git
+cd backend
+npm install @nestjs/jwt @nestjs/passport passport passport-jwt
+npm install @nestjs/config @nestjs/throttler argon2 class-validator class-transformer @prisma/client
+npm install -D prisma @types/passport-jwt
+npx prisma init --datasource-provider postgresql
+npx prisma migrate dev --name init
+npx prisma generate
+cd ..
+
+npx create-next-app@latest web --typescript --tailwind --app
+cd web && npm install && cd ..
+
+npx create-expo-app@latest mobile --template blank-typescript
+cd mobile && npx expo install expo-router expo-video expo-secure-store && cd ..
+
+mkdir shared && cd shared && npm init -y && cd ..
+
+# root package.json: "workspaces": ["backend","web","mobile","shared"]
+npm install -D turbo
+npx turbo dev
 ```
 
 ---
 
-## 6. Asosiy backend logika
+<a id="12"></a>
+## 12. Ishlab chiqish tartibi
 
-```typescript
-// sessions/sessions.service.ts
-async submitAnswer(sessionId: string, questionId: string, answerOptionId: string) {
-  const answer = await this.prisma.answerOption.findUniqueOrThrow({
-    where: { id: answerOptionId },
-    include: { video: true },
-  });
+| Hafta | Backend | Web | Mobile |
+|---|---|---|---|
+| 1 | Skelet, Prisma, Auth | — | — |
+| 2 | Categories/Questions | Login/register, categories | — |
+| 3 | Tests moduli | Test oqimi + VideoPlayer | Skelet, login/register |
+| 4 | Videos/Cloudflare | Admin panel | Test oqimi + VideoPlayer |
+| 5 | Stats, testlar, polish | Polish, deploy | Profil/tarix, polish, deploy |
 
-  await this.prisma.attemptAnswer.create({
-    data: { sessionId, questionId, answerOptionId, isCorrect: answer.isCorrect },
-  });
-
-  await this.prisma.testSession.update({
-    where: { id: sessionId },
-    data: {
-      totalCount: { increment: 1 },
-      correctCount: answer.isCorrect ? { increment: 1 } : undefined,
-    },
-  });
-
-  return {
-    isCorrect: answer.isCorrect,
-    video: answer.video && {
-      url: answer.video.url,
-      outcome: answer.video.outcome,
-      durationSec: answer.video.durationSec,
-    },
-  };
-}
-```
-
-Video tanlash uchun alohida "qaysi videoni ko'rsatish" logikasi yo'q — u `answer.video` FK orqali avtomatik keladi. Bu 2-bo'limdagi arxitekturaning to'g'ridan-to'g'ri natijasi.
+Backend har doim 1 hafta oldinda — frontendlar unga bog'liq.
 
 ---
 
-## 7. Web — `ResultVideo` komponenti
-
-```tsx
-function ResultVideo({ outcome, url, onDone }: {
-  outcome: 'SUCCESS' | 'VIOLATION'; url: string; onDone: () => void;
-}) {
-  const ref = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const v = ref.current;
-    if (!v) return;
-    v.addEventListener('ended', onDone);
-    return () => v.removeEventListener('ended', onDone);
-  }, [onDone]);
-
-  return (
-    <div className="relative rounded-xl overflow-hidden">
-      <video ref={ref} src={url} autoPlay playsInline className="w-full" />
-      <span className="absolute top-3 right-3 text-3xl">
-        {outcome === 'SUCCESS' ? '✅' : '❌'}
-      </span>
-    </div>
-  );
-}
-```
-
-Savol ekraniga kirilganda, joriy savolning barcha `videoUrl`'lari uchun fonda `fetch(url, {cache: 'force-cache'})` chaqirib qo'yiladi — shu preload.
-
----
-
-## 8. Mobil — `expo-video` bilan
-
-```tsx
-import { useVideoPlayer, VideoView } from 'expo-video';
-
-function ResultVideo({ url, outcome, onDone }: Props) {
-  const player = useVideoPlayer(url, p => { p.play(); });
-
-  useEffect(() => {
-    const sub = player.addListener('playToEnd', onDone);
-    return () => sub.remove();
-  }, [player, onDone]);
-
-  return (
-    <View>
-      <VideoView player={player} style={{ width: '100%', aspectRatio: 16/9 }} />
-      <Text style={styles.badge}>{outcome === 'SUCCESS' ? '✅' : '❌'}</Text>
-    </View>
-  );
-}
-```
-
-Savol ro'yxati yuklanganda `player.preload` yoki alohida `useVideoPlayer` instance orqali keyingi ehtimoliy videolarni oldindan bufferlash mumkin — kutubxona buni built-in qo'llab-quvvatlaydi.
-
----
-
-## 9. Auth oqimi
-
-1. `POST /register` → parol `argon2`/`bcrypt` bilan hash qilinadi
-2. `POST /login` → access token (15 daq) + refresh token (30 kun, DB'da saqlanadi)
-3. Har himoyalangan so'rov → `AuthGuard` access token'ni tekshiradi
-4. Access token muddati tugasa → `POST /refresh` → yangi access token
-5. `POST /logout` → refresh token DB'dan o'chiriladi
-
----
-
-## 10. Bosqichlar
-
-| Faza | Ish | DoD |
-|---|---|---|
-| **0 — Skeleton** | Monorepo, Prisma schema+migration, NestJS + auth (register/login/refresh), kategoriya seed | `npm run dev` ishlaydi, curl orqali register→login→/me o'tadi |
-| **1 — Kontent** | R2 presigned upload, video/kategoriya/savol/javob admin endpointlari | 1 kategoriya, 5 savol, video bilan bog'langan javoblar DB'da bor |
-| **2 — Test oqimi** | `/sessions/start`, `/answer`, `/finish` | curl orqali to'liq bitta test sessiyasini o'tkazish mumkin |
-| **3 — Web** | Next.js sahifalar, `ResultVideo`, preload | Brauzerda: ro'yxatdan o'tish → test → video natija → yakun |
-| **4 — Mobil** | Expo, `expo-video`, xuddi shu oqim | Qurilma/emulyatorda to'liq oqim ishlaydi |
-| **5 — Admin UI + statistika** | Kontent qo'shish uchun oddiy panel, tarix sahifasi | Dasturchi bo'lmagan odam UI orqali savol+video qo'sha oladi |
-| **6 — Polish** | Video yuklanmasa fallback, offline holat, production deploy | — |
-
----
-
-## 11. Guardrails
-
-- ❌ Har bir savol uchun noyob video yaratishdan oldin — mavjud "outcome" videolardan foydalanish mumkinmi, tekshiring
-- ❌ Video fayllarni Node serveriga proxy qilib yuklash — R2'ga presigned URL orqali to'g'ridan-to'g'ri
-- ❌ "10 soniya" talabini playback kodida sun'iy sekinlashtirish orqali bajarish
-- ❌ Video URL'larni frontend kodida hardcode qilish
-- ❌ Parolni hash'siz saqlash
-- ❌ MVP bosqichida Redis/BullMQ/Turborepo qo'shish — hozircha kerak emas
-
----
-
-## 12. To'liq AI-agent prompt
+<a id="13"></a>
+## 13. YAGONA to'liq AI-prompt
 
 ```
-LOYIHA: Mashina Test — video-asosidagi haydovchilik testi (O'zbekiston)
+LOYIHA: "Haydovchilik test simulyatori" — to'liq full-stack (Backend+Web+Mobile)
 
-STACK: NestJS (Node.js+TS) + Prisma + PostgreSQL, Next.js+Tailwind (web),
-Expo + expo-video (mobil), Cloudflare R2 (video), npm workspaces monorepo.
+Quyidagi ilovani noldan, monorepo sifatida qur: backend API, web ilova, mobil
+ilova. Tartib: avval BACKEND, keyin WEB, keyin MOBILE.
 
-ASOSIY ARXITEKTURA QOIDASI: video savolga emas, NATIJA TURIGA (Video jadvali)
-bog'lanadi; AnswerOption.videoId shu Video'ga ishora qiladi. Bir xil natija
-turidagi ko'plab javoblar bitta videoni qayta ishlatadi (~20 ta video,
-50-100 ta savol uchun kifoya).
+KONTEKST: Foydalanuvchi ro'yxatdan o'tadi, kategoriya tanlaydi, savollarga
+javob beradi. Har bir JAVOBGA video bog'langan: to'g'ri → "haydash" videosi
+(loop, ✅); xato → kamida 10s "avariya" videosi (bir marta, ❌). Video
+Cloudflare Stream'da; backend faqat metadata bilan ishlaydi.
 
-BOSHLANG'ICH VAZIFA (Phase 0):
-1. npm workspaces monorepo yarating: backend/, web/, mobile/
-2. backend/ ichida NestJS loyihasi, quyidagi Prisma schema bilan:
-   [yuqoridagi to'liq schema shu yerga qo'yiladi]
-3. auth modulini yozing: register, login (JWT access+refresh), refresh,
-   logout, /me — barchasi test bilan
-4. Kategoriya seed skripti: 5-6 ta boshlang'ich kategoriya
+STACK: NestJS 11 + Prisma 7 + PostgreSQL (backend) | Next.js 16 + Tailwind
+(web) | Expo + expo-video (mobil, expo-av EMAS) | JWT+argon2id | Turborepo.
 
-CHEKLOVLAR:
-- Video URL'lar hech qachon frontend kodida hardcode qilinmasin
-- "Kamida 10 sekund" — content talabi, playback kodida sun'iy bajarilmasin
-- Redis/BullMQ/Turborepo — hozircha qo'shilmasin
+MODELLAR: 4-bo'limdagi to'liq Prisma schema.
+API: 5-bo'limdagi to'liq ro'yxat (admin/questions/:id ham kiradi).
+QOIDALAR: 6-bo'limdagi 6 ta qoidaga qat'iy rioya qilinsin.
 
-Iltimos, Phase 0'ni to'liq kod bilan yarating: package.json (workspaces),
-backend/prisma/schema.prisma, backend/src/auth/ (to'liq moduli), va
-kategoriya seed skripti.
+QISM 1 — BACKEND: 7-bo'limdagi modullarni, xavfsizlik qoidalariga rioya
+qilib, to'liq TypeScript kod bilan yarating (auth, users, categories,
+questions, tests, videos, admin — har biri controller+service+DTO bilan).
+
+QISM 2 — WEB: 8-bo'limdagi sahifalarni to'liq yarating — ayniqsa
+/test/[sessionId] (VideoPlayer: loop/once mantiq, preload, onEnded) va
+/admin/* (CRUD + video yuklash).
+
+QISM 3 — MOBILE: 9-bo'limdagi ekranlarni yarating — web bilan bir xil
+mantiq, expo-video va expo-secure-store bilan.
+
+Placeholder yoki "// TODO" qoldirmasdan, har bir faylni to'liq va ishga
+tayyor holda yozing.
 ```
+
+---
+
+<a id="14"></a>
+## 14. Ochiq savollar
+
+1. Auth — email+parolmi, yoki telefon+SMS OTP ham kerakmi?
+2. 50-100 videoni kim/qanday tayyorlaydi? (loyihaning eng ko'p vaqt oladigan qismi)
+3. Til — hozircha faqat o'zbekchami, yoki boshidanoq ru/en ham kerakmi?
+4. Admin sonmi — bitta yoki bir nechta?
+5. Web va mobil UI kodini alohida yozamizmi, yoki Expo Router universal yondashuvini sinaymizmi (9-bo'lim)?
