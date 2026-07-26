@@ -16,6 +16,7 @@ exports.QuestionsController = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 const client_1 = require("@prisma/client");
 let QuestionsController = class QuestionsController {
     prisma;
@@ -86,6 +87,7 @@ let QuestionsController = class QuestionsController {
 };
 exports.QuestionsController = QuestionsController;
 __decorate([
+    (0, public_decorator_1.Public)(),
     (0, common_1.Get)('categories/:categoryId/questions'),
     __param(0, (0, common_1.Param)('categoryId')),
     __metadata("design:type", Function),

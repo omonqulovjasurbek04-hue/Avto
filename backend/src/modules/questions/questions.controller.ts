@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { Role } from '@prisma/client';
 
 @Controller()
 export class QuestionsController {
   constructor(private prisma: PrismaService) {}
 
+  @Public()
   @Get('categories/:categoryId/questions')
   async findByCategory(@Param('categoryId') categoryId: string) {
     const questions = await this.prisma.question.findMany({

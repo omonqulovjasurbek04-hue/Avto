@@ -16,12 +16,12 @@ export declare class CategoriesController {
             questions: number;
         };
     } & {
-        name: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        name: string;
         slug: string;
         order: number;
+        createdAt: Date;
+        updatedAt: Date;
     }) | {
         error: string;
     }>;
@@ -30,24 +30,24 @@ export declare class CategoriesController {
         slug: string;
         order?: number;
     }): Promise<{
-        name: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        name: string;
         slug: string;
         order: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, body: Partial<{
         name: string;
         slug: string;
         order: number;
     }>): Promise<{
-        name: string;
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
+        name: string;
         slug: string;
         order: number;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         ok: boolean;

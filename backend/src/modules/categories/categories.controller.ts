@@ -1,12 +1,14 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import { Role } from '@prisma/client';
 
 @Controller('categories')
 export class CategoriesController {
   constructor(private prisma: PrismaService) {}
 
+  @Public()
   @Get()
   async findAll() {
     const categories = await this.prisma.category.findMany({
@@ -22,6 +24,7 @@ export class CategoriesController {
     }));
   }
 
+  @Public()
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const cat = await this.prisma.category.findUnique({

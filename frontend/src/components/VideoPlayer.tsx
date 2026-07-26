@@ -1,166 +1,138 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, ShieldCheck, ShieldAlert, Zap, Volume2, VolumeX, Maximize } from 'lucide-react';
-import { VideoType } from '../types';
+import React, { useRef, useEffect, useState } from 'react';
+import { CheckCircle2, AlertTriangle, Play, Pause } from 'lucide-react';
 
 interface VideoPlayerProps {
-  playbackUrl?: string;
-  videoType?: VideoType;
+  playbackUrl?: string | null;
+  type?: 'CORRECT' | 'WRONG' | null;
+  videoType?: string | null;
   durationSec?: number;
+  onEnded?: () => void;
   autoPlay?: boolean;
   title?: string;
-  onEnded?: () => void;
   className?: string;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   playbackUrl,
+  type,
   videoType = 'CORRECT',
-  durationSec = 12,
-  autoPlay = true,
-  title = "Cloudflare Stream Video",
+  durationSec = 10,
   onEnded,
-  className = "h-[320px] md:h-[380px]",
+  autoPlay = true,
+  title,
+  className,
 }) => {
-  const [isPlaying, setIsPlaying] = useState<boolean>(autoPlay);
-  const [isMuted, setIsMuted] = useState<boolean>(true);
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(autoPlay);
+  const [elapsed, setElapsed] = useState(0);
 
-  // Default fallback videos if direct Cloudflare MP4/HLS isn't provided
-  const defaultDriveVideo = "https://assets.mixkit.co/videos/preview/mixkit-car-driving-on-a-highway-at-dusk-41558-large.mp4";
-  const defaultCrashVideo = "https://assets.mixkit.co/videos/preview/mixkit-[#1283]-car-driving-through-a-dark-tunnel-41557-large.mp4";
-
-  const videoSource = playbackUrl || (videoType === 'CORRECT' ? defaultDriveVideo : defaultCrashVideo);
-  const isCorrect = videoType === 'CORRECT';
+  const effectiveType = type || videoType;
+  const isCorrect = effectiveType === 'CORRECT';
+  const minDuration = Math.max(10, durationSec);
 
   useEffect(() => {
-    setIsPlaying(autoPlay);
-    setCurrentTime(0);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      if (autoPlay) {
-        videoRef.current.play().catch(() => {});
-      }
-    }
-  }, [playbackUrl, videoType]);
+    const video = videoRef.current;
+    if (!video) return;
 
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
+    if (autoPlay) {
+      video.play().catch((err) => console.log('Autoplay error:', err));
     }
-  };
 
-  const handleVideoEnded = () => {
-    if (isCorrect) {
-      // Loop rejimida to'g'ri javob davom etadi
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(() => {});
+    const handleTimeUpdate = () => {
+      setElapsed(video.currentTime);
+      if (!isCorrect && video.currentTime >= minDuration) {
+        if (onEnded) {
+          onEnded();
+        }
       }
-    } else {
-      // Xato javob bir marta kamida 10s ijro etilib, to'xtaydi va onEnded chaqiriladi
-      setIsPlaying(false);
-      if (onEnded) onEnded();
-    }
-  };
+    };
+
+    const handleEnded = () => {
+      if (!isCorrect) {
+        if (onEnded) {
+          onEnded();
+        }
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('ended', handleEnded);
+
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('ended', handleEnded);
+    };
+  }, [playbackUrl, isCorrect, minDuration, onEnded, autoPlay]);
 
   const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play().catch(() => {});
-      }
-      setIsPlaying(!isPlaying);
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
   return (
-    <div className={`relative w-full ${className} rounded-2xl overflow-hidden glass-panel border ${
-      isCorrect ? 'border-emerald-500/50 shadow-[0_0_25px_rgba(16,185,129,0.3)]' : 'border-red-500/50 shadow-[0_0_25px_rgba(239,68,68,0.3)]'
-    } hud-corner flex flex-col justify-between group bg-slate-950`}>
-      {/* HTML5 Video Element with Stream Support */}
-      <video
-        ref={videoRef}
-        src={videoSource}
-        autoPlay={autoPlay}
-        loop={isCorrect}
-        muted={isMuted}
-        playsInline
-        onTimeUpdate={handleTimeUpdate}
-        onEnded={handleVideoEnded}
-        className="absolute inset-0 w-full h-full object-cover transition-all duration-300"
-      />
-
-      {/* Futuristic Scanline Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#4cd7f6]/5 to-transparent h-16 w-full animate-scan pointer-events-none" />
-
-      {/* TOP STREAM HUD STATUS BADGE */}
-      <div className="relative z-10 flex items-center justify-between p-3 md:p-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent backdrop-blur-xs">
-        <div className="flex items-center gap-2">
-          <div className={`px-3 py-1 rounded-lg border flex items-center gap-2 backdrop-blur-md ${
-            isCorrect ? 'bg-emerald-950/80 border-emerald-500 text-emerald-300' : 'bg-red-950/80 border-red-500 text-red-300'
+    <div className="relative w-full h-full min-h-[250px] bg-slate-950 rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center group">
+      {playbackUrl ? (
+        <video
+          ref={videoRef}
+          src={playbackUrl}
+          loop={isCorrect}
+          playsInline
+          muted
+          preload="auto"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center border ${
+            isCorrect ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-red-500/20 border-red-500/50 text-red-400'
           }`}>
-            <span className={`w-2 h-2 rounded-full animate-ping ${isCorrect ? 'bg-emerald-400' : 'bg-red-500'}`} />
-            {isCorrect ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
-            <span className="font-mono text-xs font-bold uppercase tracking-wider">
-              {isCorrect ? "TO'G'RI JAVOB (LOOP)" : "XATO JAVOB (AVARIYA - 10S)"}
-            </span>
+            {isCorrect ? <CheckCircle2 className="w-8 h-8" /> : <AlertTriangle className="w-8 h-8" />}
           </div>
-
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-xs font-mono text-slate-300">
-            <Zap className="w-3.5 h-3.5 text-[#4cd7f6]" />
-            <span>CLOUDFLARE STREAM</span>
-          </div>
-        </div>
-
-        {/* Mute & Fullscreen toggles */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-1.5 rounded-lg bg-black/60 hover:bg-black/80 border border-white/10 text-slate-200 hover:text-[#4cd7f6] transition-all"
-            title={isMuted ? "Ovozni yoqish" : "Ovozni o'chirish"}
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* CENTER PLAY BUTTON OVERLAY */}
-      <div className="relative z-10 flex items-center justify-center my-auto">
-        <button
-          onClick={togglePlay}
-          className={`w-16 h-16 rounded-full border-2 flex items-center justify-center text-white backdrop-blur-md transition-all duration-300 ${
-            isPlaying ? 'opacity-0 group-hover:opacity-100 scale-95' : 'opacity-100 scale-100'
-          } ${
-            isCorrect ? 'bg-emerald-500/30 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]' : 'bg-red-500/30 border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.5)]'
-          }`}
-        >
-          {isPlaying ? <Pause className="w-8 h-8 fill-white" /> : <Play className="w-8 h-8 fill-white translate-x-0.5" />}
-        </button>
-      </div>
-
-      {/* BOTTOM CONTROL BAR */}
-      <div className="relative z-10 flex flex-col justify-end p-3 md:p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent space-y-2">
-        {/* Progress Timeline */}
-        <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden cursor-pointer">
-          <div
-            className={`h-full transition-all duration-150 ${isCorrect ? 'bg-emerald-400' : 'bg-red-500'}`}
-            style={{
-              width: videoRef.current && videoRef.current.duration
-                ? `${(currentTime / videoRef.current.duration) * 100}%`
-                : '0%'
-            }}
-          />
-        </div>
-
-        <div className="flex justify-between items-center text-xs font-mono text-slate-300">
-          <span>{title}</span>
-          <span>
-            {Math.floor(currentTime)}s / {Math.floor(videoRef.current?.duration || durationSec)}s
+          <p className="text-sm font-semibold text-slate-200">
+            {isCorrect ? "To'g'ri harakatlanish videosi" : "Avariya simulyatsiyasi (Kamida 10s)"}
+          </p>
+          <span className="text-xs text-slate-500 font-mono">
+            {playbackUrl ? playbackUrl : 'Cloudflare Stream Demo Simulation'}
           </span>
         </div>
+      )}
+
+      {/* Overlay status badge */}
+      <div className="absolute top-4 left-4 z-10">
+        <span className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono font-bold border shadow-lg backdrop-blur-md ${
+          isCorrect 
+            ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300' 
+            : 'bg-red-950/80 border-red-500/50 text-red-300'
+        }`}>
+          {isCorrect ? (
+            <>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>TO'G'RI (LOOP ✅)</span>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-3.5 h-3.5 text-red-400 animate-pulse" />
+              <span>XATO (AVARIYA ❌ — {Math.ceil(elapsed)}s / {minDuration}s)</span>
+            </>
+          )}
+        </span>
       </div>
+
+      {/* Play/Pause overlay button */}
+      {playbackUrl && (
+        <button
+          onClick={togglePlay}
+          className="absolute bottom-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-900/80 border border-white/20 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+        </button>
+      )}
     </div>
   );
 };

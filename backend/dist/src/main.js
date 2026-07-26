@@ -5,7 +5,7 @@ const common_1 = require("@nestjs/common");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, { rawBody: true });
     app.setGlobalPrefix('api');
     app.enableCors({
         origin: process.env.CORS_ORIGINS?.split(',') || '*',
