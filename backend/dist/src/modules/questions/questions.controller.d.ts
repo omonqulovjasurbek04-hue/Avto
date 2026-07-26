@@ -4,9 +4,9 @@ export declare class QuestionsController {
     constructor(prisma: PrismaService);
     findByCategory(categoryId: string): Promise<{
         id: string;
+        order: number;
         text: string;
         imageUrl: string | null;
-        order: number;
         answers: {
             id: string;
             text: string;
@@ -34,12 +34,12 @@ export declare class QuestionsController {
         })[];
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        order: number;
         categoryId: string;
         text: string;
         imageUrl: string | null;
-        order: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     create(body: {
         categoryId: string;
@@ -48,12 +48,12 @@ export declare class QuestionsController {
         order?: number;
     }): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        order: number;
         categoryId: string;
         text: string;
         imageUrl: string | null;
-        order: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     update(id: string, body: Partial<{
         text: string;
@@ -61,12 +61,12 @@ export declare class QuestionsController {
         order: number;
     }>): Promise<{
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        order: number;
         categoryId: string;
         text: string;
         imageUrl: string | null;
-        order: number;
-        createdAt: Date;
-        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         ok: boolean;
