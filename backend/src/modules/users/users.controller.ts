@@ -10,7 +10,7 @@ export class UsersController {
   async me(@CurrentUser('id') userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: { id: true, name: true, email: true, phone: true, role: true, createdAt: true },
     });
     return { user };
   }

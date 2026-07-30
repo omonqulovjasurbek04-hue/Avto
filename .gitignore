@@ -37,3 +37,6 @@ jwt_secret.txt
 
 # Kimi project memory
 .kimi-memory/
+
+# Graphify generated knowledge graph (regenerate with: graphify update .)
+graphify-out/

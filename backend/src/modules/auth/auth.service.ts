@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
@@ -17,13 +17,23 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException('Bu email bilan ro\'yxatdan o\'tilgan');
+    if (!dto.email && !dto.phone) {
+      throw new BadRequestException("Email yoki telefon raqami kiritilishi shart");
+    }
+
+    if (dto.email) {
+      const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (existing) throw new ConflictException('Bu email bilan ro\'yxatdan o\'tilgan');
+    }
+    if (dto.phone) {
+      const existing = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+      if (existing) throw new ConflictException('Bu telefon raqami bilan ro\'yxatdan o\'tilgan');
+    }
 
     const password = await argon2.hash(dto.password);
     const user = await this.prisma.user.create({
-      data: { name: dto.name, email: dto.email, password },
-      select: { id: true, name: true, email: true, role: true },
+      data: { name: dto.name, email: dto.email, phone: dto.phone, password },
+      select: { id: true, name: true, email: true, phone: true, role: true },
     });
 
     const tokens = await this.generateTokens(user.id);
@@ -31,20 +41,22 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (!user) throw new UnauthorizedException('Email yoki parol noto\'g\'ri');
+    const user = await this.prisma.user.findFirst({
+      where: { OR: [{ email: dto.identifier }, { phone: dto.identifier }] },
+    });
+    if (!user) throw new UnauthorizedException('Email/telefon yoki parol noto\'g\'ri');
 
     const valid = await argon2.verify(user.password, dto.password);
-    if (!valid) throw new UnauthorizedException('Email yoki parol noto\'g\'ri');
+    if (!valid) throw new UnauthorizedException('Email/telefon yoki parol noto\'g\'ri');
 
     const tokens = await this.generateTokens(user.id);
     return {
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role },
       ...tokens,
     };
   }
 
-  async refresh(oldRefreshToken: string, userId: string, tokenId: string) {
+  async refresh(oldRefreshToken: string, userId: string) {
     const tokenHash = this.hashToken(oldRefreshToken);
     const stored = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
@@ -68,9 +80,12 @@ export class AuthService {
     return tokens;
   }
 
-  async logout(userId: string, tokenId: string) {
+  async logout(userId: string, refreshToken?: string) {
+    if (!refreshToken) {
+      return this.logoutAll(userId);
+    }
     await this.prisma.refreshToken.updateMany({
-      where: { id: tokenId, userId, revokedAt: null },
+      where: { tokenHash: this.hashToken(refreshToken), userId, revokedAt: null },
       data: { revokedAt: new Date() },
     });
   }
@@ -85,7 +100,7 @@ export class AuthService {
   async getProfile(userId: string) {
     return this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: { id: true, name: true, email: true, phone: true, role: true, createdAt: true },
     });
   }
 
@@ -99,7 +114,10 @@ export class AuthService {
     );
     const refreshTokenValue = this.jwtService.sign(
       { sub: userId, type: 'refresh', tokenId },
-      { expiresIn: refreshExpires } as any,
+      {
+        expiresIn: refreshExpires,
+        secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
+      } as any,
     );
 
     const expiresAt = new Date();

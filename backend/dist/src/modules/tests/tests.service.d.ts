@@ -31,25 +31,25 @@ export declare class TestsService {
     }>;
     getHistory(userId: string): Promise<({
         category: {
-            id: string;
             name: string;
+            id: string;
         };
         _count: {
             answers: number;
         };
     } & {
         id: string;
+        userId: string;
+        categoryId: string;
         startedAt: Date;
         finishedAt: Date | null;
         totalScore: number | null;
         totalCount: number | null;
-        userId: string;
-        categoryId: string;
     })[]>;
     getSessionDetail(userId: string, sessionId: string): Promise<{
         category: {
-            id: string;
             name: string;
+            id: string;
         };
         answers: ({
             question: {
@@ -71,11 +71,11 @@ export declare class TestsService {
         })[];
     } & {
         id: string;
+        userId: string;
+        categoryId: string;
         startedAt: Date;
         finishedAt: Date | null;
         totalScore: number | null;
         totalCount: number | null;
-        userId: string;
-        categoryId: string;
     }>;
 }

@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { Request } from 'express';
 export declare class AuthController {
     private authService;
@@ -11,6 +12,7 @@ export declare class AuthController {
         user: {
             name: string;
             email: string | null;
+            phone: string | null;
             id: string;
             role: import(".prisma/client").$Enums.Role;
         };
@@ -22,6 +24,7 @@ export declare class AuthController {
             id: string;
             name: string;
             email: string | null;
+            phone: string | null;
             role: import(".prisma/client").$Enums.Role;
         };
     }>;
@@ -29,13 +32,14 @@ export declare class AuthController {
         accessToken: string;
         refreshToken: string;
     }>;
-    logout(userId: string, tokenId?: string): Promise<{
+    logout(userId: string, dto: LogoutDto): Promise<{
         ok: boolean;
     }>;
     me(userId: string): Promise<{
         user: {
             name: string;
             email: string | null;
+            phone: string | null;
             id: string;
             role: import(".prisma/client").$Enums.Role;
             createdAt: Date;

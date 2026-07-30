@@ -14,7 +14,7 @@ interface AuthModalProps {
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onLogout }) => {
   const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,15 +26,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onL
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!identifier || !password) return;
 
     setError(null);
     setIsSubmitting(true);
     try {
       if (isRegister) {
-        await register(name, email, password);
+        await register(name, identifier, password);
       } else {
-        await login(email, password);
+        await login(identifier, password);
       }
       setNotification(isRegister ? "Muvaffaqiyatli ro'yxatdan o'tdingiz!" : "Tizimga muvaffaqiyatli kirdingiz!");
       setTimeout(() => {
@@ -138,34 +138,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onL
 
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-300">
-                  Elektron pochta
+                  Email yoki telefon raqami
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="user@example.com"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    placeholder="user@example.com yoki +998901234567"
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white text-slate-900 font-medium placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#4cd7f6]"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <div className="flex justify-between items-center text-xs">
-                  <label className="font-semibold text-slate-300">Parol</label>
-                  {!isRegister && (
-                    <button
-                      type="button"
-                      onClick={() => alert("Parolni tiklash havolasi pochtangizga yuborildi.")}
-                      className="text-[#4cd7f6] hover:underline font-bold"
-                    >
-                      Parolni unutdingizmi?
-                    </button>
-                  )}
-                </div>
+                <label className="font-semibold text-slate-300 text-xs">Parol</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
                   <input

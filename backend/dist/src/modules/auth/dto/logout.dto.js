@@ -9,36 +9,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RegisterDto = void 0;
+exports.LogoutDto = void 0;
 const class_validator_1 = require("class-validator");
-class RegisterDto {
-    name;
-    email;
-    phone;
-    password;
+class LogoutDto {
+    refreshToken;
 }
-exports.RegisterDto = RegisterDto;
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(1),
-    (0, class_validator_1.MaxLength)(100),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "name", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEmail)(),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "email", void 0);
+exports.LogoutDto = LogoutDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.Matches)(/^\+?[0-9]{7,15}$/, { message: "Telefon raqami noto'g'ri formatda" }),
     __metadata("design:type", String)
-], RegisterDto.prototype, "phone", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.MinLength)(8),
-    (0, class_validator_1.MaxLength)(128),
-    __metadata("design:type", String)
-], RegisterDto.prototype, "password", void 0);
-//# sourceMappingURL=register.dto.js.map
+], LogoutDto.prototype, "refreshToken", void 0);
+//# sourceMappingURL=logout.dto.js.map

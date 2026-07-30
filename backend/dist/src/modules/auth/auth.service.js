@@ -59,31 +59,43 @@ let AuthService = AuthService_1 = class AuthService {
         this.jwtService = jwtService;
     }
     async register(dto) {
-        const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-        if (existing)
-            throw new common_1.ConflictException('Bu email bilan ro\'yxatdan o\'tilgan');
+        if (!dto.email && !dto.phone) {
+            throw new common_1.BadRequestException("Email yoki telefon raqami kiritilishi shart");
+        }
+        if (dto.email) {
+            const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+            if (existing)
+                throw new common_1.ConflictException('Bu email bilan ro\'yxatdan o\'tilgan');
+        }
+        if (dto.phone) {
+            const existing = await this.prisma.user.findUnique({ where: { phone: dto.phone } });
+            if (existing)
+                throw new common_1.ConflictException('Bu telefon raqami bilan ro\'yxatdan o\'tilgan');
+        }
         const password = await argon2.hash(dto.password);
         const user = await this.prisma.user.create({
-            data: { name: dto.name, email: dto.email, password },
-            select: { id: true, name: true, email: true, role: true },
+            data: { name: dto.name, email: dto.email, phone: dto.phone, password },
+            select: { id: true, name: true, email: true, phone: true, role: true },
         });
         const tokens = await this.generateTokens(user.id);
         return { user, ...tokens };
     }
     async login(dto) {
-        const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        const user = await this.prisma.user.findFirst({
+            where: { OR: [{ email: dto.identifier }, { phone: dto.identifier }] },
+        });
         if (!user)
-            throw new common_1.UnauthorizedException('Email yoki parol noto\'g\'ri');
+            throw new common_1.UnauthorizedException('Email/telefon yoki parol noto\'g\'ri');
         const valid = await argon2.verify(user.password, dto.password);
         if (!valid)
-            throw new common_1.UnauthorizedException('Email yoki parol noto\'g\'ri');
+            throw new common_1.UnauthorizedException('Email/telefon yoki parol noto\'g\'ri');
         const tokens = await this.generateTokens(user.id);
         return {
-            user: { id: user.id, name: user.name, email: user.email, role: user.role },
+            user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role },
             ...tokens,
         };
     }
-    async refresh(oldRefreshToken, userId, tokenId) {
+    async refresh(oldRefreshToken, userId) {
         const tokenHash = this.hashToken(oldRefreshToken);
         const stored = await this.prisma.refreshToken.findUnique({
             where: { tokenHash },
@@ -102,9 +114,12 @@ let AuthService = AuthService_1 = class AuthService {
         const tokens = await this.generateTokens(userId);
         return tokens;
     }
-    async logout(userId, tokenId) {
+    async logout(userId, refreshToken) {
+        if (!refreshToken) {
+            return this.logoutAll(userId);
+        }
         await this.prisma.refreshToken.updateMany({
-            where: { id: tokenId, userId, revokedAt: null },
+            where: { tokenHash: this.hashToken(refreshToken), userId, revokedAt: null },
             data: { revokedAt: new Date() },
         });
     }
@@ -117,7 +132,7 @@ let AuthService = AuthService_1 = class AuthService {
     async getProfile(userId) {
         return this.prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, name: true, email: true, role: true, createdAt: true },
+            select: { id: true, name: true, email: true, phone: true, role: true, createdAt: true },
         });
     }
     async generateTokens(userId) {
@@ -125,7 +140,10 @@ let AuthService = AuthService_1 = class AuthService {
         const accessExpires = (process.env.JWT_ACCESS_EXPIRES_IN || '15m');
         const refreshExpires = (process.env.JWT_REFRESH_EXPIRES_IN || '30d');
         const accessToken = this.jwtService.sign({ sub: userId, type: 'access' }, { expiresIn: accessExpires });
-        const refreshTokenValue = this.jwtService.sign({ sub: userId, type: 'refresh', tokenId }, { expiresIn: refreshExpires });
+        const refreshTokenValue = this.jwtService.sign({ sub: userId, type: 'refresh', tokenId }, {
+            expiresIn: refreshExpires,
+            secret: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret',
+        });
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 30);
         await this.prisma.refreshToken.create({

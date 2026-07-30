@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { Request } from 'express';
@@ -34,17 +35,13 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() req: Request) {
     const user = req.user as any;
-    return this.authService.refresh(user.refreshToken, user.userId, user.tokenId);
+    return this.authService.refresh(user.refreshToken, user.userId);
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@CurrentUser('id') userId: string, @CurrentUser('tokenId') tokenId?: string) {
-    if (tokenId) {
-      await this.authService.logout(userId, tokenId);
-    } else {
-      await this.authService.logoutAll(userId);
-    }
+  async logout(@CurrentUser('id') userId: string, @Body() dto: LogoutDto) {
+    await this.authService.logout(userId, dto.refreshToken);
     return { ok: true };
   }
 

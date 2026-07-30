@@ -4,8 +4,8 @@ import { authApi, ApiUser, ApiError, getAccessToken, setTokens } from '../api/cl
 interface AuthContextValue {
   user: ApiUser | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  register: (name: string, identifier: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,24 +27,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .finally(() => setIsLoading(false));
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login(email, password);
+  const login = useCallback(async (identifier: string, password: string) => {
+    const res = await authApi.login(identifier, password);
     setTokens({ accessToken: res.accessToken, refreshToken: res.refreshToken });
     setUser(res.user);
   }, []);
 
-  const register = useCallback(async (name: string, email: string, password: string) => {
-    const res = await authApi.register(name, email, password);
+  const register = useCallback(async (name: string, identifier: string, password: string) => {
+    const res = await authApi.register(name, identifier, password);
     setTokens({ accessToken: res.accessToken, refreshToken: res.refreshToken });
     setUser(res.user);
   }, []);
 
   const logout = useCallback(() => {
+    authApi.logout().catch(() => {
+      // best-effort server-side revocation; client-side logout must proceed regardless
+    });
     setTokens(null);
     setUser(null);
-    authApi.logout().catch(() => {
-      // token already cleared client-side; server revocation failure is non-fatal
-    });
   }, []);
 
   return (

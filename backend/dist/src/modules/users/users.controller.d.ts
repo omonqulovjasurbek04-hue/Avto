@@ -6,6 +6,7 @@ export declare class UsersController {
         user: {
             name: string;
             email: string | null;
+            phone: string | null;
             id: string;
             role: import(".prisma/client").$Enums.Role;
             createdAt: Date;

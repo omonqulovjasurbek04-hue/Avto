@@ -36,25 +36,25 @@ export declare class TestsController {
     }>;
     history(userId: string): Promise<({
         category: {
-            id: string;
             name: string;
+            id: string;
         };
         _count: {
             answers: number;
         };
     } & {
         id: string;
+        userId: string;
+        categoryId: string;
         startedAt: Date;
         finishedAt: Date | null;
         totalScore: number | null;
         totalCount: number | null;
-        userId: string;
-        categoryId: string;
     })[]>;
     getSession(userId: string, sessionId: string): Promise<{
         category: {
-            id: string;
             name: string;
+            id: string;
         };
         answers: ({
             question: {
@@ -76,11 +76,11 @@ export declare class TestsController {
         })[];
     } & {
         id: string;
+        userId: string;
+        categoryId: string;
         startedAt: Date;
         finishedAt: Date | null;
         totalScore: number | null;
         totalCount: number | null;
-        userId: string;
-        categoryId: string;
     }>;
 }

@@ -1,120 +1,165 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import api from '../../services/api';
+import { SceneView, SceneData, SceneActor, SceneOutcome } from '../../components/SceneView';
+
+interface Answer {
+  id: string;
+  text: string;
+}
+
+interface QuestionData {
+  id: string;
+  text: string;
+  answers: Answer[];
+  scene: SceneData | null;
+  actors: SceneActor[] | null;
+}
+
+interface AnswerResponse {
+  isCorrect: boolean;
+  scene: SceneOutcome | null;
+  nextQuestion: QuestionData | null;
+}
 
 export default function TestSessionScreen() {
-  const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
+  const { sessionId, question, total } = useLocalSearchParams<{ sessionId: string; question: string; total: string }>();
   const router = useRouter();
 
-  const [currentQuestion, setCurrentQuestion] = useState<any>({
-    id: 'q-1',
-    text: "Svetoforning qizil chirog'ida harakatlanish taqiqlanadimi?",
-    answers: [
-      { id: 'a-1', text: "Ha, qat'iyan taqiqlanadi" },
-      { id: 'a-2', text: 'Yo\'q, ruxsat beriladi' },
-      { id: 'a-3', text: 'Faqat o\'ngga burilishda ruxsat beriladi' },
-    ],
-  });
-
+  const [currentQuestion, setCurrentQuestion] = useState<QuestionData>(() => JSON.parse(question));
+  const [answeredCount, setAnsweredCount] = useState(0);
   const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
-  const [videoResult, setVideoResult] = useState<{
-    playbackUrl: string;
-    type: 'CORRECT' | 'WRONG';
-    durationSec: number;
-    isCorrect: boolean;
-  } | null>(null);
+  const [answerResult, setAnswerResult] = useState<AnswerResponse | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [loadingAnswer, setLoadingAnswer] = useState(false);
+  const [phase, setPhase] = useState<'running' | 'result'>('running');
+  const [finishResult, setFinishResult] = useState<{ score: number; total: number; percentage: number } | null>(null);
+  const [finishing, setFinishing] = useState(false);
 
-  // Initialize expo-video player
-  const player = useVideoPlayer(videoResult?.playbackUrl || '', (p) => {
-    p.loop = videoResult?.type === 'CORRECT';
-    p.play();
-  });
+  const totalCount = Number(total) || 0;
 
   const handleSelectAnswer = async (answerId: string) => {
-    if (selectedAnswerId || loadingAnswer) return;
+    if (selectedAnswerId || submitting) return;
     setSelectedAnswerId(answerId);
-    setLoadingAnswer(true);
-
+    setSubmitting(true);
+    setError(null);
     try {
       const res = await api.post(`/tests/${sessionId}/answer`, {
         questionId: currentQuestion.id,
         answerId,
       });
-
-      const { isCorrect, video, nextQuestion } = res.data;
-      if (video) {
-        setVideoResult({
-          playbackUrl: video.playbackUrl,
-          type: video.type,
-          durationSec: video.durationSec || 10,
-          isCorrect,
-        });
-      } else {
-        // Fallback video result demo
-        setVideoResult({
-          playbackUrl: '',
-          type: answerId === 'a-1' ? 'CORRECT' : 'WRONG',
-          durationSec: 10,
-          isCorrect: answerId === 'a-1',
-        });
-      }
+      setAnswerResult(res.data);
+      setAnsweredCount((c) => c + 1);
     } catch (err) {
-      console.log('Error submitting answer:', err);
-      setVideoResult({
-        playbackUrl: '',
-        type: answerId === 'a-1' ? 'CORRECT' : 'WRONG',
-        durationSec: 10,
-        isCorrect: answerId === 'a-1',
-      });
+      setError("Javobni yuborib bo'lmadi.");
+      setSelectedAnswerId(null);
     } finally {
-      setLoadingAnswer(false);
+      setSubmitting(false);
     }
   };
 
+  const handleFinish = async () => {
+    setFinishing(true);
+    setError(null);
+    try {
+      const res = await api.post(`/tests/${sessionId}/finish`);
+      setFinishResult(res.data);
+    } catch (err) {
+      setError("Testni yakunlab bo'lmadi.");
+    } finally {
+      setFinishing(false);
+      setPhase('result');
+    }
+  };
+
+  const handleContinue = () => {
+    if (answerResult?.nextQuestion) {
+      setCurrentQuestion(answerResult.nextQuestion);
+      setAnswerResult(null);
+      setSelectedAnswerId(null);
+    } else {
+      handleFinish();
+    }
+  };
+
+  if (phase === 'result') {
+    const passed = (finishResult?.percentage ?? 0) >= 80;
+    return (
+      <View style={styles.resultContainer}>
+        <Text style={styles.resultEmoji}>{passed ? '🏆' : '⚠️'}</Text>
+        <Text style={styles.resultTitle}>{passed ? "Muvaffaqiyatli!" : "Qoniqarsiz natija"}</Text>
+        <Text style={styles.resultScore}>{finishResult?.percentage ?? 0}%</Text>
+        <Text style={styles.resultDetail}>
+          {finishResult?.score ?? 0} / {finishResult?.total ?? 0} to'g'ri javob
+        </Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={() => router.replace('/')}>
+          <Text style={styles.primaryButtonText}>Bosh sahifaga qaytish</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const isAnswered = !!answerResult;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* VIDEO CONTAINER */}
-      <View style={styles.videoContainer}>
-        {videoResult?.playbackUrl ? (
-          <VideoView player={player} style={styles.video} nativeControls={false} />
-        ) : (
-          <View style={[styles.placeholderVideo, videoResult && (videoResult.isCorrect ? styles.bgCorrect : styles.bgWrong)]}>
-            <Text style={styles.videoBadge}>
-              {videoResult ? (videoResult.isCorrect ? "✅ TO'G'RI (LOOP)" : "❌ XATO (AVARIYA MIN 10S)") : "🎬 VIDEO SIMULATSIYA"}
-            </Text>
-            <Text style={styles.videoSubtext}>
-              {videoResult ? (videoResult.isCorrect ? "Mashina xavfsiz harakatlanmoqda" : "Kamida 10s avariya ko'rsatiladi") : "Javob tanlangach Cloudflare Stream videosi pleyerda ijro etiladi"}
-            </Text>
-          </View>
-        )}
-      </View>
+      <Text style={styles.progress}>
+        Savol {answeredCount + 1} / {totalCount}
+      </Text>
 
-      {/* QUESTION CARD */}
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      <SceneView scene={currentQuestion.scene} actors={currentQuestion.actors} outcome={answerResult?.scene ?? null} />
+
       <View style={styles.card}>
         <Text style={styles.qText}>{currentQuestion.text}</Text>
 
         <View style={styles.answersList}>
-          {currentQuestion.answers.map((ans: any) => {
-            const isSelected = selectedAnswerId === ans.id;
+          {currentQuestion.answers.map((ans) => {
+            const selected = selectedAnswerId === ans.id;
+            const extraStyle = isAnswered && selected
+              ? (answerResult!.isCorrect ? styles.ansCorrect : styles.ansWrong)
+              : isAnswered
+                ? styles.ansDisabled
+                : null;
             return (
               <TouchableOpacity
                 key={ans.id}
-                style={[
-                  styles.ansButton,
-                  isSelected && (videoResult?.isCorrect ? styles.ansCorrect : styles.ansWrong),
-                ]}
+                style={[styles.ansButton, extraStyle]}
                 onPress={() => handleSelectAnswer(ans.id)}
-                disabled={!!selectedAnswerId}
+                disabled={isAnswered || submitting}
               >
                 <Text style={styles.ansText}>{ans.text}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
+
+        {isAnswered && (
+          <View style={[styles.resultBanner, answerResult!.isCorrect ? styles.resultBannerSafe : styles.resultBannerFail]}>
+            <Text style={styles.resultBannerTitle}>{answerResult!.isCorrect ? "To'g'ri javob!" : 'Xato javob!'}</Text>
+            {answerResult!.scene?.ruleText && (
+              <Text style={styles.resultBannerText}>
+                {answerResult!.scene.ruleCode ? `YHQ ${answerResult!.scene.ruleCode}: ` : ''}
+                {answerResult!.scene.ruleText}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {isAnswered && (
+          <TouchableOpacity style={styles.primaryButton} onPress={handleContinue} disabled={finishing}>
+            {finishing ? (
+              <ActivityIndicator color="#002e6a" />
+            ) : (
+              <Text style={styles.primaryButtonText}>
+                {answerResult?.nextQuestion ? 'Keyingi savol' : 'Testni yakunlash'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
     </ScrollView>
   );
@@ -129,40 +174,14 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
   },
-  videoContainer: {
-    height: 220,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: '#030712',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  video: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholderVideo: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  bgCorrect: {
-    backgroundColor: 'rgba(16,185,129,0.15)',
-  },
-  bgWrong: {
-    backgroundColor: 'rgba(239,68,68,0.15)',
-  },
-  videoBadge: {
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 6,
-  },
-  videoSubtext: {
-    color: '#94a3b8',
+  progress: {
+    color: '#4cd7f6',
     fontSize: 12,
-    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#fca5a5',
+    fontSize: 12,
   },
   card: {
     backgroundColor: '#111c2d',
@@ -170,12 +189,12 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
+    gap: 14,
   },
   qText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#ffffff',
-    marginBottom: 16,
     lineHeight: 22,
   },
   answersList: {
@@ -196,8 +215,72 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.2)',
     borderColor: '#ef4444',
   },
+  ansDisabled: {
+    opacity: 0.5,
+  },
   ansText: {
     color: '#e2e8f0',
     fontSize: 14,
+  },
+  resultBanner: {
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    gap: 4,
+  },
+  resultBannerSafe: {
+    backgroundColor: 'rgba(6,78,59,0.4)',
+    borderColor: 'rgba(16,185,129,0.4)',
+  },
+  resultBannerFail: {
+    backgroundColor: 'rgba(69,10,10,0.4)',
+    borderColor: 'rgba(239,68,68,0.4)',
+  },
+  resultBannerTitle: {
+    color: '#e2e8f0',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+  resultBannerText: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    lineHeight: 17,
+  },
+  primaryButton: {
+    backgroundColor: '#4cd7f6',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  primaryButtonText: {
+    color: '#002e6a',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  resultContainer: {
+    flex: 1,
+    backgroundColor: '#081425',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+    gap: 10,
+  },
+  resultEmoji: {
+    fontSize: 56,
+  },
+  resultTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  resultScore: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#4cd7f6',
+  },
+  resultDetail: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginBottom: 20,
   },
 });

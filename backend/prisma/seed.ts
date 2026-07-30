@@ -48,14 +48,22 @@ async function seedSceneQuestions() {
     },
   });
 
-  // Re-seed fresh each run so this stays idempotent across dev resets.
-  await prisma.question.deleteMany({ where: { categoryId: category.id } });
-
+  // Upsert by the file's stable id (sc-0001, ...) so re-running this never
+  // deletes rows that real TestSessionAnswer history may already reference.
   for (const [idx, file] of files.entries()) {
     const raw: SceneFile = JSON.parse(fs.readFileSync(path.join(contentDir, file), 'utf-8'));
 
-    const question = await prisma.question.create({
-      data: {
+    const question = await prisma.question.upsert({
+      where: { externalId: raw.id },
+      update: {
+        categoryId: category.id,
+        text: raw.question.text.uz,
+        order: idx + 1,
+        sceneJson: JSON.stringify({ scene: raw.scene, actors: raw.actors }),
+        resolutionJson: JSON.stringify(raw.resolution),
+      },
+      create: {
+        externalId: raw.id,
         categoryId: category.id,
         text: raw.question.text.uz,
         order: idx + 1,
@@ -65,12 +73,14 @@ async function seedSceneQuestions() {
     });
 
     for (const option of raw.question.options) {
-      await prisma.answer.create({
-        data: {
+      await prisma.answer.upsert({
+        where: { questionId_optionKey: { questionId: question.id, optionKey: option.id } },
+        update: { text: option.label.uz, isCorrect: option.id === raw.question.correct },
+        create: {
           questionId: question.id,
+          optionKey: option.id,
           text: option.label.uz,
           isCorrect: option.id === raw.question.correct,
-          optionKey: option.id,
         },
       });
     }
@@ -179,24 +189,20 @@ async function main() {
       create: { name: cat.name, slug: cat.slug, order: cat.order },
     });
 
-    await prisma.question.deleteMany({ where: { categoryId: created.id } });
-
     for (const [qi, q] of cat.questions.entries()) {
-      const question = await prisma.question.create({
-        data: {
-          categoryId: created.id,
-          text: q.text,
-          order: qi + 1,
-        },
+      const externalId = `${cat.slug}-q${qi + 1}`;
+      const question = await prisma.question.upsert({
+        where: { externalId },
+        update: { categoryId: created.id, text: q.text, order: qi + 1 },
+        create: { externalId, categoryId: created.id, text: q.text, order: qi + 1 },
       });
 
-      for (const a of q.answers) {
-        await prisma.answer.create({
-          data: {
-            questionId: question.id,
-            text: a.text,
-            isCorrect: a.isCorrect,
-          },
+      for (const [ai, a] of q.answers.entries()) {
+        const optionKey = String.fromCharCode(65 + ai); // A, B, C, D...
+        await prisma.answer.upsert({
+          where: { questionId_optionKey: { questionId: question.id, optionKey } },
+          update: { text: a.text, isCorrect: a.isCorrect },
+          create: { questionId: question.id, optionKey, text: a.text, isCorrect: a.isCorrect },
         });
       }
     }

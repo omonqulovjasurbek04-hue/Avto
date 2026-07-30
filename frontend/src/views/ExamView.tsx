@@ -20,6 +20,38 @@ interface ExamViewProps {
 
 const EXAM_DURATION_SEC = 20 * 60;
 const PASS_THRESHOLD = 80;
+const STORAGE_KEY = 'avto.examSession.v1';
+
+interface PersistedExamState {
+  sessionId: string;
+  total: number;
+  currentQuestion: ApiQuestion;
+  history: { questionId: string; isCorrect: boolean }[];
+  examEndAt: number;
+}
+
+function saveExamState(state: PersistedExamState) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadExamState(): PersistedExamState | null {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed: PersistedExamState = JSON.parse(raw);
+    if (parsed.examEndAt <= Date.now()) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function clearExamState() {
+  localStorage.removeItem(STORAGE_KEY);
+}
 
 export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) => {
   const { user } = useAuth();
@@ -40,7 +72,24 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
   const [submitting, setSubmitting] = useState(false);
 
   const [finishResult, setFinishResult] = useState<TestFinishResponse | null>(null);
+  const [examEndAt, setExamEndAt] = useState<number>(0);
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(EXAM_DURATION_SEC);
+
+  // Resume an in-progress exam after a page reload, if one hasn't expired yet.
+  useEffect(() => {
+    if (!user) return;
+    const saved = loadExamState();
+    if (saved) {
+      setSessionId(saved.sessionId);
+      setTotal(saved.total);
+      setCurrentQuestion(saved.currentQuestion);
+      setHistory(saved.history);
+      setExamEndAt(saved.examEndAt);
+      setTimeLeftSeconds(Math.max(0, Math.round((saved.examEndAt - Date.now()) / 1000)));
+      setPhase('running');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -56,14 +105,15 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
 
   useEffect(() => {
     if (phase !== 'running') return;
-    if (timeLeftSeconds <= 0) {
+    const tick = () => setTimeLeftSeconds(Math.max(0, Math.round((examEndAt - Date.now()) / 1000)));
+    if (Date.now() >= examEndAt) {
       handleFinish();
       return;
     }
-    const interval = setInterval(() => setTimeLeftSeconds((p) => p - 1), 1000);
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, timeLeftSeconds]);
+  }, [phase, examEndAt, timeLeftSeconds]);
 
   const formatTimer = (totalSecs: number) => {
     const mins = Math.floor(Math.max(0, totalSecs) / 60);
@@ -77,6 +127,7 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
     setError(null);
     try {
       const res = await testsApi.start(selectedCategoryId);
+      const endAt = Date.now() + EXAM_DURATION_SEC * 1000;
       setSessionId(res.sessionId);
       setTotal(res.total);
       setCurrentQuestion(res.question);
@@ -84,8 +135,12 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
       setAnswerResult(null);
       setSelectedAnswerId(null);
       setFinishResult(null);
+      setExamEndAt(endAt);
       setTimeLeftSeconds(EXAM_DURATION_SEC);
       setPhase('running');
+      if (res.question) {
+        saveExamState({ sessionId: res.sessionId, total: res.total, currentQuestion: res.question, history: [], examEndAt: endAt });
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Imtihonni boshlab bo'lmadi");
     } finally {
@@ -101,7 +156,9 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
     try {
       const res = await testsApi.answer(sessionId, currentQuestion.id, answerId);
       setAnswerResult(res);
-      setHistory((prev) => [...prev, { questionId: currentQuestion.id, isCorrect: res.isCorrect }]);
+      const nextHistory = [...history, { questionId: currentQuestion.id, isCorrect: res.isCorrect }];
+      setHistory(nextHistory);
+      saveExamState({ sessionId, total, currentQuestion, history: nextHistory, examEndAt });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Javobni yuborib bo'lmadi");
       setSelectedAnswerId(null);
@@ -112,9 +169,11 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
 
   const handleContinue = () => {
     if (answerResult?.nextQuestion) {
-      setCurrentQuestion(answerResult.nextQuestion);
+      const next = answerResult.nextQuestion;
+      setCurrentQuestion(next);
       setAnswerResult(null);
       setSelectedAnswerId(null);
+      if (sessionId) saveExamState({ sessionId, total, currentQuestion: next, history, examEndAt });
     } else {
       handleFinish();
     }
@@ -128,6 +187,7 @@ export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) =>
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Imtihonni yakunlab bo'lmadi");
     } finally {
+      clearExamState();
       setPhase('result');
     }
   };

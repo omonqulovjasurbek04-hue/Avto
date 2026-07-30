@@ -13,6 +13,7 @@ export declare class AuthService {
         user: {
             name: string;
             email: string | null;
+            phone: string | null;
             id: string;
             role: import(".prisma/client").$Enums.Role;
         };
@@ -24,18 +25,20 @@ export declare class AuthService {
             id: string;
             name: string;
             email: string | null;
+            phone: string | null;
             role: import(".prisma/client").$Enums.Role;
         };
     }>;
-    refresh(oldRefreshToken: string, userId: string, tokenId: string): Promise<{
+    refresh(oldRefreshToken: string, userId: string): Promise<{
         accessToken: string;
         refreshToken: string;
     }>;
-    logout(userId: string, tokenId: string): Promise<void>;
+    logout(userId: string, refreshToken?: string): Promise<void>;
     logoutAll(userId: string): Promise<void>;
     getProfile(userId: string): Promise<{
         name: string;
         email: string | null;
+        phone: string | null;
         id: string;
         role: import(".prisma/client").$Enums.Role;
         createdAt: Date;

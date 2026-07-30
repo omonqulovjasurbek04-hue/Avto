@@ -104,6 +104,7 @@ export interface ApiUser {
   id: string;
   name: string;
   email: string | null;
+  phone: string | null;
   role: 'USER' | 'ADMIN';
   createdAt?: string;
 }
@@ -263,17 +264,22 @@ export interface AdminVideo {
 // ── API surface ────────────────────────────────────────────────────
 
 export const authApi = {
-  register: (name: string, email: string, password: string) =>
-    request<{ user: ApiUser; accessToken: string; refreshToken: string }>('/auth/register', {
+  /** identifier can be an email address or a phone number */
+  register: (name: string, identifier: string, password: string) => {
+    const isEmail = identifier.includes('@');
+    return request<{ user: ApiUser; accessToken: string; refreshToken: string }>('/auth/register', {
       method: 'POST',
-      body: { name, email, password },
-    }),
-  login: (email: string, password: string) =>
+      body: { name, password, email: isEmail ? identifier : undefined, phone: isEmail ? undefined : identifier },
+    });
+  },
+  /** identifier can be an email address or a phone number */
+  login: (identifier: string, password: string) =>
     request<{ user: ApiUser; accessToken: string; refreshToken: string }>('/auth/login', {
       method: 'POST',
-      body: { email, password },
+      body: { identifier, password },
     }),
-  logout: () => request<{ ok: boolean }>('/auth/logout', { method: 'POST' }),
+  logout: () =>
+    request<{ ok: boolean }>('/auth/logout', { method: 'POST', body: { refreshToken: getRefreshToken() } }),
   me: () => request<{ user: ApiUser }>('/users/me'),
 };
 

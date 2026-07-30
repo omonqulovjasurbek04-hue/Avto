@@ -6,9 +6,9 @@ export declare class QuestionsController {
         scene: unknown;
         actors: unknown;
         id: string;
+        order: number;
         text: string;
         imageUrl: string | null;
-        order: number;
         answers: {
             id: string;
             text: string;
@@ -16,9 +16,9 @@ export declare class QuestionsController {
     }[]>;
     findByCategoryAdmin(categoryId: string): Promise<{
         id: string;
+        order: number;
         text: string;
         imageUrl: string | null;
-        order: number;
         answers: {
             id: string;
             text: string;
@@ -34,12 +34,12 @@ export declare class QuestionsController {
                 id: string;
                 createdAt: Date;
                 type: import(".prisma/client").$Enums.VideoType;
+                status: string;
                 title: string | null;
                 streamUid: string;
                 playbackUrl: string;
                 thumbnailUrl: string | null;
                 durationSec: number;
-                status: string;
             } | null;
         } & {
             id: string;
@@ -50,14 +50,15 @@ export declare class QuestionsController {
             videoId: string | null;
         })[];
         id: string;
-        categoryId: string;
-        text: string;
-        imageUrl: string | null;
-        order: number;
-        sceneJson: string | null;
-        resolutionJson: string | null;
         createdAt: Date;
         updatedAt: Date;
+        order: number;
+        categoryId: string;
+        externalId: string | null;
+        text: string;
+        imageUrl: string | null;
+        sceneJson: string | null;
+        resolutionJson: string | null;
     }>;
     create(body: {
         categoryId: string;
@@ -66,14 +67,15 @@ export declare class QuestionsController {
         order?: number;
     }): Promise<{
         id: string;
-        categoryId: string;
-        text: string;
-        imageUrl: string | null;
-        order: number;
-        sceneJson: string | null;
-        resolutionJson: string | null;
         createdAt: Date;
         updatedAt: Date;
+        order: number;
+        categoryId: string;
+        externalId: string | null;
+        text: string;
+        imageUrl: string | null;
+        sceneJson: string | null;
+        resolutionJson: string | null;
     }>;
     update(id: string, body: Partial<{
         text: string;
@@ -81,14 +83,15 @@ export declare class QuestionsController {
         order: number;
     }>): Promise<{
         id: string;
-        categoryId: string;
-        text: string;
-        imageUrl: string | null;
-        order: number;
-        sceneJson: string | null;
-        resolutionJson: string | null;
         createdAt: Date;
         updatedAt: Date;
+        order: number;
+        categoryId: string;
+        externalId: string | null;
+        text: string;
+        imageUrl: string | null;
+        sceneJson: string | null;
+        resolutionJson: string | null;
     }>;
     remove(id: string): Promise<{
         ok: boolean;
