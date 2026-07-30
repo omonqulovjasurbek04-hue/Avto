@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PracticeService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
+const scene_util_1 = require("../../common/utils/scene.util");
 let PracticeService = class PracticeService {
     prisma;
     constructor(prisma) {
@@ -42,6 +43,7 @@ let PracticeService = class PracticeService {
                     type: selectedAnswer.video.type,
                 }
                 : null,
+            scene: (0, scene_util_1.resolveSceneOutcome)(question.resolutionJson, selectedAnswer.optionKey, selectedAnswer.isCorrect),
         };
     }
 };

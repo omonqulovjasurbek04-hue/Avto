@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ViewType, UserProfile } from './types';
+import { useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { AuthModal } from './components/AuthModal';
@@ -14,29 +15,22 @@ import { MobileView } from './views/MobileView';
 export function App() {
   const [activeView, setActiveView] = useState<ViewType>('home');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [user, setUser] = useState<UserProfile>({
-    name: 'Jasurbek',
-    email: 'user@example.com',
-    role: 'ADMIN',
-    isLoggedIn: false,
-    isPremium: true,
-  });
+  const { user: authUser, logout } = useAuth();
 
-  const handleLoginSuccess = (name: string, email: string) => {
-    setUser({
-      ...user,
-      name,
-      email,
-      isLoggedIn: true,
-    });
-  };
-
-  const handleLogout = () => {
-    setUser({
-      ...user,
-      isLoggedIn: false,
-    });
-  };
+  const user: UserProfile = authUser
+    ? {
+        name: authUser.name,
+        email: authUser.email || '',
+        role: authUser.role,
+        isLoggedIn: true,
+        isPremium: false,
+      }
+    : {
+        name: '',
+        email: '',
+        isLoggedIn: false,
+        isPremium: false,
+      };
 
   const renderView = () => {
     switch (activeView) {
@@ -71,13 +65,7 @@ export function App() {
         {renderView()}
       </main>
       <Footer />
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => setIsAuthOpen(false)}
-        user={user}
-        onLoginSuccess={handleLoginSuccess}
-        onLogout={handleLogout}
-      />
+      <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} user={user} onLogout={logout} />
     </div>
   );
 }

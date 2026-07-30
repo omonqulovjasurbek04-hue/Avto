@@ -8,14 +8,9 @@ export declare class TestsController {
         sessionId: string;
         categoryId: string;
         question: {
-            id: string;
-            text: string;
-            imageUrl: string | null;
-            answers: {
-                id: string;
-                text: string;
-            }[];
-        };
+            scene: unknown;
+            actors: unknown;
+        } | null;
         total: number;
     }>;
     answer(userId: string, sessionId: string, body: {
@@ -28,14 +23,10 @@ export declare class TestsController {
             durationSec: number;
             type: import(".prisma/client").$Enums.VideoType;
         } | null;
+        scene: import("../../common/utils/scene.util").SceneOutcome | null;
         nextQuestion: {
-            id: string;
-            text: string;
-            imageUrl: string | null;
-            answers: {
-                id: string;
-                text: string;
-            }[];
+            scene: unknown;
+            actors: unknown;
         } | null;
     }>;
     finish(userId: string, sessionId: string): Promise<{
@@ -45,25 +36,25 @@ export declare class TestsController {
     }>;
     history(userId: string): Promise<({
         category: {
-            name: string;
             id: string;
+            name: string;
         };
         _count: {
             answers: number;
         };
     } & {
         id: string;
-        userId: string;
-        categoryId: string;
         startedAt: Date;
         finishedAt: Date | null;
         totalScore: number | null;
         totalCount: number | null;
+        userId: string;
+        categoryId: string;
     })[]>;
     getSession(userId: string, sessionId: string): Promise<{
         category: {
-            name: string;
             id: string;
+            name: string;
         };
         answers: ({
             question: {
@@ -85,11 +76,11 @@ export declare class TestsController {
         })[];
     } & {
         id: string;
-        userId: string;
-        categoryId: string;
         startedAt: Date;
         finishedAt: Date | null;
         totalScore: number | null;
         totalCount: number | null;
+        userId: string;
+        categoryId: string;
     }>;
 }

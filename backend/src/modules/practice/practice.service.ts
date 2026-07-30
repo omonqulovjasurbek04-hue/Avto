@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { resolveSceneOutcome } from '../../common/utils/scene.util';
 
 @Injectable()
 export class PracticeService {
@@ -32,6 +33,7 @@ export class PracticeService {
             type: selectedAnswer.video.type,
           }
         : null,
+      scene: resolveSceneOutcome(question.resolutionJson, selectedAnswer.optionKey, selectedAnswer.isCorrect),
     };
   }
 }

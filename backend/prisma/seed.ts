@@ -1,11 +1,83 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import * as argon2 from 'argon2';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || 'file:./prisma/dev.db',
 });
 const prisma = new PrismaClient({ adapter });
+
+interface SceneOption {
+  id: string;
+  refers_to?: string;
+  label: Record<string, string>;
+}
+
+interface SceneFile {
+  id: string;
+  topic: string;
+  scene: Record<string, unknown>;
+  actors: Record<string, unknown>[];
+  question: {
+    text: Record<string, string>;
+    options: SceneOption[];
+    correct: string;
+  };
+  resolution: Record<string, unknown>;
+}
+
+async function seedSceneQuestions() {
+  const contentDir = path.join(__dirname, '../content');
+  if (!fs.existsSync(contentDir)) return;
+
+  const files = fs
+    .readdirSync(contentDir)
+    .filter((f) => f.startsWith('sc-') && f.endsWith('.json'))
+    .sort();
+  if (files.length === 0) return;
+
+  const category = await prisma.category.upsert({
+    where: { slug: 'priority-practice' },
+    update: { name: 'Ustunlik va chorrahalar (Amaliy simulyatsiya)' },
+    create: {
+      name: 'Ustunlik va chorrahalar (Amaliy simulyatsiya)',
+      slug: 'priority-practice',
+      order: 10,
+    },
+  });
+
+  // Re-seed fresh each run so this stays idempotent across dev resets.
+  await prisma.question.deleteMany({ where: { categoryId: category.id } });
+
+  for (const [idx, file] of files.entries()) {
+    const raw: SceneFile = JSON.parse(fs.readFileSync(path.join(contentDir, file), 'utf-8'));
+
+    const question = await prisma.question.create({
+      data: {
+        categoryId: category.id,
+        text: raw.question.text.uz,
+        order: idx + 1,
+        sceneJson: JSON.stringify({ scene: raw.scene, actors: raw.actors }),
+        resolutionJson: JSON.stringify(raw.resolution),
+      },
+    });
+
+    for (const option of raw.question.options) {
+      await prisma.answer.create({
+        data: {
+          questionId: question.id,
+          text: option.label.uz,
+          isCorrect: option.id === raw.question.correct,
+          optionKey: option.id,
+        },
+      });
+    }
+  }
+
+  console.log(`${category.name}: ${category.slug} — ${files.length} ta amaliy savol (sahna asosida)`);
+}
 
 async function main() {
   const adminPassword = await argon2.hash('admin123');
@@ -107,6 +179,8 @@ async function main() {
       create: { name: cat.name, slug: cat.slug, order: cat.order },
     });
 
+    await prisma.question.deleteMany({ where: { categoryId: created.id } });
+
     for (const [qi, q] of cat.questions.entries()) {
       const question = await prisma.question.create({
         data: {
@@ -131,9 +205,12 @@ async function main() {
     console.log(`${cat.name}: ${created.slug} — ${qCount} ta savol`);
   }
 
+  await seedSceneQuestions();
+
   const totalQ = await prisma.question.count();
   const totalA = await prisma.answer.count();
-  console.log(`\nJami: ${categories.length} kategoriya, ${totalQ} savol, ${totalA} javob`);
+  const totalCat = await prisma.category.count();
+  console.log(`\nJami: ${totalCat} kategoriya, ${totalQ} savol, ${totalA} javob`);
 }
 
 main()

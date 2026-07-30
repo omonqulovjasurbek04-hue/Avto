@@ -3,16 +3,32 @@ export declare class QuestionsController {
     private prisma;
     constructor(prisma: PrismaService);
     findByCategory(categoryId: string): Promise<{
+        scene: unknown;
+        actors: unknown;
         id: string;
-        order: number;
         text: string;
         imageUrl: string | null;
+        order: number;
         answers: {
             id: string;
             text: string;
         }[];
     }[]>;
+    findByCategoryAdmin(categoryId: string): Promise<{
+        id: string;
+        text: string;
+        imageUrl: string | null;
+        order: number;
+        answers: {
+            id: string;
+            text: string;
+            isCorrect: boolean;
+        }[];
+    }[]>;
     findOneAdmin(id: string): Promise<{
+        resolution: any;
+        scene: unknown;
+        actors: unknown;
         answers: ({
             video: {
                 id: string;
@@ -30,16 +46,18 @@ export declare class QuestionsController {
             text: string;
             questionId: string;
             isCorrect: boolean;
+            optionKey: string | null;
             videoId: string | null;
         })[];
-    } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        order: number;
         categoryId: string;
         text: string;
         imageUrl: string | null;
+        order: number;
+        sceneJson: string | null;
+        resolutionJson: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     create(body: {
         categoryId: string;
@@ -48,12 +66,14 @@ export declare class QuestionsController {
         order?: number;
     }): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        order: number;
         categoryId: string;
         text: string;
         imageUrl: string | null;
+        order: number;
+        sceneJson: string | null;
+        resolutionJson: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     update(id: string, body: Partial<{
         text: string;
@@ -61,12 +81,14 @@ export declare class QuestionsController {
         order: number;
     }>): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        order: number;
         categoryId: string;
         text: string;
         imageUrl: string | null;
+        order: number;
+        sceneJson: string | null;
+        resolutionJson: string | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     remove(id: string): Promise<{
         ok: boolean;
@@ -80,6 +102,7 @@ export declare class QuestionsController {
         text: string;
         questionId: string;
         isCorrect: boolean;
+        optionKey: string | null;
         videoId: string | null;
     }>;
     updateAnswer(id: string, body: Partial<{
@@ -91,6 +114,7 @@ export declare class QuestionsController {
         text: string;
         questionId: string;
         isCorrect: boolean;
+        optionKey: string | null;
         videoId: string | null;
     }>;
 }

@@ -1,5 +1,21 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { parseScene, resolveSceneOutcome } from '../../common/utils/scene.util';
+
+const QUESTION_SELECT = {
+  id: true,
+  text: true,
+  imageUrl: true,
+  order: true,
+  sceneJson: true,
+  answers: { select: { id: true, text: true } },
+} as const;
+
+function toPublicQuestion(q: ({ sceneJson?: string | null } & Record<string, any>) | null) {
+  if (!q) return null;
+  const { sceneJson, ...rest } = q;
+  return { ...rest, ...parseScene(sceneJson) };
+}
 
 @Injectable()
 export class TestsService {
@@ -8,7 +24,7 @@ export class TestsService {
   async startSession(userId: string, categoryId: string) {
     const category = await this.prisma.category.findUnique({
       where: { id: categoryId },
-      include: { questions: { take: 1, orderBy: { order: 'asc' }, select: { id: true, text: true, imageUrl: true, answers: { select: { id: true, text: true } } } } },
+      include: { questions: { take: 1, orderBy: { order: 'asc' }, select: QUESTION_SELECT } },
     });
     if (!category) throw new NotFoundException('Kategoriya topilmadi');
 
@@ -19,7 +35,7 @@ export class TestsService {
     return {
       sessionId: session.id,
       categoryId: session.categoryId,
-      question: category.questions[0] || null,
+      question: toPublicQuestion(category.questions[0]),
       total: await this.prisma.question.count({ where: { categoryId } }),
     };
   }
@@ -40,7 +56,7 @@ export class TestsService {
       where: { id: answerId },
       include: {
         video: { select: { playbackUrl: true, durationSec: true, type: true } },
-        question: { include: { answers: { select: { id: true, text: true } } } },
+        question: { select: { order: true, resolutionJson: true } },
       },
     });
     if (!answer || answer.questionId !== questionId) {
@@ -57,7 +73,7 @@ export class TestsService {
         order: { gt: answer.question.order },
       },
       orderBy: { order: 'asc' },
-      select: { id: true, text: true, imageUrl: true, answers: { select: { id: true, text: true } } },
+      select: QUESTION_SELECT,
     });
 
     return {
@@ -65,7 +81,8 @@ export class TestsService {
       video: answer.video
         ? { playbackUrl: answer.video.playbackUrl, durationSec: answer.video.durationSec, type: answer.video.type }
         : null,
-      nextQuestion,
+      scene: resolveSceneOutcome(answer.question.resolutionJson, answer.optionKey, answer.isCorrect),
+      nextQuestion: toPublicQuestion(nextQuestion),
     };
   }
 

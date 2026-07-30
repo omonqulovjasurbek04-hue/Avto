@@ -1,41 +1,51 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
-import { User, Lock, Eye, EyeOff, ArrowRight, X, CheckCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { ApiError } from '../api/client';
+import { User, Lock, Eye, EyeOff, ArrowRight, X, CheckCircle, Loader2 } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: UserProfile;
-  onLoginSuccess: (name: string, email: string) => void;
   onLogout: () => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onClose,
-  user,
-  onLoginSuccess,
-  onLogout,
-}) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, user, onLogout }) => {
+  const { login, register } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('user@example.com');
-  const [password, setPassword] = useState('password123');
-  const [name, setName] = useState('Jasurbek');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-    
-    onLoginSuccess(isRegister ? name : (email.split('@')[0] || 'Foydalanuvchi'), email);
-    setNotification(isRegister ? "Muvaffaqiyatli ro'yxatdan o'tdingiz!" : "Tizimga muvaffaqiyatli kirdingiz!");
-    setTimeout(() => {
-      setNotification(null);
-      onClose();
-    }, 1200);
+
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      if (isRegister) {
+        await register(name, email, password);
+      } else {
+        await login(email, password);
+      }
+      setNotification(isRegister ? "Muvaffaqiyatli ro'yxatdan o'tdingiz!" : "Tizimga muvaffaqiyatli kirdingiz!");
+      setTimeout(() => {
+        setNotification(null);
+        onClose();
+      }, 1200);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Noma'lum xatolik yuz berdi");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,6 +110,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
             )}
 
+            {error && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-semibold">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {isRegister && (
                 <div className="space-y-1">
@@ -122,12 +138,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-300">
-                  Elektron pochta yoki Foydalanuvchi nomi
+                  Elektron pochta
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-3.5 w-4 h-4 text-slate-400" />
                   <input
-                    type="text"
+                    type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -172,10 +188,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 mt-2 rounded-xl bg-gradient-to-r from-[#8cc3ff] to-[#4cd7f6] text-[#001a42] font-bold text-base hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cyan-glow"
+                disabled={isSubmitting}
+                className="w-full py-3 mt-2 rounded-xl bg-gradient-to-r from-[#8cc3ff] to-[#4cd7f6] text-[#001a42] font-bold text-base hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cyan-glow disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>{isRegister ? "Ro'yxatdan o'tish" : "Kirish"}</span>
-                <ArrowRight className="w-5 h-5" />
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <span>{isRegister ? "Ro'yxatdan o'tish" : "Kirish"}</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             </form>
 
@@ -184,7 +207,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <p>
                   Sizda allaqachon hisob bormi?{' '}
                   <button
-                    onClick={() => setIsRegister(false)}
+                    onClick={() => {
+                      setIsRegister(false);
+                      setError(null);
+                    }}
                     className="text-[#4cd7f6] font-bold hover:underline"
                   >
                     Kirish
@@ -194,7 +220,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <p>
                   Hisobingiz yo'qmi?{' '}
                   <button
-                    onClick={() => setIsRegister(true)}
+                    onClick={() => {
+                      setIsRegister(true);
+                      setError(null);
+                    }}
                     className="text-[#4cd7f6] font-bold hover:underline"
                   >
                     Ro'yxatdan o'tish

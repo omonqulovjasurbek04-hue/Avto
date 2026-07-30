@@ -100,7 +100,10 @@ let VideosService = VideosService_1 = class VideosService {
                 const [k, v] = p.split('=');
                 sigMap[k] = v;
             }
-            return sigMap['sig'] === expected;
+            const provided = sigMap['sig'];
+            if (!provided || provided.length !== expected.length)
+                return false;
+            return crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
         }
         catch {
             return false;

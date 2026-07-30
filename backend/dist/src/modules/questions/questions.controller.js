@@ -18,6 +18,7 @@ const prisma_service_1 = require("../../prisma/prisma.service");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
 const client_1 = require("@prisma/client");
+const scene_util_1 = require("../../common/utils/scene.util");
 let QuestionsController = class QuestionsController {
     prisma;
     constructor(prisma) {
@@ -32,8 +33,26 @@ let QuestionsController = class QuestionsController {
                 text: true,
                 imageUrl: true,
                 order: true,
+                sceneJson: true,
                 answers: {
                     select: { id: true, text: true },
+                    orderBy: { id: 'asc' },
+                },
+            },
+        });
+        return questions.map(({ sceneJson, ...q }) => ({ ...q, ...(0, scene_util_1.parseScene)(sceneJson) }));
+    }
+    async findByCategoryAdmin(categoryId) {
+        const questions = await this.prisma.question.findMany({
+            where: { categoryId },
+            orderBy: { order: 'asc' },
+            select: {
+                id: true,
+                text: true,
+                imageUrl: true,
+                order: true,
+                answers: {
+                    select: { id: true, text: true, isCorrect: true },
                     orderBy: { id: 'asc' },
                 },
             },
@@ -52,7 +71,11 @@ let QuestionsController = class QuestionsController {
         });
         if (!q)
             throw new common_1.NotFoundException('Savol topilmadi');
-        return q;
+        return {
+            ...q,
+            ...(0, scene_util_1.parseScene)(q.sceneJson),
+            resolution: q.resolutionJson ? JSON.parse(q.resolutionJson) : null,
+        };
     }
     async create(body) {
         return this.prisma.question.create({
@@ -94,6 +117,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], QuestionsController.prototype, "findByCategory", null);
+__decorate([
+    (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
+    (0, common_1.Get)('admin/categories/:categoryId/questions'),
+    __param(0, (0, common_1.Param)('categoryId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], QuestionsController.prototype, "findByCategoryAdmin", null);
 __decorate([
     (0, roles_decorator_1.Roles)(client_1.Role.ADMIN),
     (0, common_1.Get)('admin/questions/:id'),

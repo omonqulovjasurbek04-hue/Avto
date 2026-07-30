@@ -12,6 +12,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
+const scene_util_1 = require("../../common/utils/scene.util");
+const QUESTION_SELECT = {
+    id: true,
+    text: true,
+    imageUrl: true,
+    order: true,
+    sceneJson: true,
+    answers: { select: { id: true, text: true } },
+};
+function toPublicQuestion(q) {
+    if (!q)
+        return null;
+    const { sceneJson, ...rest } = q;
+    return { ...rest, ...(0, scene_util_1.parseScene)(sceneJson) };
+}
 let TestsService = class TestsService {
     prisma;
     constructor(prisma) {
@@ -20,7 +35,7 @@ let TestsService = class TestsService {
     async startSession(userId, categoryId) {
         const category = await this.prisma.category.findUnique({
             where: { id: categoryId },
-            include: { questions: { take: 1, orderBy: { order: 'asc' }, select: { id: true, text: true, imageUrl: true, answers: { select: { id: true, text: true } } } } },
+            include: { questions: { take: 1, orderBy: { order: 'asc' }, select: QUESTION_SELECT } },
         });
         if (!category)
             throw new common_1.NotFoundException('Kategoriya topilmadi');
@@ -30,7 +45,7 @@ let TestsService = class TestsService {
         return {
             sessionId: session.id,
             categoryId: session.categoryId,
-            question: category.questions[0] || null,
+            question: toPublicQuestion(category.questions[0]),
             total: await this.prisma.question.count({ where: { categoryId } }),
         };
     }
@@ -52,7 +67,7 @@ let TestsService = class TestsService {
             where: { id: answerId },
             include: {
                 video: { select: { playbackUrl: true, durationSec: true, type: true } },
-                question: { include: { answers: { select: { id: true, text: true } } } },
+                question: { select: { order: true, resolutionJson: true } },
             },
         });
         if (!answer || answer.questionId !== questionId) {
@@ -67,14 +82,15 @@ let TestsService = class TestsService {
                 order: { gt: answer.question.order },
             },
             orderBy: { order: 'asc' },
-            select: { id: true, text: true, imageUrl: true, answers: { select: { id: true, text: true } } },
+            select: QUESTION_SELECT,
         });
         return {
             isCorrect: answer.isCorrect,
             video: answer.video
                 ? { playbackUrl: answer.video.playbackUrl, durationSec: answer.video.durationSec, type: answer.video.type }
                 : null,
-            nextQuestion,
+            scene: (0, scene_util_1.resolveSceneOutcome)(answer.question.resolutionJson, answer.optionKey, answer.isCorrect),
+            nextQuestion: toPublicQuestion(nextQuestion),
         };
     }
     async finishSession(userId, sessionId) {

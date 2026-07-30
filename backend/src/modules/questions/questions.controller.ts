@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { Role } from '@prisma/client';
+import { parseScene } from '../../common/utils/scene.util';
 
 @Controller()
 export class QuestionsController {
@@ -19,8 +20,30 @@ export class QuestionsController {
         text: true,
         imageUrl: true,
         order: true,
+        sceneJson: true,
         answers: {
           select: { id: true, text: true },
+          orderBy: { id: 'asc' },
+        },
+      },
+    });
+    // resolutionJson stays server-side only; sceneJson (roads/actors, no resolution) is safe to reveal upfront.
+    return questions.map(({ sceneJson, ...q }) => ({ ...q, ...parseScene(sceneJson) }));
+  }
+
+  @Roles(Role.ADMIN)
+  @Get('admin/categories/:categoryId/questions')
+  async findByCategoryAdmin(@Param('categoryId') categoryId: string) {
+    const questions = await this.prisma.question.findMany({
+      where: { categoryId },
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        text: true,
+        imageUrl: true,
+        order: true,
+        answers: {
+          select: { id: true, text: true, isCorrect: true },
           orderBy: { id: 'asc' },
         },
       },
@@ -41,7 +64,11 @@ export class QuestionsController {
       },
     });
     if (!q) throw new NotFoundException('Savol topilmadi');
-    return q;
+    return {
+      ...q,
+      ...parseScene(q.sceneJson),
+      resolution: q.resolutionJson ? JSON.parse(q.resolutionJson) : null,
+    };
   }
 
   @Roles(Role.ADMIN)

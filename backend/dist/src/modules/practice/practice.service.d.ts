@@ -10,5 +10,6 @@ export declare class PracticeService {
             durationSec: number;
             type: import(".prisma/client").$Enums.VideoType;
         } | null;
+        scene: import("../../common/utils/scene.util").SceneOutcome | null;
     }>;
 }

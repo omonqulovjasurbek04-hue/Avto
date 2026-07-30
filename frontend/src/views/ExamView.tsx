@@ -1,302 +1,381 @@
-import React, { useState, useEffect } from 'react';
-import { Question, ExamAnswer, ViewType } from '../types';
-import { EXAM_QUESTIONS } from '../data/mockData';
-import { InteractiveCockpit } from '../components/InteractiveCockpit';
-import { Clock, Flag, ChevronLeft, ChevronRight, CheckCircle2, AlertTriangle, RotateCcw, Trophy } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ViewType } from '../types';
+import { useAuth } from '../context/AuthContext';
+import { SceneStage } from '../components/SceneStage';
+import {
+  categoriesApi,
+  testsApi,
+  ApiCategory,
+  ApiQuestion,
+  TestAnswerResponse,
+  TestFinishResponse,
+  ApiError,
+} from '../api/client';
+import { Clock, ChevronRight, CheckCircle2, XCircle, AlertTriangle, RotateCcw, Trophy, Lock, Loader2 } from 'lucide-react';
 
 interface ExamViewProps {
   onNavigate: (view: ViewType) => void;
   onOpenAuth: () => void;
 }
 
-export const ExamView: React.FC<ExamViewProps> = ({ onNavigate }) => {
-  const [currentIdx, setCurrentIdx] = useState<number>(3); // Default to question 4 (0-indexed 3) as shown in image
-  const [userAnswers, setUserAnswers] = useState<{ [qId: number]: ExamAnswer }>({
-    1: { questionId: 1, selectedOptionId: 'C' },
-    2: { questionId: 2, selectedOptionId: 'A' },
-    3: { questionId: 3, selectedOptionId: 'A' },
-  });
+const EXAM_DURATION_SEC = 20 * 60;
+const PASS_THRESHOLD = 80;
 
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(20 * 60); // 20:00 timer
-  const [isExamSubmitted, setIsExamSubmitted] = useState<boolean>(false);
+export const ExamView: React.FC<ExamViewProps> = ({ onNavigate, onOpenAuth }) => {
+  const { user } = useAuth();
 
-  // Timer Countdown
+  const [phase, setPhase] = useState<'select' | 'running' | 'result'>('select');
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [total, setTotal] = useState(0);
+  const [currentQuestion, setCurrentQuestion] = useState<ApiQuestion | null>(null);
+  const [history, setHistory] = useState<{ questionId: string; isCorrect: boolean }[]>([]);
+  const [answerResult, setAnswerResult] = useState<TestAnswerResponse | null>(null);
+  const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [finishResult, setFinishResult] = useState<TestFinishResponse | null>(null);
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState(EXAM_DURATION_SEC);
+
   useEffect(() => {
-    if (isExamSubmitted || timeLeftSeconds <= 0) return;
-    const interval = setInterval(() => {
-      setTimeLeftSeconds((prev) => {
-        if (prev <= 1) {
-          setIsExamSubmitted(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [timeLeftSeconds, isExamSubmitted]);
+    if (!user) return;
+    categoriesApi
+      .list()
+      .then((cats) => {
+        setCategories(cats);
+        if (cats.length > 0) setSelectedCategoryId(cats[0].id);
+      })
+      .catch((err) => setError(err instanceof ApiError ? err.message : "Kategoriyalarni yuklab bo'lmadi"))
+      .finally(() => setLoadingCategories(false));
+  }, [user]);
 
-  const currentQ: Question = EXAM_QUESTIONS[currentIdx] || EXAM_QUESTIONS[0];
-  const currentAnswer = userAnswers[currentQ.id] || { questionId: currentQ.id };
+  useEffect(() => {
+    if (phase !== 'running') return;
+    if (timeLeftSeconds <= 0) {
+      handleFinish();
+      return;
+    }
+    const interval = setInterval(() => setTimeLeftSeconds((p) => p - 1), 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, timeLeftSeconds]);
 
   const formatTimer = (totalSecs: number) => {
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
+    const mins = Math.floor(Math.max(0, totalSecs) / 60);
+    const secs = Math.max(0, totalSecs) % 60;
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const handleSelectOption = (optId: string) => {
-    if (isExamSubmitted) return;
-    setUserAnswers((prev) => ({
-      ...prev,
-      [currentQ.id]: {
-        ...prev[currentQ.id],
-        questionId: currentQ.id,
-        selectedOptionId: optId,
-      },
-    }));
+  const handleStart = async () => {
+    if (!selectedCategoryId) return;
+    setStarting(true);
+    setError(null);
+    try {
+      const res = await testsApi.start(selectedCategoryId);
+      setSessionId(res.sessionId);
+      setTotal(res.total);
+      setCurrentQuestion(res.question);
+      setHistory([]);
+      setAnswerResult(null);
+      setSelectedAnswerId(null);
+      setFinishResult(null);
+      setTimeLeftSeconds(EXAM_DURATION_SEC);
+      setPhase('running');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Imtihonni boshlab bo'lmadi");
+    } finally {
+      setStarting(false);
+    }
   };
 
-  const handleToggleFlag = () => {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [currentQ.id]: {
-        ...prev[currentQ.id],
-        questionId: currentQ.id,
-        flagged: !prev[currentQ.id]?.flagged,
-      },
-    }));
+  const handleSelectAnswer = async (answerId: string) => {
+    if (!sessionId || !currentQuestion || selectedAnswerId || submitting) return;
+    setSelectedAnswerId(answerId);
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await testsApi.answer(sessionId, currentQuestion.id, answerId);
+      setAnswerResult(res);
+      setHistory((prev) => [...prev, { questionId: currentQuestion.id, isCorrect: res.isCorrect }]);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Javobni yuborib bo'lmadi");
+      setSelectedAnswerId(null);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  // Calculate score
-  const answeredCount = (Object.values(userAnswers) as ExamAnswer[]).filter((a) => a.selectedOptionId).length;
-  const correctCount = EXAM_QUESTIONS.filter(
-    (q) => userAnswers[q.id]?.selectedOptionId === q.correctOptionId
-  ).length;
-  const scorePercent = Math.round((correctCount / EXAM_QUESTIONS.length) * 100);
-  const isPassed = scorePercent >= 80;
+  const handleContinue = () => {
+    if (answerResult?.nextQuestion) {
+      setCurrentQuestion(answerResult.nextQuestion);
+      setAnswerResult(null);
+      setSelectedAnswerId(null);
+    } else {
+      handleFinish();
+    }
+  };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 md:px-10 pt-24 pb-16 space-y-8">
-      {/* HEADER SECTION WITH TIMER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl md:text-3xl font-extrabold text-white">
-            Driver Certification Exam
-          </h1>
-          <p className="text-xs font-mono text-[#4cd7f6] mt-1">
-            Module 4: Urban Navigation Protocol
-          </p>
-        </div>
+  const handleFinish = async () => {
+    if (!sessionId) return;
+    try {
+      const res = await testsApi.finish(sessionId);
+      setFinishResult(res);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Imtihonni yakunlab bo'lmadi");
+    } finally {
+      setPhase('result');
+    }
+  };
 
-        {/* Floating Timer Badge */}
-        <div className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full glass-panel border transition-all shadow-[0_0_20px_rgba(76,215,246,0.2)] ${
-          timeLeftSeconds < 300 ? 'border-red-500 text-red-400 animate-pulse' : 'border-[#4cd7f6]/40 text-[#4cd7f6]'
-        }`}>
-          <Clock className="w-5 h-5" />
-          <span className="font-mono text-2xl font-extrabold tracking-widest">
-            {formatTimer(timeLeftSeconds)}
-          </span>
-        </div>
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 pt-32 pb-16 text-center space-y-6">
+        <Lock className="w-12 h-12 text-[#4cd7f6] mx-auto" />
+        <h1 className="font-display text-2xl font-bold text-white">Imtihon uchun tizimga kiring</h1>
+        <p className="text-slate-300 text-sm">Rasmiy imtihon rejimi faqat ro'yxatdan o'tgan foydalanuvchilar uchun mavjud.</p>
+        <button
+          onClick={onOpenAuth}
+          className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#adc6ff] to-[#4cd7f6] text-[#002e6a] font-bold text-sm hover:brightness-110"
+        >
+          Tizimga kirish
+        </button>
       </div>
+    );
+  }
 
-      {/* EXAM CONTENT OR RESULTS MODAL */}
-      {isExamSubmitted ? (
+  if (phase === 'select') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 pt-32 pb-16 space-y-6">
+        <h1 className="font-display text-2xl md:text-3xl font-extrabold text-white text-center">Imtihon uchun kategoriya tanlang</h1>
+        {error && <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">{error}</div>}
+        {loadingCategories ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="w-8 h-8 text-[#4cd7f6] animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategoryId(cat.id)}
+                className={`w-full p-4 rounded-xl border text-left transition-all flex items-center justify-between ${
+                  selectedCategoryId === cat.id
+                    ? 'bg-[#152031] border-[#4cd7f6] text-white'
+                    : 'bg-[#111c2d]/60 border-white/10 text-slate-300 hover:border-white/30'
+                }`}
+              >
+                <span className="font-semibold">{cat.name}</span>
+                <span className="text-xs font-mono text-slate-400">{cat._count?.questions ?? 0} ta savol</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          onClick={handleStart}
+          disabled={!selectedCategoryId || starting}
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#adc6ff] to-[#4cd7f6] text-[#002e6a] font-bold text-sm hover:brightness-110 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {starting ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Imtihonni boshlash</span>}
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === 'result') {
+    const percentage = finishResult?.percentage ?? 0;
+    const isPassed = percentage >= PASS_THRESHOLD;
+    return (
+      <div className="max-w-7xl mx-auto px-4 md:px-10 pt-24 pb-16">
         <div className="glass-panel p-8 md:p-12 rounded-2xl border border-white/20 text-center space-y-6 max-w-2xl mx-auto animate-fadeIn">
-          <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center text-4xl ${
-            isPassed ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500' : 'bg-red-500/20 text-red-400 border-2 border-red-500'
-          }`}>
+          <div
+            className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center text-4xl ${
+              isPassed ? 'bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500' : 'bg-red-500/20 text-red-400 border-2 border-red-500'
+            }`}
+          >
             {isPassed ? <Trophy className="w-10 h-10" /> : <AlertTriangle className="w-10 h-10" />}
           </div>
-
           <div className="space-y-2">
             <h2 className="font-display text-3xl font-bold text-white">
-              {isPassed ? 'Imtihon Muvaffaqiyatli Topshirildi!' : 'Natija Qoniqarsiz'}
+              {isPassed ? 'Imtihon muvaffaqiyatli topshirildi!' : 'Natija qoniqarsiz'}
             </h2>
             <p className="text-sm text-slate-300">
-              {isPassed 
-                ? 'Tabriklaymiz! Siz O\'zbekiston YHQ sertifikatsiyasi sinovidan muvaffaqiyatli o\'tdingiz.' 
-                : 'Afsuski, yetarli ball to\'plolmadingiz. Qaytadan urinib ko\'ring.'}
+              {isPassed ? "Tabriklaymiz! Siz o'tish balidan yuqori natija ko'rsatdingiz." : "Afsuski, yetarli ball to'plolmadingiz. Qaytadan urinib ko'ring."}
             </p>
           </div>
-
           <div className="grid grid-cols-3 gap-4 p-4 rounded-xl bg-[#111c2d] border border-white/10 text-center">
             <div>
-              <span className="text-xs text-slate-400 block">To'plangan Ball</span>
-              <span className="text-2xl font-bold text-white font-mono">{scorePercent}%</span>
+              <span className="text-xs text-slate-400 block">To'plangan ball</span>
+              <span className="text-2xl font-bold text-white font-mono">{percentage}%</span>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">To'g'ri Javoblar</span>
-              <span className="text-2xl font-bold text-emerald-400 font-mono">{correctCount}/20</span>
+              <span className="text-xs text-slate-400 block">To'g'ri javoblar</span>
+              <span className="text-2xl font-bold text-emerald-400 font-mono">
+                {finishResult?.score ?? 0}/{finishResult?.total ?? 0}
+              </span>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">O'tish Bali</span>
-              <span className="text-2xl font-bold text-[#4cd7f6] font-mono">80%</span>
+              <span className="text-xs text-slate-400 block">O'tish bali</span>
+              <span className="text-2xl font-bold text-[#4cd7f6] font-mono">{PASS_THRESHOLD}%</span>
             </div>
           </div>
-
           <div className="flex gap-4 justify-center pt-4">
             <button
-              onClick={() => {
-                setIsExamSubmitted(false);
-                setTimeLeftSeconds(20 * 60);
-                setUserAnswers({});
-                setCurrentIdx(0);
-              }}
+              onClick={() => setPhase('select')}
               className="px-8 py-3 rounded-xl bg-gradient-to-r from-[#adc6ff] to-[#4cd7f6] text-[#002e6a] font-bold text-sm hover:brightness-110 flex items-center gap-2"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>Qaytadan Topshirish</span>
+              <span>Qaytadan topshirish</span>
             </button>
             <button
               onClick={() => onNavigate('analytics')}
               className="px-8 py-3 rounded-xl glass-panel text-white font-semibold text-sm hover:bg-white/10"
             >
-              Tahlilni Ko'rish
+              Tahlilni ko'rish
             </button>
           </div>
         </div>
-      ) : (
-        /* MAIN EXAM GRID */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* LEFT SIDEBAR: QUESTION MATRIX */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-6">
-              <div className="flex justify-between items-center text-xs font-mono">
-                <span className="text-slate-300 font-bold uppercase">Question Matrix</span>
-                <span className="text-[#4cd7f6] font-bold">
-                  {answeredCount}/20 Answered
-                </span>
-              </div>
+      </div>
+    );
+  }
 
-              {/* 5x4 Grid Matrix of Question Numbers */}
-              <div className="grid grid-cols-5 gap-2.5">
-                {EXAM_QUESTIONS.map((q, idx) => {
-                  const ans = userAnswers[q.id];
-                  const isCurrent = idx === currentIdx;
-                  const isAnswered = !!ans?.selectedOptionId;
-                  const isFlagged = !!ans?.flagged;
+  // phase === 'running'
+  if (!currentQuestion) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 pt-32 pb-16 flex justify-center">
+        <Loader2 className="w-8 h-8 text-[#4cd7f6] animate-spin" />
+      </div>
+    );
+  }
 
-                  let style = 'bg-[#111c2d] border-white/10 text-slate-300 hover:bg-[#1f2a3c]';
-                  if (isCurrent) {
-                    style = 'bg-[#152031] border-[#4cd7f6] text-[#4cd7f6] font-bold shadow-[0_0_12px_rgba(76,215,246,0.4)]';
-                  } else if (isAnswered) {
-                    style = 'bg-[#1f2a3c] border-[#4cd7f6]/40 text-white font-semibold';
-                  }
+  const isAnswered = !!answerResult;
+  const questionNumber = history.length + 1;
 
-                  return (
-                    <button
-                      key={q.id}
-                      onClick={() => setCurrentIdx(idx)}
-                      className={`h-10 rounded-lg border text-xs font-mono transition-all flex items-center justify-center relative ${style}`}
-                    >
-                      {q.id}
-                      {isFlagged && (
-                        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+  return (
+    <div className="max-w-7xl mx-auto px-4 md:px-10 pt-24 pb-16 space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl md:text-3xl font-extrabold text-white">Rasmiy imtihon</h1>
+          <p className="text-xs font-mono text-[#4cd7f6] mt-1">
+            Savol {questionNumber} / {total}
+          </p>
+        </div>
+        <div
+          className={`flex items-center gap-2.5 px-6 py-2.5 rounded-full glass-panel border transition-all shadow-[0_0_20px_rgba(76,215,246,0.2)] ${
+            timeLeftSeconds < 300 ? 'border-red-500 text-red-400 animate-pulse' : 'border-[#4cd7f6]/40 text-[#4cd7f6]'
+          }`}
+        >
+          <Clock className="w-5 h-5" />
+          <span className="font-mono text-2xl font-extrabold tracking-widest">{formatTimer(timeLeftSeconds)}</span>
+        </div>
+      </div>
 
-              {/* Flag for review button */}
-              <button
-                onClick={handleToggleFlag}
-                className={`w-full py-3 rounded-xl border text-xs font-mono uppercase tracking-wider font-bold transition-all flex items-center justify-center gap-2 ${
-                  currentAnswer?.flagged
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                    : 'bg-[#111c2d] border-white/10 text-slate-300 hover:border-white/30'
-                }`}
-              >
-                <Flag className="w-4 h-4" />
-                <span>{currentAnswer?.flagged ? 'FLAGGED FOR REVIEW' : 'FLAG FOR REVIEW'}</span>
-              </button>
+      {error && <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">{error}</div>}
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-4 space-y-6">
+          <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-slate-300 font-bold uppercase">Progress</span>
+              <span className="text-[#4cd7f6] font-bold">{history.length}/{total} javob berildi</span>
             </div>
-          </div>
-
-          {/* RIGHT MAIN PANEL: HUD COCKPIT & QUESTION CHOICES */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* Interactive HUD Cockpit */}
-            <InteractiveCockpit
-              simType={currentQ.hudSimulationType}
-              simLabel={currentQ.simLabel || `SIM_ENV_${String(currentQ.id).padStart(2, '0')}`}
-              heightClass="h-[300px] md:h-[350px]"
-            />
-
-            {/* Question Details Card */}
-            <div className="glass-panel p-6 md:p-8 rounded-2xl border border-white/10 space-y-6">
-              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="px-3 py-1 rounded-md bg-[#4cd7f6]/10 text-[#4cd7f6] border border-[#4cd7f6]/30 font-mono text-xs font-bold">
-                    QUESTION {String(currentQ.id).padStart(2, '0')}
-                  </span>
-                  <span className="text-xs text-slate-400 font-mono">Multiple Choice</span>
-                </div>
-              </div>
-
-              {/* Question Text */}
-              <p className="text-base md:text-lg font-medium text-white leading-relaxed">
-                {currentQ.title}
-              </p>
-
-              {/* Radio Choices */}
-              <div className="space-y-3 pt-2">
-                {currentQ.options.map((option) => {
-                  const isSelected = currentAnswer?.selectedOptionId === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => handleSelectOption(option.id)}
-                      className={`w-full p-4 rounded-xl border text-left transition-all flex items-start gap-4 ${
-                        isSelected
-                          ? 'bg-[#1f2a3c] border-[#4cd7f6] text-white shadow-[0_0_15px_rgba(76,215,246,0.2)]'
-                          : 'bg-[#111c2d]/60 border-white/10 text-slate-300 hover:border-white/20 hover:bg-[#111c2d]'
-                      }`}
-                    >
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
-                        isSelected ? 'border-[#4cd7f6] bg-[#4cd7f6]' : 'border-slate-500'
-                      }`}>
-                        {isSelected && <div className="w-2 h-2 rounded-full bg-[#081425]" />}
-                      </div>
-                      <span className="text-sm font-medium leading-relaxed">
-                        {option.text}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Action Controls */}
-              <div className="flex justify-between items-center pt-6 border-t border-white/10">
-                <button
-                  onClick={() => setCurrentIdx((prev) => Math.max(0, prev - 1))}
-                  disabled={currentIdx === 0}
-                  className="px-6 py-2.5 rounded-xl bg-[#111c2d] border border-white/10 text-slate-300 hover:text-white disabled:opacity-40 text-xs font-mono uppercase tracking-wider font-bold flex items-center gap-2"
+            <div className="flex flex-wrap gap-2">
+              {history.map((h, idx) => (
+                <span
+                  key={idx}
+                  className={`w-8 h-8 rounded-lg border flex items-center justify-center text-xs font-mono font-bold ${
+                    h.isCorrect ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'bg-red-500/20 border-red-500/50 text-red-400'
+                  }`}
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>PREVIOUS</span>
-                </button>
-
-                {currentIdx === EXAM_QUESTIONS.length - 1 ? (
-                  <button
-                    onClick={() => setIsExamSubmitted(true)}
-                    className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 font-bold text-xs font-mono uppercase tracking-wider hover:brightness-110 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                  >
-                    SUBMIT EXAM
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setCurrentIdx((prev) => Math.min(EXAM_QUESTIONS.length - 1, prev + 1))}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#adc6ff] to-[#4cd7f6] text-[#002e6a] font-bold text-xs font-mono uppercase tracking-wider hover:brightness-110 flex items-center gap-2 shadow-[0_0_15px_rgba(76,215,246,0.2)]"
-                  >
-                    <span>NEXT QUESTION</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+                  {idx + 1}
+                </span>
+              ))}
+              <span className="w-8 h-8 rounded-lg border border-[#4cd7f6] bg-[#152031] flex items-center justify-center text-xs font-mono font-bold text-[#4cd7f6]">
+                {questionNumber}
+              </span>
             </div>
           </div>
         </div>
-      )}
+
+        <div className="lg:col-span-8 space-y-6">
+          <SceneStage scene={currentQuestion.scene} actors={currentQuestion.actors} outcome={answerResult?.scene ?? null} />
+
+          <div className="glass-panel p-6 md:p-8 rounded-2xl border border-white/10 space-y-6">
+            <p className="text-base md:text-lg font-medium text-white leading-relaxed">{currentQuestion.text}</p>
+
+            <div className="space-y-3 pt-2">
+              {currentQuestion.answers.map((option) => {
+                const isSelected = selectedAnswerId === option.id;
+                let style = 'bg-[#111c2d]/60 border-white/10 text-slate-300 hover:border-white/20 hover:bg-[#111c2d]';
+                if (isAnswered && isSelected) {
+                  style = answerResult.isCorrect
+                    ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200'
+                    : 'bg-red-950/60 border-red-500 text-red-200';
+                } else if (isAnswered) {
+                  style = 'bg-[#111c2d]/40 border-white/5 text-slate-500 opacity-60';
+                } else if (isSelected) {
+                  style = 'bg-[#1f2a3c] border-[#4cd7f6] text-white shadow-[0_0_15px_rgba(76,215,246,0.2)]';
+                }
+
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => handleSelectAnswer(option.id)}
+                    disabled={isAnswered || submitting}
+                    className={`w-full p-4 rounded-xl border text-left transition-all flex items-start gap-4 ${style}`}
+                  >
+                    <span className="text-sm font-medium leading-relaxed">{option.text}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {isAnswered && (
+              <div
+                className={`p-4 rounded-xl border text-sm space-y-1.5 ${
+                  answerResult.isCorrect ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200' : 'bg-amber-950/40 border-amber-500/40 text-amber-200'
+                }`}
+              >
+                <div className="flex items-center gap-2 font-bold">
+                  {answerResult.isCorrect ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      <span>To'g'ri javob!</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-5 h-5 text-amber-400" />
+                      <span>Xato javob!</span>
+                    </>
+                  )}
+                </div>
+                {answerResult.scene?.ruleText && (
+                  <p className="text-xs text-slate-300 leading-relaxed pl-7">
+                    {answerResult.scene.ruleCode ? `YHQ ${answerResult.scene.ruleCode}: ` : ''}
+                    {answerResult.scene.ruleText}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end pt-6 border-t border-white/10">
+              {isAnswered && (
+                <button
+                  onClick={handleContinue}
+                  className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-[#adc6ff] to-[#4cd7f6] text-[#002e6a] font-bold text-xs font-mono uppercase tracking-wider hover:brightness-110 flex items-center gap-2 shadow-[0_0_15px_rgba(76,215,246,0.2)]"
+                >
+                  <span>{answerResult.nextQuestion ? 'Keyingi savol' : 'Imtihonni yakunlash'}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
