@@ -19,7 +19,50 @@
 14. [Ochiq savollar](#14)
 
 ---
+Avval Railway'ning 2026-yildagi haqiqiy narxlash siyosatini tekshirib chiqdim, chunki bu yerda muhim nuans bor.
 
+## Rostini aytsam — "to'liq bepul" bo'lmaydi
+
+Railway'da ikkita alohida narsa bor, ko'pchilik ularni aralashtirib yuboradi:
+
+- **30 kunlik sinov** — $5 kredit, karta shart emas (ba'zi manbalarda karta talab qilinishi ham aytiladi — ro'yxatdan o'tishda ko'rinadi)
+- **Free plan** (sinovdan keyin) — oyiga atigi **$1**, juda cheklangan: 0.5GB RAM, 0.5GB disk, 1 loyiha
+
+Bazangiz (PostgreSQL) bilan doimiy ishlaydigan ilova uchun bu yetarli emas — Railway'ning o'zi ham aytadiki, **baza qo'shilgan ilova uchun minimal Hobby reja ($5/oy) kerak**. Shuning uchun sizga real kutish: **oyiga taxminan $5** — bu "to'liq bepul" emas, lekin sizning loyihangiz uchun juda arzon bo'ladi (pastda sababi bor).
+
+## Nega bu loyiha uchun $5/oy ham katta ortiqcha bo'ladi
+
+Sizning bazangizda faqat **matn** saqlanadi — savollar, javoblar, foydalanuvchilar, sessiyalar. Video Cloudflare'da (to'g'ri qaror). Hatto 10 000 foydalanuvchi, minglab test sessiyasi bo'lsa ham — bu baza bir necha o'n megabaytdan oshmaydi. Ya'ni Railway'ning "narx sizib ketishi" xavfi (usage-based billing) sizga deyarli tegmaydi — asosiy xarajat backend serverning o'zi ishlab turishi bo'ladi, u ham juda kam.
+
+## Tavsiya etilgan arxitektura — hammasini Railway'ga tiqmang
+
+| Qism | Qayerda | Nega |
+|---|---|---|
+| **Backend (NestJS) + PostgreSQL** | Railway | Bir-biriga yaqin, GitHub'dan avtomatik deploy, Prisma bilan tabiiy ishlaydi |
+| **Web (Next.js)** | **Vercel** (Railway emas!) | Vercel — Next.js'ning o'z kompaniyasi, hobby loyihalar uchun narxi haqiqatan bepul va cheklovlari ancha keng |
+| **Mobil (Expo)** | Hech qayerda "hostlanmaydi" | EAS Build orqali App Store/Play Store'ga chiqariladi, server kerak emas |
+| **Video** | Cloudflare Stream | Sizning rejangiz — to'g'ri |
+
+Bu bo'linish sizga eng ko'p tejamkorlik beradi: Railway'ga faqat og'ir bo'lmagan backend+baza, Vercel'dan esa web uchun bepul imkoniyatdan to'liq foydalanasiz.
+
+## Amaliy sozlash — Railway'da backend+baza
+
+1. GitHub repo'ni Railway'ga ulaysiz — u NestJS'ni avtomatik taniydi
+2. "+ New" → PostgreSQL — bir tugma bilan qo'shiladi, `DATABASE_URL` avtomatik environment variable sifatida backend'ga in'ektsiya qilinadi (Prisma buni to'g'ridan-to'g'ri o'qiydi)
+3. Boshqa env o'zgaruvchilarni (`JWT_ACCESS_SECRET`, `CLOUDFLARE_*`, `CORS_ORIGINS` — bu yerga Vercel'dagi web domeningizni yozasiz) Railway dashboard'da qo'shasiz
+4. **Muhim:** production'da `prisma migrate dev` emas, **`prisma migrate deploy`** ishlatiladi. Railway'ning "Start Command"ini shunday sozlang:
+   ```
+   npx prisma migrate deploy && npx prisma generate && node dist/main.js
+   ```
+5. Railway avtomatik bir domen beradi (`xxx.up.railway.app`), xohlasangiz o'z domeningizni ulashingiz mumkin
+
+## Xarajatni pastda ushlab turish uchun
+
+- Redis/BullMQ'ni hozircha qo'shmang — MVP bosqichida shart emas, ortiqcha resurs = ortiqcha xarajat
+- Railway dashboard'da **usage alert/budjet chegarasi** qo'ying — narx to'satdan sakrab ketmasligi uchun (bu real xavf, izlanishlarda ham ta'kidlangan)
+- Backend kodini samarali yozing — Railway soniya bo'yicha hisoblaydi, shuning uchun keraksiz doimiy fon jarayonlari (masalan cron har soniyada) xarajatni oshiradi
+
+Xohlasangiz, shu Railway+Vercel arxitekturasiga mos `.env` va deploy sozlamalarini ham oldingi hujjatlarga qo'shib, alohida fayl qilib beray?
 <a id="1"></a>
 ## 1. Loyiha nima va nega shunday qurilgan
 
