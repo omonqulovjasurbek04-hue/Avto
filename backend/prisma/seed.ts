@@ -90,14 +90,14 @@ async function seedSceneQuestions() {
 }
 
 async function main() {
-  const adminPassword = await argon2.hash('admin123');
+  const adminPassword = await argon2.hash('adminPassword123');
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@yhq.uz' },
+    where: { email: 'admin@avto.uz' },
     update: {},
     create: {
       name: 'Admin',
-      email: 'admin@yhq.uz',
+      email: 'admin@avto.uz',
       password: adminPassword,
       role: 'ADMIN',
     },
