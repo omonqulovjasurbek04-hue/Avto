@@ -34,12 +34,12 @@ export declare class QuestionsController {
                 id: string;
                 createdAt: Date;
                 type: import(".prisma/client").$Enums.VideoType;
-                status: string;
                 title: string | null;
                 streamUid: string;
                 playbackUrl: string;
                 thumbnailUrl: string | null;
                 durationSec: number;
+                status: string;
             } | null;
         } & {
             id: string;

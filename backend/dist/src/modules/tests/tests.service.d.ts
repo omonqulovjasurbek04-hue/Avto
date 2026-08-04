@@ -31,8 +31,8 @@ export declare class TestsService {
     }>;
     getHistory(userId: string): Promise<({
         category: {
-            name: string;
             id: string;
+            name: string;
         };
         _count: {
             answers: number;
@@ -48,8 +48,8 @@ export declare class TestsService {
     })[]>;
     getSessionDetail(userId: string, sessionId: string): Promise<{
         category: {
-            name: string;
             id: string;
+            name: string;
         };
         answers: ({
             question: {

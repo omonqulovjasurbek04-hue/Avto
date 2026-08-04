@@ -4,10 +4,10 @@ export declare class UsersController {
     constructor(prisma: PrismaService);
     me(userId: string): Promise<{
         user: {
-            name: string;
+            id: string;
             email: string | null;
             phone: string | null;
-            id: string;
+            name: string;
             role: import(".prisma/client").$Enums.Role;
             createdAt: Date;
         } | null;

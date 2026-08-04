@@ -36,8 +36,8 @@ export declare class TestsController {
     }>;
     history(userId: string): Promise<({
         category: {
-            name: string;
             id: string;
+            name: string;
         };
         _count: {
             answers: number;
@@ -53,8 +53,8 @@ export declare class TestsController {
     })[]>;
     getSession(userId: string, sessionId: string): Promise<{
         category: {
-            name: string;
             id: string;
+            name: string;
         };
         answers: ({
             question: {

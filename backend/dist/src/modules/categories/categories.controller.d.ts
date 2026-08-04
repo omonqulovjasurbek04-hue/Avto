@@ -16,8 +16,8 @@ export declare class CategoriesController {
             questions: number;
         };
     } & {
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         slug: string;
@@ -30,8 +30,8 @@ export declare class CategoriesController {
         slug: string;
         order?: number;
     }): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         slug: string;
@@ -42,8 +42,8 @@ export declare class CategoriesController {
         slug: string;
         order: number;
     }>): Promise<{
-        name: string;
         id: string;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         slug: string;
